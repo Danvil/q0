@@ -9,6 +9,7 @@
 #define RND_H_
 
 #include "../IAlgorithm.h"
+#include <Danvil/Tools/Small.h>
 #include <string>
 
 /// <summary>
@@ -41,10 +42,10 @@ public:
 		// in every iteration add new particles and delete the worst particles
 		for(int k = 1; k < maxIterations; k++) {
 			// add new samples by randomly selecting points
-			int target_add = max(0, 2 * particleCount - open.size());
+			int target_add = Danvil::max((size_t)0, 2 * particleCount - open.count());
 			open.add(State::Random(target_add));
 			// evaluate the chunk
-			open.evaluateUnkown(f);
+			open.evaluateUnknown(f);
 			// pick the best
 			// check if the best in this chunk is better than the best so far
 			open = open.best(particleCount);

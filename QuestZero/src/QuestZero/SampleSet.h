@@ -6,7 +6,7 @@
 #include <algorithm>
 
 template<typename Traits>
-class Sample
+class TSample
 {
 public:
 	typedef typename Traits::State State;
@@ -17,14 +17,14 @@ private:
 	bool _isKnown;
 
 public:
-	Sample() {}
+	TSample() {}
 
-	Sample(const State& state)
+	TSample(const State& state)
 	: _state(state),
 	  _isKnown(false) {
 	}
 
-	Sample(const State& state, double score)
+	TSample(const State& state, double score)
 	: _state(state),
 	  _score(score),
 	  _isKnown(true) {
@@ -55,12 +55,12 @@ public:
 };
 
 template<typename Traits>
-bool operator<(const State<Traits>& a, const State<Traits>& b) {
+bool operator<(const TSample<Traits>& a, const TSample<Traits>& b) {
 	return a.isScoreKnown() && (b.isScoreUnknown() || a.score() < b.score());
 }
 
 template<typename Traits>
-class SampleSet
+class TSampleSet
 {
 public:
 	typedef typename Traits::State State;
@@ -71,6 +71,13 @@ public:
 	std::vector<Sample> _samples;
 
 public:
+	TSampleSet() {
+	}
+
+	TSampleSet(const std::vector<Sample>& s) {
+		_samples = s;
+	}
+
 	bool isEmpty() const {
 		return count() == 0;
 	}
@@ -81,7 +88,7 @@ public:
 
 	void add(const std::vector<State>& states) {
 		BOOST_FOREACH(const State& s, states) {
-			_samples.push_back(Sample(state));
+			_samples.push_back(Sample(s));
 		}
 	}
 
@@ -118,9 +125,9 @@ public:
 		return best_sample;
 	}
 
-	SampleSet best(size_t n) const {
+	TSampleSet best(size_t n) {
 		std::sort(_samples.begin(), _samples.end());
-		return SampleSet(std::vector<Samples>(_samples.begin(), _samples.begin() + n));
+		return TSampleSet(std::vector<Sample>(_samples.begin(), _samples.begin() + n));
 	}
 
 };

@@ -16,11 +16,11 @@
 #include <stdexcept>
 
 template<typename K, int N_CAT, int N_ROT>
-class State
+class TState
 {
 public:
 	Danvil::ctLinAlg::Vec<K, N_CAT> cartesian;
-	Danvil::ctLinAlg::Quaternion<K> rotation[N_ROT];
+	Danvil::ctLinAlg::TQuaternion<K> rotation[N_ROT];
 
 public:
 	unsigned int dimension() const {
@@ -35,7 +35,7 @@ public:
 		throw std::runtime_error("Not implemented!");
 	}
 
-	static K Distance(const State& a, const State& b) {
+	static K Distance(const TState& a, const TState& b) {
 		K d = (K)0;
 		for(int i=0; i<N_CAT; i++) {
 			K x = a.cartesian[i] - b.cartesian[i];
@@ -46,8 +46,8 @@ public:
 		}
 	}
 
-	static State& Compose(const State& a, const State& b) {
-		State c;
+	static TState& Compose(const TState& a, const TState& b) {
+		TState c;
 		c.cartesian = a.cartesian + b.cartesian;
 		for(int i=0; i<N_ROT; i++) {
 			c.rotation[i] = a.rotation[i] * b.rotation[i];
@@ -55,8 +55,8 @@ public:
 		return c;
 	}
 
-	static State& Difference(const State& a, const State& b) {
-		State c;
+	static TState& Difference(const TState& a, const TState& b) {
+		TState c;
 		c.cartesian = a.cartesian - b.cartesian;
 		for(int i=0; i<N_ROT; i++) {
 			c.rotation[i] = b.rotation[i].inverse() * a.rotation[i];
@@ -64,11 +64,11 @@ public:
 		return c;
 	}
 
-	static State& WeightedSum(double factors[], State states[]) {
+	static TState& WeightedSum(double factors[], TState states[]) {
 		throw std::runtime_error("Not implemented!");
 	}
 
-	static std::vector<State> Random(size_t n) {
+	static std::vector<TState> Random(size_t n) {
 		throw std::runtime_error("Not implemented!");
 	}
 

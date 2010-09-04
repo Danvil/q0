@@ -14,9 +14,9 @@ using std::endl;
 
 struct Traits
 {
-	typedef State<double, 3, 0> State;
-	typedef Sample<Traits> Sample;
-	typedef SampleSet<Traits> SampleSet;
+	typedef TState<double, 3, 0> State;
+	typedef TSample<Traits> Sample;
+	typedef TSampleSet<Traits> SampleSet;
 	typedef IFunction<Traits> Function;
 };
 
@@ -31,7 +31,7 @@ public:
 
 int main(int argc, char* argv[]) {
 	cout << "Hello QuestZero!" << endl;
-	TestFunction f;
+	PTR(TestFunction) f(new TestFunction());
 	RND<Traits> rnd;
 	Traits::SampleSet best = rnd.Optimize(f);
 	cout << "Bye QuestZero!" << endl;
