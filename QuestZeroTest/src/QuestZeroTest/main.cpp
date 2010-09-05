@@ -5,9 +5,12 @@
  *      Author: david
  */
 
+#include "Benchmarks/Cartesian.h"
 #include "QuestZero/States/CState.h"
 #include "QuestZero/SampleSet.h"
 #include "QuestZero/Algorithms/RND.h"
+#include "QuestZero/Algorithms/PSO.h"
+#include <Danvil/Tools/Timer.h>
 #include <iostream>
 using std::cout;
 using std::endl;
@@ -19,18 +22,29 @@ class TestFunction
 {
 public:
 	double operator()(const MyState& state) {
-		return Danvil::ctLinAlg::Norm(state.cartesian);
+		return Benchmarks::Cartesian<MyState::V::ScalarType, MyState::V::Dimension>::Ackley(state.cartesian);
 	}
 };
 
 struct MyTraits
 {
 	typedef MyState State;
+	typedef TCStateOperator<double, 3> StateOperator;
 	typedef TSample<MyTraits> Sample;
 	typedef TSampleSet<MyTraits> SampleSet;
 	typedef TCDomainBox<double, 3> Domain;
 	typedef TestFunction Function;
 };
+
+template<typename ALGO, typename DOM, typename FNC>
+void TestAlgo(ALGO algo, const DOM& dom, const FNC& fnc) {
+	Danvil::Timer timer;
+	timer.start();
+	MyTraits::SampleSet best_many = algo.Optimize(dom, fnc);
+	timer.stop();
+	cout << "Time: " << timer.getElapsedTimeInMilliSec() << " ms" << endl;
+	cout << "Result: " << best_many.best() << endl;
+}
 
 int main(int argc, char* argv[]) {
 	cout << "Hello QuestZero!" << endl;
@@ -41,13 +55,17 @@ int main(int argc, char* argv[]) {
 
 	PTR(MyTraits::Function) fnc(new MyTraits::Function());
 
-	RND<MyTraits> rnd;
+	cout << "----- RND -----" << endl;
+	RND<MyTraits> algoRnd;
+	algoRnd.particleCount = 1000;
+	algoRnd.maxIterations = 20;
+	TestAlgo(algoRnd, dom, fnc);
 
-	MyTraits::SampleSet best_many = rnd.Optimize(dom, fnc);
-
-	cout << "----- RESULT ----" << endl;
-	cout << best_many.best() << endl;
-	cout << "----- RESULT ----" << endl;
+	cout << "----- PSO -----" << endl;
+	PSO<MyTraits> algoPso;
+	algoPso.settings.particleCount = 1000;
+	algoPso.settings.iterations = 20;
+	TestAlgo(algoPso, dom, fnc);
 
 	cout << "Bye QuestZero!" << endl;
 	return 0;
