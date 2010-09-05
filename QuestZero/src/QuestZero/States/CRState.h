@@ -8,6 +8,8 @@
 #ifndef QUESTZERO_CRSTATE_H_
 #define QUESTZERO_CRSTATE_H_
 
+#include "CState.h"
+#include "RState.h"
 #include <Danvil/Ptr.h>
 #include <Danvil/LinAlg.h>
 #include <vector>
@@ -17,67 +19,82 @@
 
 template<typename K, int N_CAT, int N_ROT>
 class TCRState
+: public Danvil::Print::IPrintable
 {
 public:
-	Danvil::ctLinAlg::Vec<K, N_CAT> cartesian;
-	Danvil::ctLinAlg::TQuaternion<K> rotation[N_ROT];
+	TCState<K, N_CAT> sc;
+	TRState<K> sr[N_ROT];
 
 public:
 	unsigned int dimension() const {
-		return N_CAT + 3*N_ROT;
+		return sc.dimension() + N_ROT * sr.dimension();
 	}
 
-	void toNumbers(int n, K* data) const {
+	size_t numbersCount() const {
+		return sc.numbersCount() + N_ROT * sr.numbersCount();
+	}
+
+	void toNumbers(size_t n, K* data) const {
+		assert(n == numbersCount());
 		throw std::runtime_error("Not implemented!");
 	}
 
-	void fromNumbers(int n, K* data) {
+	void fromNumbers(size_t n, const K* data) {
+		assert(n == numbersCount());
 		throw std::runtime_error("Not implemented!");
 	}
+
+	void print(std::ostream& os) const {
+		os << "[" << sc << ", ";
+		for(int i=0; i<N_ROT; i++) {
+			os << sr[i] << ", ";
+		}
+		os << "]";
+	}
+
 };
 
 template<typename K, int N_CAT, int N_ROT>
 class TCRStateOperator
 {
 public:
-	typedef TCRState<K, N_CAT, int N_ROT> State;
+	typedef TCRState<K, N_CAT, N_ROT> State;
+	typedef TCStateOperator<K, N_CAT> COP;
+	typedef TRStateOperator<K> ROP;
 
 public:
 	static K Distance(const State& a, const State& b) {
-		K d = (K)0;
-		for(int i=0; i<N_CAT; i++) {
-			K x = a.cartesian[i] - b.cartesian[i];
-			d += x * x;
-		}
+		K d = COP::Distance(a.sc, b.sc);
 		for(int i=0; i<N_ROT; i++) {
-			d += shortestAngle(a.rotation[i], b.rotation[i]);
+			d += ROP::Distance(a.sr[i], b.sr[i]);
 		}
 	}
 
-	static State& Compose(const State& a, const State& b) {
+	static State Compose(const State& a, const State& b) {
 		State c;
-		c.cartesian = a.cartesian + b.cartesian;
+		c.sc = COP::Compose(a.sc, b.sc);
 		for(int i=0; i<N_ROT; i++) {
-			c.rotation[i] = a.rotation[i] * b.rotation[i];
+			c.sr[i] = ROP::Compose(a.sr[i], b.sr[i]);
 		}
 		return c;
 	}
 
-	static State& Difference(const State& a, const State& b) {
+	static State Difference(const State& a, const State& b) {
 		State c;
-		c.cartesian = a.cartesian - b.cartesian;
+		c.sc = COP::Difference(a.sc, b.sc);
 		for(int i=0; i<N_ROT; i++) {
-			c.rotation[i] = b.rotation[i].inverse() * a.rotation[i];
+			c.sr[i] = ROP::Difference(a.sr[i], b.sr[i]);
 		}
 		return c;
 	}
 
-	static State& WeightedSum(K factors[], State states[]) {
-		throw std::runtime_error("Not implemented!");
-	}
-
-	static std::vector<TState> Random(size_t n) {
-		throw std::runtime_error("Not implemented!");
+	static State WeightedSum(K f1, const State& s1, K f2, const State& s2, K f3, const State& s3) {
+		State c;
+		c.sc = COP::WeightedSum(f1, s1.sc, f2, s2.sc, f3, s3.sc);
+		for(int i=0; i<N_ROT; i++) {
+			c.sr[i] = ROP::WeightedSum(f1, s1.sr[i], f2, s2.sr[i], f3, s3.sr[i]);
+		}
+		return c;
 	}
 
 };
@@ -87,8 +104,44 @@ class TCRDomain
 {
 public:
 	typedef TCRState<K, N_CAT, N_ROT> State;
+	typedef TCDomainBox<K, N_CAT> COM;
+	typedef Danvil::ctLinAlg::Vec<K, N_CAT> V;
+	typedef TRFull<K> ROM;
 
 public:
+	COM com;
+	ROM rom[N_ROT];
+
+	TCRDomain(const V& min, const V& max)
+	: com(min, max) {}
+
+	State random() const {
+		State s;
+		s.sc = com.random();
+		for(int i=0; i<N_ROT; i++) {
+			s.sr[i] = rom[i].random();
+		}
+		return s;
+	}
+
+	std::vector<State> random(size_t n) const {
+		std::vector<State> states;
+		for(size_t i=0; i<n; i++) {
+			states.push_back(random());
+		}
+		return states;
+	}
+
+	State project(const State& x) const {
+		State s;
+		s.sc = com.project(x.sc);
+		for(int i=0; i<N_ROT; i++) {
+			s.sr[i] = rom[i].project(x.sr[i]);
+		}
+		return s;
+	}
+
+
 };
 
 #endif
