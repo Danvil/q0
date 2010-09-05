@@ -11,6 +11,7 @@
 #include <Danvil/Print.h>
 #include <Danvil/Ptr.h>
 #include <Danvil/LinAlg.h>
+#include <Danvil/Tools/Small.h>
 #include <Danvil/Memops/Copy.h>
 #include <vector>
 #include <boost/foreach.hpp>
@@ -72,6 +73,10 @@ public:
 		return State(a.cartesian - b.cartesian);
 	}
 
+	static State WeightedSum(K f1, const State& s1, K f2, const State& s2, K f3, const State& s3) {
+		return State(f1 * s1.cartesian + f2 * s2.cartesian + f3 * s3.cartesian);
+	}
+
 	static State WeightedSum(size_t n, const K* factors, const State* states) {
 		if(n == 0) {
 			throw std::runtime_error("Must have at least one element for WeightedSum!");
@@ -118,11 +123,23 @@ public:
 		return states;
 	}
 
+	State project(const State& s) const {
+		return State(projectV(s.cartesian));
+	}
+
 private:
 	V randomV() const {
 		V v;
-		for(size_t i=0; i<N_CAT; i++) {
+		for(size_t i=0; i<v.dimension(); i++) {
 			v[i] = RandomNumbers::S.random(_min[i], _max[i]);
+		}
+		return v;
+	}
+
+	V projectV(const V& x) const {
+		V v;
+		for(size_t i=0; i<v.dimension(); i++) {
+			v[i] = Danvil::clamped(x[i], _min[i], _max[i]);
 		}
 		return v;
 	}
