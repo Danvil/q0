@@ -51,7 +51,7 @@ public:
 			// check if the best in this chunk is better than the best so far
 			open = open.best(particleCount);
 			// update progress bar
-//			Trace(k + 1, Settings.MaxIterations, open);
+			Trace(k + 1, maxIterations, open);
 			// check if best satisfy break condition
 //			if(Settings.Finished(k + 1, open.Best().Score))
 //				break;

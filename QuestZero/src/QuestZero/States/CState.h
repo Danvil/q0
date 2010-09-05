@@ -38,13 +38,17 @@ public:
 		return N_CAT;
 	}
 
-	void toNumbers(int n, K* data) const {
-		assert(N_CAT == n);
+	size_t numbersCount() const {
+		return N_CAT;
+	}
+
+	void toNumbers(size_t n, K* data) const {
+		assert(n == numbersCount());
 		Danvil::Memops::Copy<N_CAT>(data, cartesian.begin());
 	}
 
-	void fromNumbers(int n, const K* data) {
-		assert(N_CAT == n);
+	void fromNumbers(size_t n, const K* data) {
+		assert(n == numbersCount());
 		Danvil::Memops::Copy<N_CAT>(cartesian.begin(), data);
 	}
 
@@ -88,7 +92,7 @@ public:
 		return c;
 	}
 
-	static State WeightesSum(const std::vector<K>& factors, const std::vector<State>& states) {
+	static State WeightedSum(const std::vector<K>& factors, const std::vector<State>& states) {
 		if(factors.size() != states.size()) {
 			throw std::runtime_error("Number of factors and states must be equal!");
 		}

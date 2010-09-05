@@ -70,6 +70,11 @@ private:
 
 public:
 	static RandomNumbers S;
+
+	static double Random01() {
+		return S.random01();
+	}
+
 };
 
 #endif

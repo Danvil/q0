@@ -96,7 +96,7 @@ public:
 				p.Update(globals);
 			}
 			// trace
-//			Trace(k + 1, Settings.MaxIterations, BestSamples());
+			Trace(k + 1, settings.iterations, bestSamples());
 			// check if best satisfy break condition
 //			if(Settings.Finished(k + 1, globals.best_score))
 //				break;

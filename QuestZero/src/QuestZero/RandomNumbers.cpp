@@ -10,3 +10,4 @@
 boost::mt19937 RandomNumbers::gen;
 
 RandomNumbers RandomNumbers::S;
+

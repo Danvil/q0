@@ -3,6 +3,9 @@
 
 #include <Danvil/Ptr.h>
 #include <boost/foreach.hpp>
+//#include <iostream>
+//using std::cout;
+//using std::endl;
 
 template<typename State>
 class IFunction
@@ -21,6 +24,10 @@ public:
 			boost::shared_ptr<typename Traits::Domain> dom,
 			boost::shared_ptr<typename Traits::Function> f
 	) = 0;
+
+	void Trace(int i, int total, const typename Traits::SampleSet& samples) {
+//		cout << "Round " << i << "/" << total << ": best=" << samples << endl;
+	}
 
 };
 
