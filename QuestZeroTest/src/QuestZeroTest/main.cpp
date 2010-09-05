@@ -6,7 +6,9 @@
  */
 
 #include "Benchmarks/Cartesian.h"
+#include "Benchmarks/PointCloudRegistration.h"
 #include "QuestZero/States/CState.h"
+#include "QuestZero/States/RState.h"
 #include "QuestZero/SampleSet.h"
 #include "QuestZero/Algorithms/RND.h"
 #include "QuestZero/Algorithms/PSO.h"
@@ -15,6 +17,8 @@
 using std::cout;
 using std::endl;
 
+//---------------------------------------------------------------------------
+
 typedef TCState<double, 3> MyState;
 
 class TestFunction
@@ -22,7 +26,7 @@ class TestFunction
 {
 public:
 	double operator()(const MyState& state) {
-		return Benchmarks::Cartesian<MyState::V::ScalarType, MyState::V::Dimension>::Ackley(state.cartesian);
+		return Benchmarks::Cartesian<MyState::V::ScalarType, MyState::V::Dimension>::Sphere(state.cartesian);
 	}
 };
 
@@ -36,39 +40,86 @@ struct MyTraits
 	typedef TestFunction Function;
 };
 
-template<typename ALGO, typename DOM, typename FNC>
-void TestAlgo(ALGO algo, const DOM& dom, const FNC& fnc) {
+//---------------------------------------------------------------------------
+
+typedef TRState<double> RegistrationState;
+
+class RegistrationFunction
+: public IFunction<RegistrationState>,
+  public Benchmarks::PointCloudRegistration<double>
+{
+public:
+	RegistrationFunction(size_t n)
+	: Benchmarks::PointCloudRegistration<double>(n) {}
+
+	double operator()(const RegistrationState& state) {
+		return fit(state.rot().rotation());
+	}
+};
+
+struct RegistrationTraits
+{
+	typedef RegistrationState State;
+	typedef TRStateOperator<double> StateOperator;
+	typedef TSample<RegistrationTraits> Sample;
+	typedef TSampleSet<RegistrationTraits> SampleSet;
+	typedef TRFull<double> Domain;
+	typedef RegistrationFunction Function;
+};
+
+//---------------------------------------------------------------------------
+
+template<typename ALGO, typename Traits>
+void TestAlgo(ALGO algo, const PTR(typename Traits::Domain)& dom, const PTR(typename Traits::Function)& fnc)
+{
 	Danvil::Timer timer;
 	timer.start();
-	MyTraits::SampleSet best_many = algo.Optimize(dom, fnc);
+	typename Traits::SampleSet best_many = algo.Optimize(dom, fnc);
 	timer.stop();
 	cout << "Time: " << timer.getElapsedTimeInMilliSec() << " ms" << endl;
 	cout << "Result: " << best_many.best() << endl;
 }
 
+template<typename Traits>
+void TestProblem(const PTR(typename Traits::Domain)& dom, const PTR(typename Traits::Function)& fnc)
+{
+	cout << "----- RND -----" << endl;
+	RND<Traits> algoRnd;
+	algoRnd.particleCount = 1000;
+	algoRnd.maxIterations = 20;
+	TestAlgo<RND<Traits>, Traits>(algoRnd, dom, fnc);
+
+	cout << "----- PSO -----" << endl;
+	PSO<Traits> algoPso;
+	algoPso.settings.particleCount = 1000;
+	algoPso.settings.iterations = 20;
+	TestAlgo<PSO<Traits>, Traits>(algoPso, dom, fnc);
+}
+
 int main(int argc, char* argv[]) {
 	cout << "Hello QuestZero!" << endl;
+	cout << endl;
 
+	cout << "----- Cartesian -----" << endl;
 	MyTraits::Domain::V min(-3, -3, -3);
 	MyTraits::Domain::V max(+3, +3, +3);
 	PTR(MyTraits::Domain) dom(new MyTraits::Domain(min, max));
-
 	PTR(MyTraits::Function) fnc(new MyTraits::Function());
+	TestProblem<MyTraits>(dom, fnc);
+	cout << endl;
 
-	cout << "----- RND -----" << endl;
-	RND<MyTraits> algoRnd;
-	algoRnd.particleCount = 1000;
-	algoRnd.maxIterations = 20;
-	TestAlgo(algoRnd, dom, fnc);
-
-	cout << "----- PSO -----" << endl;
-	PSO<MyTraits> algoPso;
-	algoPso.settings.particleCount = 1000;
-	algoPso.settings.iterations = 20;
-	TestAlgo(algoPso, dom, fnc);
+	cout << "----- Registration -----" << endl;
+	PTR(RegistrationTraits::Domain) r_dom(new RegistrationTraits::Domain());
+	PTR(RegistrationTraits::Function) r_fnc(new RegistrationTraits::Function(100));
+	TestProblem<RegistrationTraits>(r_dom, r_fnc);
+	cout << endl;
 
 	cout << "Bye QuestZero!" << endl;
 	return 0;
 }
 
+//---------------------------------------------------------------------------
+
 #include "QuestZero/RandomNumbers.cpp"
+
+//---------------------------------------------------------------------------
