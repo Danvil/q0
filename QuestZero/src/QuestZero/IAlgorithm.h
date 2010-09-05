@@ -4,11 +4,11 @@
 #include <Danvil/Ptr.h>
 #include <boost/foreach.hpp>
 
-template<typename Traits>
+template<typename State>
 class IFunction
 {
 public:
-	virtual double operator()(const typename Traits::State& state) = 0;
+	virtual double operator()(const State& state) = 0;
 };
 
 template<typename Traits>
@@ -17,7 +17,10 @@ class IMinimizationAlgorithm
 public:
 	virtual ~IMinimizationAlgorithm() {}
 
-	virtual typename Traits::SampleSet Optimize(boost::shared_ptr<IFunction<Traits> > f) = 0;
+	virtual typename Traits::SampleSet Optimize(
+			boost::shared_ptr<typename Traits::Domain> dom,
+			boost::shared_ptr<typename Traits::Function> f
+	) = 0;
 
 };
 

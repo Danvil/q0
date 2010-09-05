@@ -22,6 +22,7 @@ class RND
 public:
 	typedef typename Traits::State State;
 	typedef typename Traits::SampleSet SampleSet;
+	typedef typename Traits::Domain Domain;
 	typedef typename Traits::Function Function;
 
 public:
@@ -37,13 +38,13 @@ public:
 	unsigned int particleCount;
 	unsigned int maxIterations;
 
-	SampleSet Optimize(PTR(Function) f) {
+	SampleSet Optimize(PTR(Domain) dom, PTR(Function) f) {
 		SampleSet open;
 		// in every iteration add new particles and delete the worst particles
-		for(int k = 1; k < maxIterations; k++) {
+		for(unsigned int k = 1; k < maxIterations; k++) {
 			// add new samples by randomly selecting points
 			int target_add = Danvil::max((size_t)0, 2 * particleCount - open.count());
-			open.add(State::Random(target_add));
+			open.add(dom->random(target_add));
 			// evaluate the chunk
 			open.evaluateUnknown(f);
 			// pick the best

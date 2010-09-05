@@ -1,12 +1,12 @@
 /*
- * State.h
+ * CRState.h
  *
- *  Created on: Sep 4, 2010
+ *  Created on: Sep 5, 2010
  *      Author: david
  */
 
-#ifndef STATE_H_
-#define STATE_H_
+#ifndef QUESTZERO_CRSTATE_H_
+#define QUESTZERO_CRSTATE_H_
 
 #include <Danvil/Ptr.h>
 #include <Danvil/LinAlg.h>
@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 template<typename K, int N_CAT, int N_ROT>
-class TState
+class TCRState
 {
 public:
 	Danvil::ctLinAlg::Vec<K, N_CAT> cartesian;
@@ -34,8 +34,16 @@ public:
 	void fromNumbers(int n, K* data) {
 		throw std::runtime_error("Not implemented!");
 	}
+};
 
-	static K Distance(const TState& a, const TState& b) {
+template<typename K, int N_CAT, int N_ROT>
+class TCRStateOperator
+{
+public:
+	typedef TCRState<K, N_CAT, int N_ROT> State;
+
+public:
+	static K Distance(const State& a, const State& b) {
 		K d = (K)0;
 		for(int i=0; i<N_CAT; i++) {
 			K x = a.cartesian[i] - b.cartesian[i];
@@ -46,8 +54,8 @@ public:
 		}
 	}
 
-	static TState& Compose(const TState& a, const TState& b) {
-		TState c;
+	static State& Compose(const State& a, const State& b) {
+		State c;
 		c.cartesian = a.cartesian + b.cartesian;
 		for(int i=0; i<N_ROT; i++) {
 			c.rotation[i] = a.rotation[i] * b.rotation[i];
@@ -55,8 +63,8 @@ public:
 		return c;
 	}
 
-	static TState& Difference(const TState& a, const TState& b) {
-		TState c;
+	static State& Difference(const State& a, const State& b) {
+		State c;
 		c.cartesian = a.cartesian - b.cartesian;
 		for(int i=0; i<N_ROT; i++) {
 			c.rotation[i] = b.rotation[i].inverse() * a.rotation[i];
@@ -64,7 +72,7 @@ public:
 		return c;
 	}
 
-	static TState& WeightedSum(double factors[], TState states[]) {
+	static State& WeightedSum(K factors[], State states[]) {
 		throw std::runtime_error("Not implemented!");
 	}
 
@@ -72,6 +80,15 @@ public:
 		throw std::runtime_error("Not implemented!");
 	}
 
+};
+
+template<typename K, int N_CAT, int N_ROT>
+class TCRDomain
+{
+public:
+	typedef TCRState<K, N_CAT, N_ROT> State;
+
+public:
 };
 
 #endif

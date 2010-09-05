@@ -1,12 +1,15 @@
 #ifndef QUESTZERO_SAMPLESET
 #define QUESTZERO_SAMPLESET
 
+#include <Danvil/Print.h>
 #include <boost/foreach.hpp>
 #include <vector>
 #include <algorithm>
+#include <ostream>
 
 template<typename Traits>
 class TSample
+: public Danvil::Print::IPrintable
 {
 public:
 	typedef typename Traits::State State;
@@ -52,6 +55,13 @@ public:
 		_isKnown = true;
 	}
 
+	void print(std::ostream& os) const {
+		if(isScoreKnown()) {
+			os << "[Sample: Score=" << _score << ", State=" << _state << "]";
+		} else {
+			os << "[Sample: Score unknown, State=" << _state << "]";
+		}
+	}
 };
 
 template<typename Traits>
@@ -61,6 +71,7 @@ bool operator<(const TSample<Traits>& a, const TSample<Traits>& b) {
 
 template<typename Traits>
 class TSampleSet
+: public Danvil::Print::IPrintable
 {
 public:
 	typedef typename Traits::State State;
@@ -110,24 +121,32 @@ public:
 		if(isEmpty()) {
 			throw std::runtime_error("Can not get best sample of empty sample set!");
 		}
-		const Sample& best_sample = _samples[0];
+		const Sample* best_sample = &(_samples[0]);
 		for(size_t i=0; i<_samples.size(); ++i) {
-			const Sample& current = _samples[i];
-			if(current.isScoreKnown()
-				&& (best_sample.isScoreUnknown() || current.score() < best_sample.score())
+			const Sample* current = &(_samples[i]);
+			if(current->isScoreKnown()
+				&& (best_sample->isScoreUnknown() || current->score() < best_sample->score())
 			) {
 				best_sample = current;
 			}
 		}
-		if(best_sample.isScoreUnknown()) {
+		if(best_sample->isScoreUnknown()) {
 			throw std::runtime_error("Can not get best sample if all samples are unevaluated!");
 		}
-		return best_sample;
+		return *best_sample;
 	}
 
 	TSampleSet best(size_t n) {
 		std::sort(_samples.begin(), _samples.end());
 		return TSampleSet(std::vector<Sample>(_samples.begin(), _samples.begin() + n));
+	}
+
+	void print(std::ostream& os) const {
+		os << "[Sample Set = {";
+		BOOST_FOREACH(const Sample& s, _samples) {
+			os << s << ", ";
+		}
+		os << "}]";
 	}
 
 };
