@@ -9,6 +9,7 @@
 #include "Benchmarks/PointCloudRegistration.h"
 #include "QuestZero/States/CState.h"
 #include "QuestZero/States/RState.h"
+#include "QuestZero/States/CRState.h"
 #include "QuestZero/SampleSet.h"
 #include "QuestZero/Algorithms/RND.h"
 #include "QuestZero/Algorithms/PSO.h"
@@ -69,6 +70,33 @@ struct RegistrationTraits
 
 //---------------------------------------------------------------------------
 
+typedef TCRState<double, 3, 1> RegistrationWPState;
+
+class RegistrationWPFunction
+: public IFunction<RegistrationWPState>,
+  public Benchmarks::PointCloudRegistration<double>
+{
+public:
+	RegistrationWPFunction(size_t n)
+	: Benchmarks::PointCloudRegistration<double>(n) {}
+
+	double operator()(const RegistrationWPState& state) {
+		return fit(state.sr[0].rot().rotation(), Danvil::ctLinAlg::Vec3<double>::FactorFromPointer(state.sc.cartesian.begin()));
+	}
+};
+
+struct RegistrationWPTraits
+{
+	typedef RegistrationWPState State;
+	typedef TCRStateOperator<double, 3, 1> StateOperator;
+	typedef TSample<RegistrationWPTraits> Sample;
+	typedef TSampleSet<RegistrationWPTraits> SampleSet;
+	typedef TCRDomain<double, 3, 1> Domain;
+	typedef RegistrationWPFunction Function;
+};
+
+//---------------------------------------------------------------------------
+
 template<typename ALGO, typename Traits>
 void TestAlgo(ALGO algo, const PTR(typename Traits::Domain)& dom, const PTR(typename Traits::Function)& fnc)
 {
@@ -112,6 +140,12 @@ int main(int argc, char* argv[]) {
 	PTR(RegistrationTraits::Domain) r_dom(new RegistrationTraits::Domain());
 	PTR(RegistrationTraits::Function) r_fnc(new RegistrationTraits::Function(100));
 	TestProblem<RegistrationTraits>(r_dom, r_fnc);
+	cout << endl;
+
+	cout << "----- Registration w. position -----" << endl;
+	PTR(RegistrationWPTraits::Domain) rwp_dom(new RegistrationWPTraits::Domain(min, max));
+	PTR(RegistrationWPTraits::Function) rwp_fnc(new RegistrationWPTraits::Function(100));
+	TestProblem<RegistrationWPTraits>(rwp_dom, rwp_fnc);
 	cout << endl;
 
 	cout << "Bye QuestZero!" << endl;

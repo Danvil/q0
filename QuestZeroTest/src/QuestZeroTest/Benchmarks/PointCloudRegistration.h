@@ -72,6 +72,14 @@ public:
 		return sqrt(sum) / (double)pointCount();
 	}
 
+	double fit(const M& R, const V& t) {
+		double sum = 0;
+		for(size_t i=0; i<pointCount(); i++) {
+			sum += Danvil::ctLinAlg::Distance(R * original[i] + t, target[i]);
+		}
+		return sqrt(sum) / (double)pointCount();
+	}
+
 };
 
 }
