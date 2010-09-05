@@ -85,8 +85,12 @@ public:
 	TSampleSet() {
 	}
 
-	TSampleSet(const std::vector<Sample>& s) {
-		_samples = s;
+	TSampleSet(const std::vector<Sample>& samples) {
+		_samples = samples;
+	}
+
+	TSampleSet(const std::vector<State>& states) {
+		add(states);
 	}
 
 	bool isEmpty() const {
@@ -95,6 +99,10 @@ public:
 
 	size_t count() const {
 		return _samples.size();
+	}
+
+	void add(const State& state) {
+		_samples.push_back(Sample(state));
 	}
 
 	void add(const std::vector<State>& states) {
