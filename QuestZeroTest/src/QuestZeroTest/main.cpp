@@ -13,6 +13,7 @@
 #include "QuestZero/SampleSet.h"
 #include "QuestZero/Algorithms/RND.h"
 #include "QuestZero/Algorithms/PSO.h"
+#include "QuestZero/Tracer/NoTracer.h"
 #include <Danvil/Tools/Timer.h>
 #include <iostream>
 using std::cout;
@@ -35,10 +36,9 @@ struct MyTraits
 {
 	typedef MyState State;
 	typedef TCStateOperator<double, 3> StateOperator;
-	typedef TSample<MyTraits> Sample;
-	typedef TSampleSet<MyTraits> SampleSet;
 	typedef TCDomainBox<double, 3> Domain;
 	typedef TestFunction Function;
+	typedef NoTracer<State> Tracer;
 };
 
 //---------------------------------------------------------------------------
@@ -62,10 +62,9 @@ struct RegistrationTraits
 {
 	typedef RegistrationState State;
 	typedef TRStateOperator<double> StateOperator;
-	typedef TSample<RegistrationTraits> Sample;
-	typedef TSampleSet<RegistrationTraits> SampleSet;
 	typedef TRFull<double> Domain;
 	typedef RegistrationFunction Function;
+	typedef NoTracer<State> Tracer;
 };
 
 //---------------------------------------------------------------------------
@@ -89,10 +88,9 @@ struct RegistrationWPTraits
 {
 	typedef RegistrationWPState State;
 	typedef TCRStateOperator<double, 3, 1> StateOperator;
-	typedef TSample<RegistrationWPTraits> Sample;
-	typedef TSampleSet<RegistrationWPTraits> SampleSet;
 	typedef TCRDomain<double, 3, 1> Domain;
 	typedef RegistrationWPFunction Function;
+	typedef NoTracer<State> Tracer;
 };
 
 //---------------------------------------------------------------------------
@@ -102,7 +100,7 @@ void TestAlgo(ALGO algo, const PTR(typename Traits::Domain)& dom, const PTR(type
 {
 	Danvil::Timer timer;
 	timer.start();
-	typename Traits::SampleSet best_many = algo.Optimize(dom, fnc);
+	TSampleSet<typename Traits::State> best_many = algo.Optimize2(dom, fnc);
 	timer.stop();
 	cout << "Time: " << timer.getElapsedTimeInMilliSec() << " ms" << endl;
 	cout << "Result: " << best_many.best() << endl;
