@@ -8,6 +8,7 @@
 #ifndef RND_H_
 #define RND_H_
 
+#include "../SampleSet.h"
 #include "../IAlgorithm.h"
 #include <Danvil/Tools/Small.h>
 #include <string>
@@ -15,15 +16,18 @@
 /// <summary>
 /// A optimization algorithm which tries to find the minimum of a function with stupid randomness
 /// </summary>
-template<typename Traits>
+template<typename Problem>
 class RND
-	: IMinimizationAlgorithm<Traits>
+: public IMinimizationAlgorithm<Problem>
 {
 public:
-	typedef typename Traits::State State;
-	typedef typename Traits::SampleSet SampleSet;
-	typedef typename Traits::Domain Domain;
-	typedef typename Traits::Function Function;
+	typedef typename Problem::State State;
+	typedef TSample<State> Sample;
+	typedef TSampleSet<State> SampleSet;
+	typedef typename Problem::StateOperator Op;
+	typedef typename Problem::Domain Domain;
+	typedef typename Problem::Function Function;
+	typedef typename Problem::Tracer Tracer;
 
 public:
 	const std::string& name() const { return "RND"; }
@@ -38,7 +42,7 @@ public:
 	unsigned int particleCount;
 	unsigned int maxIterations;
 
-	SampleSet Optimize(PTR(Domain) dom, PTR(Function) f) {
+	SampleSet Optimize(PTR(Domain) dom, PTR(Function) f, PTR(Tracer) tracer) {
 		SampleSet open;
 		// in every iteration add new particles and delete the worst particles
 		for(unsigned int k = 1; k < maxIterations; k++) {
@@ -51,7 +55,7 @@ public:
 			// check if the best in this chunk is better than the best so far
 			open = open.best(particleCount);
 			// update progress bar
-			Trace(k + 1, maxIterations, open);
+			tracer->trace(k + 1, maxIterations, open);
 			// check if best satisfy break condition
 //			if(Settings.Finished(k + 1, open.Best().Score))
 //				break;

@@ -8,6 +8,7 @@
 #ifndef QUESTZERO_ALGORITHMS_PSO_H_
 #define QUESTZERO_ALGORITHMS_PSO_H_
 
+#include "../SampleSet.h"
 #include "../IAlgorithm.h"
 #include <Danvil/Ptr.h>
 #include <vector>
@@ -21,17 +22,18 @@
 /// See http://www.hvass-labs.org/projects/swarmops/
 /// See Particle Swarm Optimization: Developments, Application and Ressources, Eberhart, R. and Shi, Y.
 /// </summary>
-template<typename Traits>
+template<typename Problem>
 class PSO
-: IMinimizationAlgorithm<Traits>
+: public IMinimizationAlgorithm<Problem>
 {
 public:
-	typedef typename Traits::State State;
-	typedef typename Traits::Sample Sample;
-	typedef typename Traits::SampleSet SampleSet;
-	typedef typename Traits::StateOperator Op;
-	typedef typename Traits::Domain Domain;
-	typedef typename Traits::Function Function;
+	typedef typename Problem::State State;
+	typedef TSample<State> Sample;
+	typedef TSampleSet<State> SampleSet;
+	typedef typename Problem::StateOperator Op;
+	typedef typename Problem::Domain Domain;
+	typedef typename Problem::Function Function;
+	typedef typename Problem::Tracer Tracer;
 
 public:
 	std::string name() { return "PSO"; }
@@ -66,12 +68,12 @@ public:
 		return samples;
 	}
 
-	SampleSet Optimize(PTR(Domain) dom, PTR(Function) fnc) {
+	SampleSet Optimize(PTR(Domain) dom, PTR(Function) fnc, PTR(Tracer) tracer) {
 		globals.set(settings);
 		globals._domain = dom;
 		// generate start samples
 		SampleSet initial = startSamples(dom);
-		BOOST_FOREACH(const Sample& s, initial._samples) {
+		BOOST_FOREACH(const Sample& s, initial.samples()) {
 			particles.push_back(ParticleData(s.state()));
 		}
 		// iterate
@@ -87,7 +89,7 @@ public:
 			}
 			// update personal best and particle
 			for(size_t i = 0; i < particles.size(); i++) {
-				const Sample& s = samples._samples[i];
+				const Sample& s = samples.samples()[i];
 				ParticleData& p = particles[i];
 				if(s.score() < p.best_score) {
 					p.best = s.state();
@@ -96,7 +98,7 @@ public:
 				p.Update(globals);
 			}
 			// trace
-			Trace(k + 1, settings.iterations, bestSamples());
+			tracer->trace(k + 1, settings.iterations, bestSamples());
 			// check if best satisfy break condition
 //			if(Settings.Finished(k + 1, globals.best_score))
 //				break;

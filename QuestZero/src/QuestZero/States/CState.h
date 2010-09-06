@@ -44,12 +44,12 @@ public:
 
 	void toNumbers(size_t n, K* data) const {
 		assert(n == numbersCount());
-		Danvil::Memops::Copy<N_CAT>(data, cartesian.begin());
+		Danvil::Memops::Copy<K, N_CAT>(data, cartesian.begin());
 	}
 
 	void fromNumbers(size_t n, const K* data) {
 		assert(n == numbersCount());
-		Danvil::Memops::Copy<N_CAT>(cartesian.begin(), data);
+		Danvil::Memops::Copy<K, N_CAT>(cartesian.begin(), data);
 	}
 
 	void print(std::ostream& os) const {

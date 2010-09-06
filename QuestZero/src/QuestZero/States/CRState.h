@@ -27,21 +27,33 @@ public:
 
 public:
 	unsigned int dimension() const {
-		return sc.dimension() + N_ROT * sr.dimension();
+		return sc.dimension() + N_ROT * sr[0].dimension();
 	}
 
 	size_t numbersCount() const {
-		return sc.numbersCount() + N_ROT * sr.numbersCount();
+		return sc.numbersCount() + N_ROT * sr[0].numbersCount();
 	}
 
 	void toNumbers(size_t n, K* data) const {
 		assert(n == numbersCount());
-		throw std::runtime_error("Not implemented!");
+		sc.toNumbers(sc.numbersCount(), data);
+		data += sc.numbersCount();
+		for(int i=0; i<N_ROT; i++) {
+			size_t len = sr[i].numbersCount();
+			sr[i].toNumbers(len, data);
+			data += len;
+		}
 	}
 
 	void fromNumbers(size_t n, const K* data) {
 		assert(n == numbersCount());
-		throw std::runtime_error("Not implemented!");
+		sc.fromNumbers(sc.numbersCount(), data);
+		data += sc.numbersCount();
+		for(int i=0; i<N_ROT; i++) {
+			size_t len = sr[i].numbersCount();
+			sr[i].fromNumbers(len, data);
+			data += len;
+		}
 	}
 
 	void print(std::ostream& os) const {

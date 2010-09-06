@@ -2,32 +2,25 @@
 #define QUEST_ZERO_IALGORITHM
 
 #include <Danvil/Ptr.h>
-#include <boost/foreach.hpp>
-//#include <iostream>
-//using std::cout;
-//using std::endl;
 
-template<typename State>
-class IFunction
-{
-public:
-	virtual double operator()(const State& state) = 0;
-};
-
-template<typename Traits>
+template<typename Problem>
 class IMinimizationAlgorithm
 {
 public:
 	virtual ~IMinimizationAlgorithm() {}
 
-	virtual typename Traits::SampleSet Optimize(
-			boost::shared_ptr<typename Traits::Domain> dom,
-			boost::shared_ptr<typename Traits::Function> f
-	) = 0;
-
-	void Trace(int i, int total, const typename Traits::SampleSet& samples) {
-//		cout << "Round " << i << "/" << total << ": best=" << samples << endl;
+	virtual TSampleSet<typename Problem::State> Optimize2(
+			boost::shared_ptr<typename Problem::Domain> dom,
+			boost::shared_ptr<typename Problem::Function> fnc
+	) {
+		return Optimize(dom, fnc, Danvil::Ptr(new typename Problem::Tracer()));
 	}
+
+	virtual TSampleSet<typename Problem::State> Optimize(
+			boost::shared_ptr<typename Problem::Domain> dom,
+			boost::shared_ptr<typename Problem::Function> fnc,
+			boost::shared_ptr<typename Problem::Tracer> tracer
+	) = 0;
 
 };
 
