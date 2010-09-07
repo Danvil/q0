@@ -22,6 +22,11 @@ class TCRState
 : public Danvil::Print::IPrintable
 {
 public:
+	typedef K ScalarType;
+	static const int cCartesianDimension = N_CAT;
+	static const int cNumberOfRotations = N_ROT;
+
+public:
 	TCState<K, N_CAT> sc;
 	TRState<K> sr[N_ROT];
 

@@ -8,6 +8,7 @@
 #ifndef RND_H_
 #define RND_H_
 
+#include "../StartingValues.h"
 #include "../SampleSet.h"
 #include "../IAlgorithm.h"
 #include <Danvil/Tools/Small.h>
@@ -42,8 +43,9 @@ public:
 	unsigned int particleCount;
 	unsigned int maxIterations;
 
-	SampleSet Optimize(PTR(Domain) dom, PTR(Function) f, PTR(Tracer) tracer) {
-		SampleSet open;
+	SampleSet Optimize(PTR(Domain) dom, PTR(Function) f, const std::vector<State>& given_initial_states, PTR(Tracer) tracer) {
+		std::vector<State> complete_initial_states = StartingValues::Repeat(given_initial_states, particleCount);
+		SampleSet open(complete_initial_states);
 		// in every iteration add new particles and delete the worst particles
 		for(unsigned int k = 1; k < maxIterations; k++) {
 			// add new samples by randomly selecting points

@@ -8,6 +8,7 @@
 #ifndef QUESTZERO_ALGORITHMS_PSO_H_
 #define QUESTZERO_ALGORITHMS_PSO_H_
 
+#include "../StartingValues.h"
 #include "../SampleSet.h"
 #include "../IAlgorithm.h"
 #include <Danvil/Ptr.h>
@@ -60,19 +61,12 @@ public:
 
 	virtual ~PSO() {}
 
-	SampleSet startSamples(PTR(Domain) dom) {
-		SampleSet samples;
-		for(unsigned int i=0; i<settings.particleCount; i++) {
-			samples.add(dom->random());
-		}
-		return samples;
-	}
-
-	SampleSet Optimize(PTR(Domain) dom, PTR(Function) fnc, PTR(Tracer) tracer) {
+	SampleSet Optimize(PTR(Domain) dom, PTR(Function) fnc, const std::vector<State>& given_initial_states, PTR(Tracer) tracer) {
 		globals.set(settings);
 		globals._domain = dom;
 		// generate start samples
-		SampleSet initial = startSamples(dom);
+		std::vector<State> complete_initial_states = StartingValues::Repeat(given_initial_states, settings.particleCount);
+		SampleSet initial(complete_initial_states);
 		BOOST_FOREACH(const Sample& s, initial.samples()) {
 			particles.push_back(ParticleData(s.state()));
 		}
