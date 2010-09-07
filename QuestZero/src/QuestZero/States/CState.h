@@ -119,6 +119,14 @@ public:
 		return State(randomV());
 	}
 
+	State random(const State& center, const std::vector<K>& noise) {
+		if(noise.size() != N_CAT) {
+			throw std::runtime_error("Noise vector has invalid length!");
+		}
+		V noise_range(noise.data());
+		return State(projectV(center.cartesian + RandomV(-noise_range, noise_range)));
+	}
+
 	std::vector<State> random(size_t n) const {
 		std::vector<State> states;
 		for(size_t i=0; i<n; i++) {
@@ -133,9 +141,13 @@ public:
 
 private:
 	V randomV() const {
+		return RandomV(_min, _max);
+	}
+
+	static V RandomV(const V& min, const V& max) {
 		V v;
 		for(size_t i=0; i<v.dimension(); i++) {
-			v[i] = RandomNumbers::S.random(_min[i], _max[i]);
+			v[i] = RandomNumbers::S.random(min[i], max[i]);
 		}
 		return v;
 	}

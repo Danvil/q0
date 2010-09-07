@@ -45,6 +45,17 @@ public:
 		}
 	}
 
+	template<typename State, typename Domain>
+	static std::vector<State> WithNoise(const State& state, unsigned int n, const PTR(Domain)& dom, const std::vector<typename State::ScalarType>& noise) {
+		std::vector<State> states;
+		states.reserve(n);
+		for(unsigned int i=0; i<n; i++) {
+			State state_with_noise = dom->random(state, noise);
+			states.push_back(state_with_noise);
+		}
+		return states;
+	}
+
 private:
 	StartingValues() {}
 

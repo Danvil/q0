@@ -141,6 +141,18 @@ public:
 		return s;
 	}
 
+	State random(const State& center, const std::vector<K>& noise) {
+		if(noise.size() != N_CAT + N_ROT) {
+			throw std::runtime_error("Noise vector has invalid length!");
+		}
+		State s;
+		s.sc = com.random(center.sc, std::vector<K>(noise.begin(), noise.begin() + N_CAT));
+		for(int i=0; i<N_ROT; i++) {
+			s.sr[i] = rom[i].random(center.sr[i], noise[N_CAT + i]);
+		}
+		return s;
+	}
+
 	std::vector<State> random(size_t n) const {
 		std::vector<State> states;
 		for(size_t i=0; i<n; i++) {

@@ -141,7 +141,11 @@ public:
 	TRFull() {}
 
 	State random() const {
-		return State(randomQ());
+		return State(RandomQ());
+	}
+
+	State random(const State& center, K noise) {
+		return State(center.rot() * RandomQ(noise));
 	}
 
 	std::vector<State> random(size_t n) const {
@@ -153,15 +157,19 @@ public:
 	}
 
 	State project(const State& s) const {
-		return State(projectQ(s.rot()));
+		return State(ProjectQ(s.rot()));
 	}
 
 private:
-	Q randomQ() const {
+	static Q RandomQ() {
 		return Danvil::ctLinAlg::RotationTools::UniformRandom<K>(&RandomNumbers::Random01);
 	}
 
-	Q projectQ(const Q& x) const {
+	static Q RandomQ(K len) {
+		return Danvil::ctLinAlg::RotationTools::UniformRandom<K>(len, &RandomNumbers::Random01);
+	}
+
+	static Q ProjectQ(const Q& x) {
 		Q q = x;
 		q.normalize();
 		return q;
