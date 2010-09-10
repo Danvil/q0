@@ -3,6 +3,7 @@
 	<name>QuestZeroTest</name>
 	<comment></comment>
 	<projects>
+		<project>QuestZero</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
