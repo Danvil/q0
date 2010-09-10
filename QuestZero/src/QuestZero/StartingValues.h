@@ -1,64 +1,118 @@
 /*
- * StartingValues.h
+ * StartingStatesPolicy.h
  *
  *  Created on: Sep 7, 2010
  *      Author: david
  */
 
-#ifndef STARTINGVALUES_H_
-#define STARTINGVALUES_H_
-
+#ifndef QUESTZERO_STARTINGSTATESPOLICY_H_
+#define QUESTZERO_STARTINGSTATESPOLICY_H_
+//---------------------------------------------------------------------------
 #include <Danvil/Ptr.h>
 #include <vector>
+//---------------------------------------------------------------------------
+namespace StatePicker {
 
-class StartingValues
-{
-public:
-	template<typename State, typename Domain>
-	static std::vector<State> Random(const PTR(Domain)& dom, unsigned int n) {
-		std::vector<State> states;
-		states.reserve(n);
-		for(unsigned int i=0; i<n; i++) {
-			states.push_back(dom.random());
-		}
-		return states;
-	}
+	//---------------------------------------------------------------------------
 
 	template<typename State>
-	static std::vector<State> Repeat(const State& state, unsigned int n) {
-		return std::vector<State>(n, state);
-	}
-
-	template<typename State>
-	static std::vector<State> Repeat(const std::vector<State>& states, unsigned int n) {
-		if(states.size() == n) {
-			return states;
-		} else if(states.size() > n) {
-			return std::vector<State>(states.begin(), states.begin() + n);
-		} else {
-			std::vector<State> result;
-			result.reserve(n);
+	struct ManyPicker
+	{
+		template<class Space>
+		std::vector<State> pick(const Space& space, unsigned int n) {
+			std::vector<State> states;
+			states.reserve(n);
 			for(unsigned int i=0; i<n; i++) {
-				result.push_back(states[i % states.size()]);
+				states.push_back(pick(space));
 			}
-			return result;
+			return states;
 		}
-	}
+	};
 
-	template<typename State, typename Domain>
-	static std::vector<State> WithNoise(const State& state, unsigned int n, const PTR(Domain)& dom, const std::vector<typename State::ScalarType>& noise) {
-		std::vector<State> states;
-		states.reserve(n);
-		for(unsigned int i=0; i<n; i++) {
-			State state_with_noise = dom->random(state, noise);
-			states.push_back(state_with_noise);
+	//---------------------------------------------------------------------------
+
+	template<typename State>
+	struct RandomPicker
+	: public ManyPicker<State>
+	{
+		template<class Space>
+		State pick(const Space& space) {
+			return space.random();
 		}
-		return states;
-	}
+	};
 
-private:
-	StartingValues() {}
+	//---------------------------------------------------------------------------
 
-};
+	template<typename State>
+	struct RepeatOne
+	: public ManyPicker<State>
+	{
+		void setDefaultState(const State& state) const { _defaultState = state; }
 
+		template<class Space>
+		const State& pick(PTR(Space)) {
+			return _defaultState;
+		}
+
+	private:
+		State _defaultState;
+	};
+
+	//---------------------------------------------------------------------------
+
+	template<typename State>
+	struct RepeatMany
+	: public ManyPicker<State>
+	{
+		RepeatMany() : _index(0) {}
+
+		struct EmptyValueListException {};
+
+		void setValues(const std::vector<State>& states) {
+			_states = states;
+		}
+
+		template<class Space>
+		const State& pick(PTR(Space)) {
+			if(_states.size() == 0) {
+				throw EmptyValueListException();
+			}
+			const State& state = _states[_index];
+			_index = (_index + 1) % _states.size();
+			return state;
+		}
+
+	private:
+		size_t _index;
+		std::vector<State> _states;
+	};
+
+	//---------------------------------------------------------------------------
+
+	template<typename State>
+	struct OneWithNoise
+	: public ManyPicker<State>
+	{
+		void setValue(const State& state) {
+			_state = state;
+		}
+
+		void setNoise(const std::vector<typename State::ScalarType>& noise) {
+			_noise = noise;
+		}
+
+		template<class Space>
+		State pick(const Space& space) {
+			return space.random(_state, _noise);
+		}
+
+	private:
+		State _state;
+		std::vector<typename State::ScalarType> _noise;
+	};
+
+	//---------------------------------------------------------------------------
+
+}
+//---------------------------------------------------------------------------
 #endif

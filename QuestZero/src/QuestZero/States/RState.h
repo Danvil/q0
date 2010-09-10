@@ -126,6 +126,10 @@ public:
 		return State(mean);
 	}
 
+	static State Mean(const std::vector<State>& states) {
+		return WeightedSum(std::vector<K>(states.size(), (K)1), states);
+	}
+
 };
 
 #include "../RandomNumbers.h"

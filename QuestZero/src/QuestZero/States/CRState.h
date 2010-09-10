@@ -114,6 +114,10 @@ public:
 		return c;
 	}
 
+	static State Mean(const std::vector<State>& states) {
+		return WeightedSum(std::vector<K>(states.size(), (K)1), states);
+	}
+
 };
 
 template<typename K, int N_CAT, int N_ROT>

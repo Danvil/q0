@@ -12,10 +12,9 @@
 #include <iostream>
 
 template<typename State>
-class ProgressAndBestToConsoleTracer
+struct ProgressAndBestToConsoleTracer
 : public ITracer<State>
 {
-public:
 	void trace(int progress, int total, const TSampleSet<State>& samples) {
 		std::cout << "Optimization Progress: " << progress << "/" << total << ", best=" << samples.best() << std::endl;
 	}

@@ -9,11 +9,11 @@
 #define QUESTZERO_TRACER_NOTRACER_H_
 
 #include "../ITracer.h"
+
 template<typename State>
-class NoTracer
+struct NoTracer
 : public ITracer<State>
 {
-public:
 	void trace(int progress, int total, const TSampleSet<State>& samples) {}
 };
 
