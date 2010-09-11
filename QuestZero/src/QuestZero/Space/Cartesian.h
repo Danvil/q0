@@ -22,15 +22,13 @@ namespace Cartesian {
 
 	namespace Operations
 	{
-		template<typename State>
+		template<typename State, typename S = typename State::ScalarType>
 		struct Linear
 		{
-			typedef typename State::ScalarType K;
-
 			struct WeightedSumException {};
 
-			K distance(const State& a, const State& b) const {
-				return Danvil::ctLinAlg::Distance(a, b);
+			double distance(const State& a, const State& b) const {
+				return (double)Danvil::ctLinAlg::Distance(a, b);
 			}
 
 			State inverse(const State& a) const {
@@ -45,14 +43,17 @@ namespace Cartesian {
 				return compose(a, inverse(b));
 			}
 
+			template<typename K>
 			State weightedSum(K f1, const State& s1, K f2, const State& s2) const {
-				return f1 * s1 + f2 * s2;
+				return (S)f1 * s1 + (S)f2 * s2;
 			}
 
+			template<typename K>
 			State weightedSum(K f1, const State& s1, K f2, const State& s2, K f3, const State& s3) const {
-				return f1 * s1 + f2 * s2 + f3 * s3;
+				return (S)f1 * s1 + (S)f2 * s2 + (S)f3 * s3;
 			}
 
+			template<typename K>
 			State weightedSum(const std::vector<K>& factors, const std::vector<State>& states) const {
 				if(factors.size() != states.size()) {
 					// Number of factors and states must be equal!
@@ -64,7 +65,7 @@ namespace Cartesian {
 				}
 				State c = factors[0] * states[0];
 				for(size_t i=1; i<states.size(); i++) {
-					c += factors[i] * states[i];
+					c += (S)factors[i] * states[i];
 				}
 				return c;
 			}
@@ -82,7 +83,7 @@ namespace Cartesian {
 		template<typename State>
 		struct Box
 		{
-			typedef typename State::ScalarType K;
+			typedef double K;
 
 			struct InvalidNoiseVectorException {};
 
@@ -142,6 +143,62 @@ namespace Cartesian {
 
 		protected:
 			~Box() {}
+		};
+
+		// TODO: allow states with variable dimension?
+		template<typename State>
+		struct Interval
+		{
+			struct InvalidNoiseVectorException {};
+
+			Interval() {}
+
+			Interval(const State& min, const State& max)
+			: _min(min),
+			  _max(max) {}
+
+			void setDomainRange(const State& range) {
+				_min = -range;
+				_max = range;
+			}
+
+			void setDomainMin(const State& min) {
+				_min = min;
+			}
+
+			void setDomainMax(const State& max) {
+				_max = max;
+			}
+
+			size_t dimension() const {
+				return 1;
+			}
+
+			State project(const State& s) const {
+				return Danvil::clamped(s, _min, _max);
+			}
+
+			State random() const {
+				return RandomV(_min, _max);
+			}
+
+			State random(const State& center, const std::vector<double>& noise) {
+				if(noise.size() != 1) {
+					throw InvalidNoiseVectorException();
+				}
+				State noise_range = noise[0];
+				return project(this->compose(center, RandomV(-noise_range, noise_range)));
+			}
+
+		private:
+			static State RandomV(const State& min, const State& max) {
+				return RandomNumbers::S.random(min, max);
+			}
+
+			State _min, _max;
+
+		protected:
+			~Interval() {}
 		};
 	}
 

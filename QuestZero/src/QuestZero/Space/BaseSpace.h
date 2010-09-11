@@ -27,7 +27,7 @@ struct BaseSpace
 {
 	typedef _State State;
 
-	typedef typename State::ScalarType K;
+	typedef double K;
 
 	/** Distance between two states */
 	K distance(const State& a, const State& b) const {
