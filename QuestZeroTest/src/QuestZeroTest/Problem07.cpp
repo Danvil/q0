@@ -1,12 +1,11 @@
 /*
- * Problem05.cpp
+ * Problem07.cpp
  *
  *  Created on: Sep 11, 2010
  *      Author: david
  */
 
 #include "Test.h"
-#include "Benchmarks/PointCloudRegistration.h"
 #include <QuestZero/Space/Cartesian.h>
 #include <QuestZero/Space/SO3.h>
 #include <QuestZero/Space/TypelistSpace.h>
@@ -18,17 +17,19 @@
 using std::cout;
 using std::endl;
 
-namespace Problem05
+namespace Problem07
 {
 
-	typedef Danvil::ctLinAlg::Vec3<double> state0;
+	typedef Danvil::ctLinAlg::Vec3f state0;
 	typedef Danvil::ctLinAlg::TQuaternion<double> state1;
-	typedef LOKI_TYPELIST_2(state0,state1) state_types;
+	typedef float state2;
+	typedef LOKI_TYPELIST_3(state0,state1,state2) state_types;
 	typedef Spaces::TypelistState<state_types> state;
 
 	typedef Spaces::Cartesian::CartesianSpace<state0> space0;
 	typedef Spaces::SO3::SO3Space<double> space1;
-	typedef LOKI_TYPELIST_2(space0,space1) space_types;
+	typedef Spaces::Cartesian::CartesianSpace<state2, Spaces::Cartesian::Operations::Linear<state2,float>, Spaces::Cartesian::Domains::Interval<state2> > space2;
+	typedef LOKI_TYPELIST_3(space0,space1,space2) space_types;
 	typedef Spaces::TypelistSpace<space_types, state> space;
 
 	typedef FunctionFromDelegate<state> function;
@@ -36,31 +37,25 @@ namespace Problem05
 	space FactorSpace() {
 		space myspace;
 		myspace.space<0>().setDomainRange(state0(3,4,5));
+		myspace.space<2>().setDomainRange(10);
 		return myspace;
 	}
 
-	class RegistrationFunction
-	: public IFunction<state>,
-	  public Benchmarks::PointCloudRegistration<double>
+	double sample02(const state& s)
 	{
-	public:
-		RegistrationFunction(size_t n)
-		: Benchmarks::PointCloudRegistration<double>(n) {}
+		state0 s1 = s.part<0>();
+		state1 s2 = s.part<1>();
+		state2 s3 = s.part<2>();
+		return sqrt(s1.x*s1.x + s1.y*s1.y + s1.z*s1.z) + Danvil::abs(s2.w) + Danvil::abs(s2.x) + Danvil::abs(s2.y) + Danvil::abs(s2.z) + Danvil::abs(s3);
+	}
 
-		double operator()(const state& state) {
-			return fit(state.part<1>().rotation(), state.part<0>());
-		}
-	};
-
-	typedef RegistrationFunction Function;
-
-	PTR(Function) FactorFunction() {
-		return Danvil::Ptr(new RegistrationFunction(100));
+	PTR(function) FactorFunction() {
+		return Danvil::Ptr(new function(boost::bind(&sample02, _1)));
 	}
 
 	void run()
 	{
-		cout << "----- Registration w. position (TypelistSpace) -----" << endl;
+		cout << "----- TypelistSpace -----" << endl;
 		TestProblem(FactorSpace(), FactorFunction());
 	}
 }

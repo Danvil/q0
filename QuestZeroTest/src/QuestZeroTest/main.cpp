@@ -16,6 +16,7 @@ namespace Problem03 { void run(); }
 namespace Problem04 { void run(); }
 namespace Problem05 { void run(); }
 namespace Problem06 { void run(); }
+namespace Problem07 { void run(); }
 
 //---------------------------------------------------------------------------
 
@@ -29,6 +30,7 @@ int main(int argc, char* argv[]) {
 	Problem04::run();
 	Problem05::run();
 	Problem06::run();
+	Problem07::run();
 
 	cout << "Bye QuestZero!" << endl;
 	return 0;
