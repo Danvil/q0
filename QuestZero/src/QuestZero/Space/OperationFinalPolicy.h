@@ -7,24 +7,34 @@
 
 #ifndef OPERATIONFINALPOLICIES_H_
 #define OPERATIONFINALPOLICIES_H_
-
+//---------------------------------------------------------------------------
 namespace Spaces {
+//---------------------------------------------------------------------------
 
 namespace OperationFinalPolicy
 {
 	template<typename State>
 	struct Unprojected
 	{
-		const State& opFinal(const State& state) const { return state; }
+		template<class Space>
+		const State& opFinal(const Space&, const State& state) const { return state; }
+
+	protected:
+		~Unprojected() {}
 	};
 
 	template<typename State>
 	struct Projected
 	{
-		State opFinal(const State& state) const { return project(state); }
+		template<class Space>
+		State opFinal(const Space& space, const State& state) const { return space.project(state); }
+
+	protected:
+		~Projected() {}
 	};
 }
 
+//---------------------------------------------------------------------------
 }
-
+//---------------------------------------------------------------------------
 #endif

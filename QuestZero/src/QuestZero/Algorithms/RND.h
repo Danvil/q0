@@ -16,8 +16,16 @@
 /// <summary>
 /// A optimization algorithm which tries to find the minimum of a function with stupid randomness
 /// </summary>
-template<typename State>
+template<
+	typename State,
+	class StartingStates,
+	class Take,
+	class Tracer
+>
 struct RND
+: public StartingStates,
+  public Take,
+  public Tracer
 {
 	RND() {
 		particleCount = 100;
@@ -26,14 +34,14 @@ struct RND
 
 	virtual ~RND() {}
 
-	const std::string& name() const { return "RND"; }
+	std::string name() const { return "RND"; }
 
 	unsigned int particleCount;
 	unsigned int maxIterations;
 
 	template<class Space, class Function>
 	TSample<State> optimize(const Space& space, PTR(Function) function) {
-		TSampleSet<State> open(this->pick(space, particleCount));
+		TSampleSet<State> open(this->pickMany(space, particleCount));
 		// in every iteration add new particles and delete the worst particles
 		for(unsigned int k = 1; k < maxIterations; k++) {
 			// add new samples by randomly selecting points

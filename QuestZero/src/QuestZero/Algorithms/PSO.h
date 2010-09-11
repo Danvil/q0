@@ -8,14 +8,12 @@
 #ifndef QUESTZERO_ALGORITHMS_PSO_H_
 #define QUESTZERO_ALGORITHMS_PSO_H_
 
-#include "../StartingValues.h"
+#include "../RandomNumbers.h"
+#include "../Sample.h"
 #include "../SampleSet.h"
-#include "../IAlgorithm.h"
 #include <Danvil/Ptr.h>
 #include <vector>
 #include <string>
-#include <stdexcept>
-#include <cassert>
 
 /// <summary>
 /// The particle swarm algorithm
@@ -23,21 +21,25 @@
 /// See http://www.hvass-labs.org/projects/swarmops/
 /// See Particle Swarm Optimization: Developments, Application and Ressources, Eberhart, R. and Shi, Y.
 /// </summary>
-template<typename Problem>
-class PSO
-: public IMinimizationAlgorithm<Problem>
+template<
+	typename State,
+	class StartingStates,
+	class Take,
+	class Tracer
+>
+struct PSO
+: public StartingStates,
+  public Take,
+  public Tracer
 {
-public:
-	typedef typename Problem::State State;
 	typedef TSample<State> Sample;
 	typedef TSampleSet<State> SampleSet;
-	typedef typename Problem::StateOperator Op;
-	typedef typename Problem::Domain Domain;
-	typedef typename Problem::Function Function;
-	typedef typename Problem::Tracer Tracer;
 
-public:
-	std::string name() { return "PSO"; }
+	PSO() {}
+
+	virtual ~PSO() {}
+
+	std::string name() const { return "PSO"; }
 
 	class PSOSettings
 	{
@@ -57,16 +59,11 @@ public:
 
 	PSOSettings settings;
 
-	PSO() {}
-
-	virtual ~PSO() {}
-
-	SampleSet Optimize(PTR(Domain) dom, PTR(Function) fnc, const std::vector<State>& given_initial_states, PTR(Tracer) tracer) {
+	template<class Space, class Function>
+	Sample optimize(const Space& space, PTR(Function) function) {
 		globals.set(settings);
-		globals._domain = dom;
 		// generate start samples
-		std::vector<State> complete_initial_states = StartingValues::Repeat(given_initial_states, settings.particleCount);
-		SampleSet initial(complete_initial_states);
+		SampleSet initial(this->pickMany(space, settings.particleCount));
 		BOOST_FOREACH(const Sample& s, initial.samples()) {
 			particles.push_back(ParticleData(s.state()));
 		}
@@ -75,7 +72,7 @@ public:
 			// construct sample set
 			SampleSet samples = currentSamples();
 			// evaluate samples
-			samples.evaluateUnknown(fnc);
+			samples.evaluateUnknown(function);
 			// update global best
 			const Sample& best = samples.best();
 			if(!globals.isSet() || best.score() < globals.bestScore()) {
@@ -89,15 +86,15 @@ public:
 					p.best = s.state();
 					p.best_score = s.score();
 				}
-				p.Update(globals);
+				p.Update(space, globals);
 			}
 			// trace
-			tracer->trace(k + 1, settings.iterations, bestSamples());
+			this->trace(k + 1, settings.iterations, bestSamples());
 			// check if best satisfy break condition
 //			if(Settings.Finished(k + 1, globals.best_score))
 //				break;
 		}
-		return bestSamples();
+		return this->take(space, bestSamples());
 	}
 
 private:
@@ -151,16 +148,13 @@ private:
 			if(u <= 4) {
 				throw std::runtime_error("psi_personal + psi_global must be > 4!");
 			}
-			return 2 / abs(2 - u - sqrt(u * u - 4 * u));
+			return 2.0 / Danvil::abs(2.0 - u - sqrt(u * u - 4.0 * u));
 		}
 
 	private:
 		bool _isBestSet;
 		State _best;
 		double _best_score;
-
-	public:
-		PTR(Domain) _domain;
 	};
 
 	class ParticleData
@@ -178,17 +172,18 @@ private:
 		State best;
 		double best_score;
 
-		void Update(GlobalData globals) {
+		template<class Space>
+		void Update(const Space& space, const GlobalData& globals) {
 			double fl = globals.omega();
 			double fp = globals.psi_personal() * RandomNumbers::S.random01();
 			double fg = globals.psi_global() * RandomNumbers::S.random01();
-			State dl = Op::Difference(current, last);
-			State dp = Op::Difference(best, current);
-			State dg = Op::Difference(globals.best(), current);
+			State dl = space.difference(current, last);
+			State dp = space.difference(best, current);
+			State dg = space.difference(globals.best(), current);
 			last = current;
-			State delta = Op::WeightedSum(fl, dl, fp, dp, fg, dg);
+			State delta = space.weightedSum(fl, dl, fp, dp, fg, dg);
 			// FIXME we should bound the "velocity" i.e. the maximal distance made in a step
-			current = globals._domain->project(Op::Compose(delta, current));
+			current = space.project(space.compose(delta, current));
 		}
 	};
 

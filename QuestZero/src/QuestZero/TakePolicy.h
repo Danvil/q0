@@ -24,6 +24,9 @@ namespace TakePolicy {
 		const TSample<State>& take(const Space&, const TSampleSet<State>& many) {
 			return many.best();
 		}
+
+	protected:
+		~TakeBest() {}
 	};
 
 	//---------------------------------------------------------------------------
@@ -36,6 +39,9 @@ namespace TakePolicy {
 		TSample<State> take(const Space& space, const TSampleSet<State>& many) {
 			return space.weightedSum(many.scores(), many.states());
 		}
+
+	protected:
+		~TakeMean() {}
 	};
 
 	//---------------------------------------------------------------------------

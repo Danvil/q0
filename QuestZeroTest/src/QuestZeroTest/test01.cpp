@@ -8,6 +8,7 @@
 #include <QuestZero/Optimization.h>
 #include <QuestZero/IFunction.h>
 #include <QuestZero/Algorithms/RND.h>
+#include <QuestZero/Algorithms/PSO.h>
 #include <QuestZero/Space/Cartesian.h>
 #include <Danvil/LinAlg.h>
 #include <boost/bind.hpp>
@@ -29,7 +30,8 @@ double sphere(const state17d& s)
 	return sum;
 }
 
-typedef Optimization<state17d, RND<state17d> > rndsolver;
+typedef Optimization<state17d, RND> rnd_solver;
+typedef Optimization<state17d, PSO> pso_solver;
 
 void foo()
 {
@@ -40,7 +42,9 @@ void foo()
 
 	PTR(fnc17d) myfnc(new fnc17d(boost::bind(&sphere, _1)));
 
-	rndsolver x;
+	rnd_solver x;
 
 	state17d result = x.optimize<space17d,fnc17d>(myspace, myfnc).state();
+
+	TSample<state17d> u = Optimization<state17d, PSO>::Optimize(myspace, myfnc);
 }

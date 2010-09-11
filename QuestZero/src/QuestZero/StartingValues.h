@@ -11,41 +11,46 @@
 #include <Danvil/Ptr.h>
 #include <vector>
 //---------------------------------------------------------------------------
-namespace StatePicker {
+namespace StartingStatePicker {
 
 	//---------------------------------------------------------------------------
 
-	template<typename State>
+	template<typename State, template <typename> class SinglePicker>
 	struct ManyPicker
+	: public SinglePicker<State>
 	{
 		template<class Space>
-		std::vector<State> pick(const Space& space, unsigned int n) {
+		std::vector<State> pickMany(const Space& space, unsigned int n) {
 			std::vector<State> states;
 			states.reserve(n);
 			for(unsigned int i=0; i<n; i++) {
-				states.push_back(pick(space));
+				states.push_back(this->pick(space));
 			}
 			return states;
 		}
+
+	protected:
+		~ManyPicker() {}
 	};
 
 	//---------------------------------------------------------------------------
 
 	template<typename State>
 	struct RandomPicker
-	: public ManyPicker<State>
 	{
 		template<class Space>
 		State pick(const Space& space) {
 			return space.random();
 		}
+
+	protected:
+		~RandomPicker() {}
 	};
 
 	//---------------------------------------------------------------------------
 
 	template<typename State>
 	struct RepeatOne
-	: public ManyPicker<State>
 	{
 		void setDefaultState(const State& state) const { _defaultState = state; }
 
@@ -56,13 +61,15 @@ namespace StatePicker {
 
 	private:
 		State _defaultState;
+
+	protected:
+		~RepeatOne() {}
 	};
 
 	//---------------------------------------------------------------------------
 
 	template<typename State>
 	struct RepeatMany
-	: public ManyPicker<State>
 	{
 		RepeatMany() : _index(0) {}
 
@@ -85,13 +92,15 @@ namespace StatePicker {
 	private:
 		size_t _index;
 		std::vector<State> _states;
+
+	protected:
+		~RepeatMany() {}
 	};
 
 	//---------------------------------------------------------------------------
 
 	template<typename State>
 	struct OneWithNoise
-	: public ManyPicker<State>
 	{
 		void setValue(const State& state) {
 			_state = state;
@@ -109,6 +118,9 @@ namespace StatePicker {
 	private:
 		State _state;
 		std::vector<typename State::ScalarType> _noise;
+
+	protected:
+		~OneWithNoise() {}
 	};
 
 	//---------------------------------------------------------------------------

@@ -14,18 +14,22 @@
 //---------------------------------------------------------------------------
 
 template<
-	typename State,
-	class Algorithm,
-	class StartingStates = StatePicker::RandomPicker<State>,
-	class Take = TakePolicy::TakeBest<State>,
-	class Tracer = NoTracer<State>
+	typename _State,
+	template<typename,class,class,class> class Algorithm,
+	template<typename> class SinglePicker = StartingStatePicker::RandomPicker,
+	template<typename> class Take = TakePolicy::TakeBest,
+	template<typename> class Tracer = NoTracer
 >
 struct Optimization
-: public Algorithm,
-  public StartingStates,
-  public Take,
-  public Tracer
+: public Algorithm<_State, StartingStatePicker::ManyPicker<_State, SinglePicker>, Take<_State>, Tracer<_State> >
 {
+	typedef _State State;
+
+	template<class Space, class Function>
+	static TSample<State> Optimize(const Space& space, PTR(Function) function) {
+		Optimization<State, Algorithm, SinglePicker, Take, Tracer> x;
+		return x.optimize(space, function);
+	}
 };
 
 //---------------------------------------------------------------------------

@@ -14,13 +14,11 @@
 
 namespace Benchmarks {
 
-template<typename K, int N>
-class Cartesian
+template<typename V>
+struct Cartesian
 {
-public:
-	typedef Danvil::ctLinAlg::Vec<K, N> V;
+	typedef typename V::ScalarType K;
 
-public:
 	/// <summary>
 	/// The function f(x) = 0
 	/// </summary>
