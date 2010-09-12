@@ -15,9 +15,16 @@ template<typename State>
 struct ProgressAndBestToConsoleTracer
 : public ITracePolicy<State>
 {
-	void trace(int progress, int total, const TSampleSet<State>& samples) {
-		std::cout << "Optimization Progress: " << progress << "/" << total << ", best=" << samples.best() << std::endl;
+	ProgressAndBestToConsoleTracer()
+	: _count(1)
+	{}
+
+	void trace(const TSampleSet<State>& samples) {
+		std::cout << "Optimization Progress (" << _count++ << "): best=" << samples.best() << std::endl;
 	}
+
+private:
+	unsigned long _count;
 };
 
 #endif

@@ -23,12 +23,14 @@
 /// </summary>
 template<
 	typename State,
+	class Target,
 	class StartingStates,
 	class Take,
 	class Tracer
 >
 struct PSO
-: public StartingStates,
+: public Target,
+  public StartingStates,
   public Take,
   public Tracer
 {
@@ -50,7 +52,6 @@ struct PSO
 			factor_personal = 2.05;
 			factor_global = 2.05;
 		}
-		unsigned int iterations;
 		unsigned int particleCount;
 		double factor_velocity;
 		double factor_personal;
@@ -68,7 +69,7 @@ struct PSO
 			particles.push_back(ParticleData(s.state()));
 		}
 		// iterate
-		for(unsigned int k = 0; k < settings.iterations; k++) {
+		while(true) {
 			// construct sample set
 			SampleSet samples = currentSamples();
 			// evaluate samples
@@ -89,10 +90,11 @@ struct PSO
 				p.Update(space, globals);
 			}
 			// trace
-			this->trace(k + 1, settings.iterations, bestSamples());
-			// check if best satisfy break condition
-//			if(Settings.Finished(k + 1, globals.best_score))
-//				break;
+			this->trace(bestSamples());
+			// check if break condition is satisfied
+			if(this->reached(globals.bestScore())) {
+				break;
+			}
 		}
 		return this->take(space, bestSamples());
 	}

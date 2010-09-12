@@ -6,7 +6,7 @@
 template<typename State>
 struct ITracePolicy
 {
-	virtual void trace(int progress, int total, const TSampleSet<State>& samples) = 0;
+	virtual void trace(const TSampleSet<State>& samples) = 0;
 };
 
 #endif

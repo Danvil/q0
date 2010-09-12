@@ -35,19 +35,26 @@ void TestAlgo(ALGO algo, const Space& space, const Function& function)
 	template<typename State> struct MyTracer : NoTracer<State> {};
 #endif
 
+//#define FIXED_CHECKS
+#ifdef FIXED_CHECKS
+	typedef TargetPolicy::FixedChecks<double,unsigned long> TargetChecker;
+#else
+	typedef TargetPolicy::ScoreTargetWithMaxChecks<double,unsigned long> TargetChecker;
+#endif
+
 template<class Space, class Function>
 void TestProblem(const Space& space, const Function& function)
 {
 	cout << "----- RND -----" << endl;
-	Optimization<typename Space::State, RND, InitialStatesPolicy::RandomPicker, TakePolicy::TakeBest, MyTracer> algoRnd;
+	Optimization<typename Space::State, RND, TargetChecker, InitialStatesPolicy::RandomPicker, TakePolicy::TakeBest, MyTracer> algoRnd;
+	algoRnd.setMaxCount(100);
 	algoRnd.particleCount = 1000;
-	algoRnd.maxIterations = 20;
 	TestAlgo(algoRnd, space, function);
 
 	cout << "----- PSO -----" << endl;
-	Optimization<typename Space::State, PSO, InitialStatesPolicy::RandomPicker, TakePolicy::TakeBest, MyTracer> algoPso;
+	Optimization<typename Space::State, PSO, TargetChecker, InitialStatesPolicy::RandomPicker, TakePolicy::TakeBest, MyTracer> algoPso;
+	algoPso.setMaxCount(100);
 	algoPso.settings.particleCount = 1000;
-	algoPso.settings.iterations = 20;
 	TestAlgo(algoPso, space, function);
 
 	cout << endl;

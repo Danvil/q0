@@ -18,18 +18,19 @@
 /// </summary>
 template<
 	typename State,
+	class Target,
 	class StartingStates,
 	class Take,
 	class Tracer
 >
 struct RND
-: public StartingStates,
+: public Target,
+  public StartingStates,
   public Take,
   public Tracer
 {
 	RND() {
 		particleCount = 100;
-		maxIterations = 10;
 	}
 
 	virtual ~RND() {}
@@ -37,13 +38,12 @@ struct RND
 	std::string name() const { return "RND"; }
 
 	unsigned int particleCount;
-	unsigned int maxIterations;
 
 	template<class Space, class Function>
 	TSample<State> optimize(const Space& space, const Function& function) {
 		TSampleSet<State> open(this->pickMany(space, particleCount));
 		// in every iteration add new particles and delete the worst particles
-		for(unsigned int k = 1; k < maxIterations; k++) {
+		while(true) {
 			// add new samples by randomly selecting points
 			int target_add = Danvil::max((size_t)0, 2 * particleCount - open.count());
 			open.add(space.randomMany(target_add));
@@ -53,10 +53,11 @@ struct RND
 			// check if the best in this chunk is better than the best so far
 			open = open.best(particleCount);
 			// update progress bar
-			this->trace(k + 1, maxIterations, open);
-			// check if best satisfy break condition
-//			if(Settings.Finished(k + 1, open.Best().Score))
-//				break;
+			this->trace(open);
+			// check if break condition is satisfied
+			if(this->reached(open.best().score())) {
+				break;
+			}
 		}
 		// return last best samples
 		return this->take(space, open);

@@ -14,7 +14,7 @@ template<typename State>
 struct NoTracer
 : public ITracePolicy<State>
 {
-	void trace(int progress, int total, const TSampleSet<State>& samples) {}
+	void trace(const TSampleSet<State>&) {}
 };
 
 #endif
