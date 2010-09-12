@@ -6,10 +6,10 @@
  */
 
 #include "Test.h"
-#include <QuestZero/Space/Cartesian.h>
-#include <QuestZero/Space/SO3.h>
-#include <QuestZero/Space/TypelistSpace.h>
-#include <QuestZero/IFunction.h>
+#include <QuestZero/Spaces/Cartesian.h>
+#include <QuestZero/Spaces/SO3.h>
+#include <QuestZero/Spaces/TypelistSpace.h>
+#include <QuestZero/Optimization/Functions.h>
 #include <Danvil/LinAlg.h>
 #include <Danvil/Tools/Small.h>
 #include <boost/bind.hpp>
@@ -32,8 +32,6 @@ namespace Problem07
 	typedef LOKI_TYPELIST_3(space0,space1,space2) space_types;
 	typedef Spaces::TypelistSpace<space_types, state> space;
 
-	typedef FunctionFromDelegate<state> function;
-
 	space FactorSpace() {
 		space myspace;
 		myspace.space<0>().setDomainRange(state0(3,4,5));
@@ -49,8 +47,12 @@ namespace Problem07
 		return sqrt(s1.x*s1.x + s1.y*s1.y + s1.z*s1.z) + Danvil::abs(s2.w) + Danvil::abs(s2.x) + Danvil::abs(s2.y) + Danvil::abs(s2.z) + Danvil::abs(s3);
 	}
 
-	PTR(function) FactorFunction() {
-		return Danvil::Ptr(new function(boost::bind(&sample02, _1)));
+	typedef Functions::BoostFunctionSingleWrapper<state> function;
+
+	function FactorFunction() {
+		function f;
+		f.setFunctor(boost::bind(&sample02, _1));
+		return f;
 	}
 
 	void run()

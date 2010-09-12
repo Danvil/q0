@@ -7,11 +7,11 @@
 
 #include "Test.h"
 #include "Benchmarks/PointCloudRegistration.h"
-#include <QuestZero/Space/Cartesian.h>
-#include <QuestZero/Space/SO3.h>
-#include <QuestZero/Space/TypelistSpace.h>
-#include <QuestZero/Space/Multiplier.h>
-#include <QuestZero/IFunction.h>
+#include <QuestZero/Spaces/Cartesian.h>
+#include <QuestZero/Spaces/SO3.h>
+#include <QuestZero/Spaces/TypelistSpace.h>
+#include <QuestZero/Spaces/Multiplier.h>
+#include <QuestZero/Optimization/Functions.h>
 #include <Danvil/LinAlg.h>
 #include <Danvil/Tools/Small.h>
 #include <boost/bind.hpp>
@@ -37,17 +37,24 @@ namespace Problem08
 	typedef LOKI_TYPELIST_2(space0,space1) space_types;
 	typedef Spaces::TypelistSpace<space_types, state> space;
 
+	space FactorSpace() {
+		space myspace;
+		for(unsigned int i=0; i<N; i++) {
+			myspace.space<0>()[i].setDomainRange(base_state_0(3,4,5));
+		}
+		return myspace;
+	}
+
 	class MultiRegistrationFunctionWPos
-	: public IFunction<state>
 	{
 	public:
-		MultiRegistrationFunctionWPos(size_t n) {
+		void createProblem(size_t n) {
 			for(unsigned int i=0; i<N; i++) {
 				r[i] = Danvil::Ptr(new Benchmarks::PointCloudRegistration<double>(N));
 			}
 		}
 
-		double operator()(const state& s) {
+		double operator()(const state& s) const {
 			double sum = 0;
 			for(unsigned int i=0; i<N; i++) {
 				double x = r[i]->fit(s.part<1>()[i].rotation(), s.part<0>()[i]);
@@ -60,18 +67,12 @@ namespace Problem08
 		PTR(Benchmarks::PointCloudRegistration<double>) r[N];
 	};
 
-	typedef MultiRegistrationFunctionWPos function;
+	typedef Functions::AddParallel<state,MultiRegistrationFunctionWPos> function;
 
-	space FactorSpace() {
-		space myspace;
-		for(unsigned int i=0; i<N; i++) {
-			myspace.space<0>()[i].setDomainRange(base_state_0(3,4,5));
-		}
-		return myspace;
-	}
-
-	PTR(function) FactorFunction() {
-		return Danvil::Ptr(new function(25));
+	function FactorFunction() {
+		function f;
+		f.createProblem(25);
+		return f;
 	}
 
 	void run()

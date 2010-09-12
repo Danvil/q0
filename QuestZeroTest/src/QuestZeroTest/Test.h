@@ -8,10 +8,10 @@
 #ifndef TEST_H_
 #define TEST_H_
 
-#include <QuestZero/Tracer/ProgressAndBestToConsoleTracer.h>
-#include <QuestZero/Algorithms/RND.h>
-#include <QuestZero/Algorithms/PSO.h>
-#include <QuestZero/Optimization.h>
+#include <QuestZero/Policies/TracePolicy/ProgressAndBestToConsoleTracer.h>
+#include <QuestZero/Optimization/Algorithms/RND.h>
+#include <QuestZero/Optimization/Algorithms/PSO.h>
+#include <QuestZero/Optimization/Optimization.h>
 #include <Danvil/Tools/Timer.h>
 #include <Danvil/Ptr.h>
 #include <iostream>
@@ -19,7 +19,7 @@ using std::cout;
 using std::endl;
 
 template<typename ALGO, class Space, class Function>
-void TestAlgo(ALGO algo, const Space& space, const PTR(Function)& function)
+void TestAlgo(ALGO algo, const Space& space, const Function& function)
 {
 	Danvil::Timer timer;
 	timer.start();
@@ -36,16 +36,16 @@ void TestAlgo(ALGO algo, const Space& space, const PTR(Function)& function)
 #endif
 
 template<class Space, class Function>
-void TestProblem(const Space& space, const PTR(Function)& function)
+void TestProblem(const Space& space, const Function& function)
 {
 	cout << "----- RND -----" << endl;
-	Optimization<typename Space::State, RND, StartingStatePicker::RandomPicker, TakePolicy::TakeBest, MyTracer> algoRnd;
+	Optimization<typename Space::State, RND, InitialStatesPolicy::RandomPicker, TakePolicy::TakeBest, MyTracer> algoRnd;
 	algoRnd.particleCount = 1000;
 	algoRnd.maxIterations = 20;
 	TestAlgo(algoRnd, space, function);
 
 	cout << "----- PSO -----" << endl;
-	Optimization<typename Space::State, PSO, StartingStatePicker::RandomPicker, TakePolicy::TakeBest, MyTracer> algoPso;
+	Optimization<typename Space::State, PSO, InitialStatesPolicy::RandomPicker, TakePolicy::TakeBest, MyTracer> algoPso;
 	algoPso.settings.particleCount = 1000;
 	algoPso.settings.iterations = 20;
 	TestAlgo(algoPso, space, function);

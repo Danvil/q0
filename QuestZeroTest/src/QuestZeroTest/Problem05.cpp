@@ -7,10 +7,10 @@
 
 #include "Test.h"
 #include "Benchmarks/PointCloudRegistration.h"
-#include <QuestZero/Space/Cartesian.h>
-#include <QuestZero/Space/SO3.h>
-#include <QuestZero/Space/TypelistSpace.h>
-#include <QuestZero/IFunction.h>
+#include <QuestZero/Spaces/Cartesian.h>
+#include <QuestZero/Spaces/SO3.h>
+#include <QuestZero/Spaces/TypelistSpace.h>
+#include <QuestZero/Optimization/Functions.h>
 #include <Danvil/LinAlg.h>
 #include <Danvil/Tools/Small.h>
 #include <boost/bind.hpp>
@@ -31,31 +31,26 @@ namespace Problem05
 	typedef LOKI_TYPELIST_2(space0,space1) space_types;
 	typedef Spaces::TypelistSpace<space_types, state> space;
 
-	typedef FunctionFromDelegate<state> function;
-
 	space FactorSpace() {
 		space myspace;
 		myspace.space<0>().setDomainRange(state0(3,4,5));
 		return myspace;
 	}
 
-	class RegistrationFunction
-	: public IFunction<state>,
-	  public Benchmarks::PointCloudRegistration<double>
+	struct RegistrationFunction
+	: public Benchmarks::PointCloudRegistration<double>
 	{
-	public:
-		RegistrationFunction(size_t n)
-		: Benchmarks::PointCloudRegistration<double>(n) {}
-
-		double operator()(const state& state) {
+		double operator()(const state& state) const {
 			return fit(state.part<1>().rotation(), state.part<0>());
 		}
 	};
 
-	typedef RegistrationFunction Function;
+	typedef Functions::AddParallel<state, RegistrationFunction> function;
 
-	PTR(Function) FactorFunction() {
-		return Danvil::Ptr(new RegistrationFunction(100));
+	function FactorFunction() {
+		function f;
+		f.createRandomProblem(100);
+		return f;
 	}
 
 	void run()

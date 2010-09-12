@@ -7,9 +7,9 @@
 
 #include "Test.h"
 #include "Benchmarks/PointCloudRegistration.h"
-#include <QuestZero/Space/SO3.h>
-#include <QuestZero/Space/Multiplier.h>
-#include <QuestZero/IFunction.h>
+#include <QuestZero/Spaces/SO3.h>
+#include <QuestZero/Spaces/Multiplier.h>
+#include <QuestZero/Optimization/Functions.h>
 #include <Danvil/LinAlg.h>
 #include <Danvil/Tools/Small.h>
 #include <boost/bind.hpp>
@@ -31,17 +31,15 @@ namespace Problem06
 		return space();
 	}
 
-	class MultiRegistrationFunction
-	: public IFunction<state>
+	struct MultiRegistrationFunction
 	{
-	public:
-		MultiRegistrationFunction(size_t n) {
+		void createProblem(size_t n) {
 			for(unsigned int i=0; i<N; i++) {
 				r[i] = Danvil::Ptr(new Benchmarks::PointCloudRegistration<double>(N));
 			}
 		}
 
-		double operator()(const state& s) {
+		double operator()(const state& s) const {
 			double sum = 0;
 			for(unsigned int i=0; i<N; i++) {
 				double x = r[i]->fit(s[i].rotation());
@@ -54,10 +52,12 @@ namespace Problem06
 		PTR(Benchmarks::PointCloudRegistration<double>) r[N];
 	};
 
-	typedef MultiRegistrationFunction function;
+	typedef Functions::AddParallel<state, MultiRegistrationFunction> function;
 
-	PTR(function) FactorFunction() {
-		return Danvil::Ptr(new function(25));
+	function FactorFunction() {
+		function f;
+		f.createProblem(25);
+		return f;
 	}
 
 	void run()

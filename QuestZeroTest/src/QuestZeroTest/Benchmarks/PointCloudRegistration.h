@@ -8,7 +8,7 @@
 #ifndef QUESTZERO_BENCHMARKS_POINTCLOUDREGISTRATION_H_
 #define QUESTZERO_BENCHMARKS_POINTCLOUDREGISTRATION_H_
 
-#include "QuestZero/RandomNumbers.h"
+#include "QuestZero/Common/RandomNumbers.h"
 #include <Danvil/LinAlg.h>
 #include <Danvil/LinAlg/RotationTools.h>
 #include <vector>
@@ -37,6 +37,9 @@ public:
 	size_t pointCount() const { return original.size(); }
 
 public:
+	PointCloudRegistration()
+	{}
+
 	PointCloudRegistration(size_t point_count) {
 		createRandomProblem(point_count);
 	}
@@ -64,7 +67,7 @@ public:
 	}
 
 public:
-	double fit(const M& R) {
+	double fit(const M& R) const {
 		double sum = 0;
 		for(size_t i=0; i<pointCount(); i++) {
 			sum += Danvil::ctLinAlg::Distance(R * original[i], target[i]);
@@ -72,7 +75,7 @@ public:
 		return sqrt(sum) / (double)pointCount();
 	}
 
-	double fit(const M& R, const V& t) {
+	double fit(const M& R, const V& t) const {
 		double sum = 0;
 		for(size_t i=0; i<pointCount(); i++) {
 			sum += Danvil::ctLinAlg::Distance(R * original[i] + t, target[i]);
