@@ -1,10 +1,10 @@
 #ifndef QUEST_ZERO_ITRACER_H_
 #define QUEST_ZERO_ITRACER_H_
 
-#include "SampleSet.h"
+#include "QuestZero/Common/SampleSet.h"
 
 template<typename State>
-struct ITracer
+struct ITracePolicy
 {
 	virtual void trace(int progress, int total, const TSampleSet<State>& samples) = 0;
 };

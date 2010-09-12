@@ -284,17 +284,17 @@ public:
 
 	/** Evaluates only unknown samples */
 	template<class Function>
-	void evaluateUnknown(PTR(Function) f) {
+	void evaluateUnknown(const Function& f) {
 		std::vector<size_t> unknown_ids;
 		std::vector<State> unknown_states = this->statesWithUnknownScore(unknown_ids);
-		std::vector<double> scores = f->evaluateParallel(unknown_states);
+		std::vector<double> scores = f(unknown_states);
 		this->setScores(scores, unknown_ids);
 	}
 
 	/** Evaluates all samples (also if the sample score is already known) */
 	template<class Function>
-	void evaluateAll(PTR(Function) f) {
-		std::vector<double> scores = f->evaluateParallel(this->states());
+	void evaluateAll(const Function& f) {
+		std::vector<double> scores = f(this->states());
 		this->setScores(scores);
 	}
 

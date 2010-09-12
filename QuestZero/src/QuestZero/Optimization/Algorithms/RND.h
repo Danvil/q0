@@ -8,8 +8,8 @@
 #ifndef ALGORITHMS_RND_H
 #define ALGORITHMS_RND_H
 
-#include "../Sample.h"
-#include "../SampleSet.h"
+#include "QuestZero/Common/Sample.h"
+#include "QuestZero/Common/SampleSet.h"
 #include <Danvil/Tools/Small.h>
 #include <string>
 
@@ -40,7 +40,7 @@ struct RND
 	unsigned int maxIterations;
 
 	template<class Space, class Function>
-	TSample<State> optimize(const Space& space, PTR(Function) function) {
+	TSample<State> optimize(const Space& space, const Function& function) {
 		TSampleSet<State> open(this->pickMany(space, particleCount));
 		// in every iteration add new particles and delete the worst particles
 		for(unsigned int k = 1; k < maxIterations; k++) {

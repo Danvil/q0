@@ -8,11 +8,11 @@
 #ifndef QUESTZERO_TRACER_NOTRACER_H_
 #define QUESTZERO_TRACER_NOTRACER_H_
 
-#include "../ITracer.h"
+#include "QuestZero/Policies/TracePolicy.h"
 
 template<typename State>
 struct NoTracer
-: public ITracer<State>
+: public ITracePolicy<State>
 {
 	void trace(int progress, int total, const TSampleSet<State>& samples) {}
 };

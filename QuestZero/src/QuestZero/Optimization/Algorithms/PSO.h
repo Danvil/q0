@@ -8,10 +8,10 @@
 #ifndef QUESTZERO_ALGORITHMS_PSO_H_
 #define QUESTZERO_ALGORITHMS_PSO_H_
 
-#include "../RandomNumbers.h"
-#include "../Sample.h"
-#include "../SampleSet.h"
-#include <Danvil/Ptr.h>
+#include "QuestZero/Common/RandomNumbers.h"
+#include "QuestZero/Common/Sample.h"
+#include "QuestZero/Common/SampleSet.h"
+#include <boost/foreach.hpp>
 #include <vector>
 #include <string>
 
@@ -60,7 +60,7 @@ struct PSO
 	PSOSettings settings;
 
 	template<class Space, class Function>
-	Sample optimize(const Space& space, PTR(Function) function) {
+	Sample optimize(const Space& space, const Function& function) {
 		globals.set(settings);
 		// generate start samples
 		SampleSet initial(this->pickMany(space, settings.particleCount));

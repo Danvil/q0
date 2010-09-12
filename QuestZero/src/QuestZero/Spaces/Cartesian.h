@@ -9,7 +9,7 @@
 #define SPACE_CARTESIAN_H_
 //---------------------------------------------------------------------------
 #include "BaseSpace.h"
-#include "../RandomNumbers.h"
+#include "QuestZero/Common/RandomNumbers.h"
 #include <Danvil/LinAlg.h>
 #include <Danvil/Memops/Copy.h>
 #include <vector>

@@ -8,8 +8,8 @@
 #ifndef QUESTZERO_TAKEPOLICY_H
 #define QUESTZERO_TAKEPOLICY_H
 //---------------------------------------------------------------------------
-#include "Sample.h"
-#include "SampleSet.h"
+#include "QuestZero/Common/Sample.h"
+#include "QuestZero/Common/SampleSet.h"
 //---------------------------------------------------------------------------
 
 namespace TakePolicy {

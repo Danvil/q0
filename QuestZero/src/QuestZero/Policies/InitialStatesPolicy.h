@@ -1,17 +1,17 @@
 /*
- * StartingStatesPolicy.h
+ * InitialStatesPolicy.h
  *
  *  Created on: Sep 7, 2010
  *      Author: david
  */
 
-#ifndef QUESTZERO_STARTINGSTATESPOLICY_H_
-#define QUESTZERO_STARTINGSTATESPOLICY_H_
+#ifndef QUESTZERO_INITIALSTATESPOLICY_H
+#define QUESTZERO_INITIALSTATESPOLICY_H
 //---------------------------------------------------------------------------
 #include <Danvil/Ptr.h>
 #include <vector>
 //---------------------------------------------------------------------------
-namespace StartingStatePicker {
+namespace InitialStatesPolicy {
 
 	//---------------------------------------------------------------------------
 
