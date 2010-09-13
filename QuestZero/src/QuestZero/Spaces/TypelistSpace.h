@@ -238,7 +238,7 @@ private:
 
 	template<int i>
 	void randomImpl(Loki::Int2Type<i>, State& s, unsigned int start, const State& center, const std::vector<Scalar>& noise) const {
-		unsigned int len = center.template part<i>().dimension();
+		unsigned int len = space<i>().dimension();
 		unsigned int end = start + len;
 		s.template setPart<i>(space<i>().random(center.template part<i>(), std::vector<Scalar>(noise.begin() + start, noise.begin() + end)));
 		randomImpl(Loki::Int2Type<i+1>(), s, end, center, noise);

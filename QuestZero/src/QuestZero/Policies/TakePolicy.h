@@ -8,6 +8,7 @@
 #ifndef QUESTZERO_TAKEPOLICY_H
 #define QUESTZERO_TAKEPOLICY_H
 //---------------------------------------------------------------------------
+#include "QuestZero/Common/ScoreComparer.h"
 #include "QuestZero/Common/Sample.h"
 #include "QuestZero/Common/SampleSet.h"
 //---------------------------------------------------------------------------

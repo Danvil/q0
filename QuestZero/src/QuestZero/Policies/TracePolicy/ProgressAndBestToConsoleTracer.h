@@ -11,7 +11,7 @@
 #include "QuestZero/Policies/TracePolicy.h"
 #include <iostream>
 
-template<typename State>
+template<typename State, class CMP>
 struct ProgressAndBestToConsoleTracer
 : public ITracePolicy<State>
 {
@@ -20,7 +20,7 @@ struct ProgressAndBestToConsoleTracer
 	{}
 
 	void trace(const TSampleSet<State>& samples) {
-		std::cout << "Optimization Progress (" << _count++ << "): best=" << samples.best() << std::endl;
+		std::cout << "Optimization Progress (" << _count++ << "): best=" << samples.template best<CMP>() << std::endl;
 	}
 
 private:

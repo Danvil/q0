@@ -102,11 +102,11 @@ namespace InitialStatesPolicy {
 	template<typename State>
 	struct OneWithNoise
 	{
-		void setValue(const State& state) {
+		void setMeanStartingValue(const State& state) {
 			_state = state;
 		}
 
-		void setNoise(const std::vector<double>& noise) {
+		void setStartingNoise(const std::vector<double>& noise) {
 			_noise = noise;
 		}
 

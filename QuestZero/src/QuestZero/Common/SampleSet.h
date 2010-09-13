@@ -11,26 +11,6 @@
 #include <ostream>
 //---------------------------------------------------------------------------
 
-template<typename State>
-struct BetterMeansSmaller {
-	bool operator()(double a, double b) {
-		return a < b;
-	}
-	bool operator()(const TSample<State>& a, const TSample<State>& b) {
-		return a.score() < b.score();
-	}
-};
-
-template<typename State>
-struct BetterMeansBigger {
-	bool operator()(double a, double b) {
-		return a > b;
-	}
-	bool operator()(const TSample<State>& a, const TSample<State>& b) {
-		return a.score() > b.score();
-	}
-};
-
 /**
  * - Functions 'states()' and 'scores()' copies states/numbers
  * - Function 'best(int)' copies all samples and performs a sort

@@ -33,6 +33,7 @@ private:
 	Time time_;
 };
 
+#include "QuestZero/Common/ScoreComparer.h"
 #include "QuestZero/Common/SampleSet.h"
 #include "QuestZero/Tracking/Solution.h"
 

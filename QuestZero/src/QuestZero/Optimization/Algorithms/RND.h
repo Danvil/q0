@@ -8,6 +8,7 @@
 #ifndef ALGORITHMS_RND_H
 #define ALGORITHMS_RND_H
 
+#include "QuestZero/Common/ScoreComparer.h"
 #include "QuestZero/Common/Sample.h"
 #include "QuestZero/Common/SampleSet.h"
 #include <Danvil/Tools/Small.h>

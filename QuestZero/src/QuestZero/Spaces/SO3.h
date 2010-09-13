@@ -82,7 +82,7 @@ namespace SO3 {
 					// Number of factors and states must be equal!
 					throw WeightedSumException();
 				}
-				return Danvil::ctLinAlg::RotationTools::WeightedMean(states, factors, 1e-3);
+				return Danvil::ctLinAlg::RotationTools::WeightedMean(states, factors, (K)1e-3);
 			}
 
 		protected:
@@ -100,6 +100,8 @@ namespace SO3 {
 		{
 			typedef Danvil::ctLinAlg::TQuaternion<K> State;
 
+			typedef double NoiseType;
+
 			Full() {}
 
 			size_t dimension() const {
@@ -116,8 +118,10 @@ namespace SO3 {
 				return Danvil::ctLinAlg::RotationTools::UniformRandom<K>(&RandomNumbers::Random01);
 			}
 
-			State random(const State& center, const K& noise) const {
-				return center * Danvil::ctLinAlg::RotationTools::UniformRandom<K>(noise, &RandomNumbers::Random01);
+			State random(const State& center, const std::vector<NoiseType>& noise) const {
+				assert(noise.size() == dimension());
+				K d = (K)noise[0];
+				return center * Danvil::ctLinAlg::RotationTools::UniformRandom<K>(d, &RandomNumbers::Random01);
 			}
 
 		protected:

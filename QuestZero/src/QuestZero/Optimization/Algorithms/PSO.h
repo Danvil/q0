@@ -8,6 +8,7 @@
 #ifndef QUESTZERO_ALGORITHMS_PSO_H_
 #define QUESTZERO_ALGORITHMS_PSO_H_
 
+#include "QuestZero/Common/ScoreComparer.h"
 #include "QuestZero/Common/RandomNumbers.h"
 #include "QuestZero/Common/Sample.h"
 #include "QuestZero/Common/SampleSet.h"
