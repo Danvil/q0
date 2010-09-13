@@ -32,6 +32,19 @@ public:
 	  _isKnown(true) {
 	}
 
+	TSample(const TSample& sample)
+	: _state(sample._state),
+	  _score(sample._score),
+	  _isKnown(sample._isKnown) {
+	}
+
+	TSample& operator=(const TSample& sample) {
+		_state = sample._state;
+		_score = sample._score;
+		_isKnown = sample._isKnown;
+		return *this;
+	}
+
 	const State& state() const {
 		return _state;
 	}
@@ -52,6 +65,12 @@ public:
 	void setScore(double score) {
 		_score = score;
 		_isKnown = true;
+	}
+
+	void setState(const State& state) {
+		_state = state;
+		_score = C_UNKNOWN_SCORE;
+		_isKnown = false;
 	}
 
 	void print(std::ostream& os) const {

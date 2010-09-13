@@ -174,7 +174,7 @@ struct Mixed2Space
 		return s;
 	}
 
-	State random(const State& center, const std::vector<K>& noise) {
+	State random(const State& center, const std::vector<K>& noise) const {
 		if(noise.size() != Space1::Dimension + N_ROT) {
 			throw std::runtime_error("Noise vector has invalid length!");
 		}

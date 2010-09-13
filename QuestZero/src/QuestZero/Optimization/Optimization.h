@@ -8,6 +8,7 @@
 #ifndef QUESTZERO_OPTIMIZATION_H_
 #define QUESTZERO_OPTIMIZATION_H_
 //---------------------------------------------------------------------------
+#include "QuestZero/Common/SampleSet.h"
 #include "QuestZero/Policies/TracePolicy/NoTracer.h"
 #include "QuestZero/Policies/InitialStatesPolicy.h"
 #include "QuestZero/Policies/TakePolicy.h"

@@ -161,7 +161,7 @@ struct TypelistSpace
 		return s;
 	}
 
-	State random(const State& center, const std::vector<Scalar>& noise) {
+	State random(const State& center, const std::vector<Scalar>& noise) const {
 		State s;
 		randomImpl(Loki::Int2Type<0>(), s, 0, center, noise);
 		return s;

@@ -31,8 +31,10 @@ void TestAlgo(ALGO algo, const Space& space, const Function& function)
 
 #ifdef DEBUG
 	template<typename State> struct MyTracer : ProgressAndBestToConsoleTracer<State> {};
+	const unsigned int Iterations = 10;
 #else
 	template<typename State> struct MyTracer : NoTracer<State> {};
+	const unsigned int Iterations = 100;
 #endif
 
 //#define FIXED_CHECKS
@@ -47,13 +49,13 @@ void TestProblem(const Space& space, const Function& function)
 {
 	cout << "----- RND -----" << endl;
 	Optimization<typename Space::State, RND, TargetChecker, InitialStatesPolicy::RandomPicker, TakePolicy::TakeBest, MyTracer> algoRnd;
-	algoRnd.setMaxCount(100);
+	algoRnd.setMaxCount(Iterations);
 	algoRnd.particleCount = 1000;
 	TestAlgo(algoRnd, space, function);
 
 	cout << "----- PSO -----" << endl;
 	Optimization<typename Space::State, PSO, TargetChecker, InitialStatesPolicy::RandomPicker, TakePolicy::TakeBest, MyTracer> algoPso;
-	algoPso.setMaxCount(100);
+	algoPso.setMaxCount(Iterations);
 	algoPso.settings.particleCount = 1000;
 	TestAlgo(algoPso, space, function);
 

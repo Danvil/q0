@@ -41,6 +41,7 @@ struct RND
 
 	template<class Space, class Function>
 	TSample<State> optimize(const Space& space, const Function& function) {
+		typedef BetterMeansSmaller<State> CMP;
 		TSampleSet<State> open(this->pickMany(space, particleCount));
 		// in every iteration add new particles and delete the worst particles
 		while(true) {
@@ -51,16 +52,16 @@ struct RND
 			open.evaluateUnknown(function);
 			// pick the best
 			// check if the best in this chunk is better than the best so far
-			open = open.best(particleCount);
+			open = open.template best<CMP>(particleCount);
 			// update progress bar
 			this->trace(open);
 			// check if break condition is satisfied
-			if(this->reached(open.best().score())) {
+			if(this->reached(open.template best<CMP>().score())) {
 				break;
 			}
 		}
 		// return last best samples
-		return this->take(space, open);
+		return this->template take<Space, CMP>(space, open);
 	}
 };
 

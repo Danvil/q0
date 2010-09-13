@@ -116,7 +116,7 @@ namespace SO3 {
 				return Danvil::ctLinAlg::RotationTools::UniformRandom<K>(&RandomNumbers::Random01);
 			}
 
-			State random(const State& center, const K& noise) {
+			State random(const State& center, const K& noise) const {
 				return center * Danvil::ctLinAlg::RotationTools::UniformRandom<K>(noise, &RandomNumbers::Random01);
 			}
 

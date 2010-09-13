@@ -153,7 +153,7 @@ struct MultiplierSpace
 		return v;
 	}
 
-	State random(const State& center, const std::vector<K>& noise) {
+	State random(const State& center, const std::vector<K>& noise) const {
 		State v;
 		size_t start = 0;
 		for(size_t i=0; i<N; i++) {

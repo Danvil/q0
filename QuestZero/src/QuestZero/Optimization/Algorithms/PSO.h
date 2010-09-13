@@ -62,6 +62,7 @@ struct PSO
 
 	template<class Space, class Function>
 	Sample optimize(const Space& space, const Function& function) {
+		typedef BetterMeansSmaller<State> CMP;
 		globals.set(settings);
 		// generate start samples
 		SampleSet initial(this->pickMany(space, settings.particleCount));
@@ -75,15 +76,15 @@ struct PSO
 			// evaluate samples
 			samples.evaluateUnknown(function);
 			// update global best
-			const Sample& best = samples.best();
-			if(!globals.isSet() || best.score() < globals.bestScore()) {
+			const Sample& best = samples.template best<CMP>();
+			if(!globals.isSet() || CMP()(best.score(), globals.bestScore())) {
 				globals.set(best);
 			}
 			// update personal best and particle
 			for(size_t i = 0; i < particles.size(); i++) {
-				const Sample& s = samples.samples()[i];
+				const Sample& s = samples[i];
 				ParticleData& p = particles[i];
-				if(s.score() < p.best_score) {
+				if(CMP()(s.score(), p.best_score)) {
 					p.best = s.state();
 					p.best_score = s.score();
 				}
@@ -96,7 +97,7 @@ struct PSO
 				break;
 			}
 		}
-		return this->take(space, bestSamples());
+		return this->template take<Space, CMP>(space, bestSamples());
 	}
 
 private:

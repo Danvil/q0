@@ -52,10 +52,10 @@ namespace InitialStatesPolicy {
 	template<typename State>
 	struct RepeatOne
 	{
-		void setDefaultState(const State& state) const { _defaultState = state; }
+		void setDefaultState(const State& state) { _defaultState = state; }
 
 		template<class Space>
-		const State& pick(PTR(Space)) {
+		const State& pick(const Space&) {
 			return _defaultState;
 		}
 
@@ -80,7 +80,7 @@ namespace InitialStatesPolicy {
 		}
 
 		template<class Space>
-		const State& pick(PTR(Space)) {
+		const State& pick(const Space&) {
 			if(_states.size() == 0) {
 				throw EmptyValueListException();
 			}
@@ -106,7 +106,7 @@ namespace InitialStatesPolicy {
 			_state = state;
 		}
 
-		void setNoise(const std::vector<typename State::ScalarType>& noise) {
+		void setNoise(const std::vector<double>& noise) {
 			_noise = noise;
 		}
 
@@ -117,7 +117,7 @@ namespace InitialStatesPolicy {
 
 	private:
 		State _state;
-		std::vector<typename State::ScalarType> _noise;
+		std::vector<double> _noise;
 
 	protected:
 		~OneWithNoise() {}

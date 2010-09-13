@@ -63,9 +63,9 @@ namespace Cartesian {
 					// Must have at least one element for WeightedSum!
 					throw WeightedSumException();
 				}
-				State c = factors[0] * states[0];
+				State c = (S)(factors[0]) * states[0];
 				for(size_t i=1; i<states.size(); i++) {
-					c += (S)factors[i] * states[i];
+					c += (S)(factors[i]) * states[i];
 				}
 				return c;
 			}
@@ -122,12 +122,12 @@ namespace Cartesian {
 				return RandomV(_min, _max);
 			}
 
-			State random(const State& center, const std::vector<K>& noise) {
+			State random(const State& center, const std::vector<K>& noise) const {
 				if(noise.size() != State::Dimension) {
 					throw InvalidNoiseVectorException();
 				}
-				State noise_range(noise.data());
-				return project(this->compose(center, RandomV(-noise_range, noise_range)));
+				State noise_range = State::FactorFromPointer(noise.data());
+				return project(center + RandomV(-noise_range, noise_range));
 			}
 
 		private:
@@ -182,7 +182,7 @@ namespace Cartesian {
 				return RandomV(_min, _max);
 			}
 
-			State random(const State& center, const std::vector<double>& noise) {
+			State random(const State& center, const std::vector<double>& noise) const {
 				if(noise.size() != 1) {
 					throw InvalidNoiseVectorException();
 				}
