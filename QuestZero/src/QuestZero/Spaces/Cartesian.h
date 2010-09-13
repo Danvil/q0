@@ -8,6 +8,7 @@
 #ifndef SPACE_CARTESIAN_H_
 #define SPACE_CARTESIAN_H_
 //---------------------------------------------------------------------------
+#include "GetScalarType.h"
 #include "BaseSpace.h"
 #include "QuestZero/Common/RandomNumbers.h"
 #include <Danvil/LinAlg.h>
@@ -22,7 +23,7 @@ namespace Cartesian {
 
 	namespace Operations
 	{
-		template<typename State, typename S = typename State::ScalarType>
+		template<typename State>
 		struct Linear
 		{
 			struct WeightedSumException {};
@@ -45,11 +46,13 @@ namespace Cartesian {
 
 			template<typename K>
 			State weightedSum(K f1, const State& s1, K f2, const State& s2) const {
+				typedef typename Private::GetScalarType<State>::ScalarType S;
 				return (S)f1 * s1 + (S)f2 * s2;
 			}
 
 			template<typename K>
 			State weightedSum(K f1, const State& s1, K f2, const State& s2, K f3, const State& s3) const {
+				typedef typename Private::GetScalarType<State>::ScalarType S;
 				return (S)f1 * s1 + (S)f2 * s2 + (S)f3 * s3;
 			}
 
@@ -63,6 +66,7 @@ namespace Cartesian {
 					// Must have at least one element for WeightedSum!
 					throw WeightedSumException();
 				}
+				typedef typename Private::GetScalarType<State>::ScalarType S;
 				State c = (S)(factors[0]) * states[0];
 				for(size_t i=1; i<states.size(); i++) {
 					c += (S)(factors[i]) * states[i];
@@ -83,8 +87,6 @@ namespace Cartesian {
 		template<typename State>
 		struct Box
 		{
-			typedef double K;
-
 			struct InvalidNoiseVectorException {};
 
 			Box() {}
@@ -122,6 +124,7 @@ namespace Cartesian {
 				return RandomV(_min, _max);
 			}
 
+			template<typename K>
 			State random(const State& center, const std::vector<K>& noise) const {
 				if(noise.size() != State::Dimension) {
 					throw InvalidNoiseVectorException();
@@ -182,12 +185,13 @@ namespace Cartesian {
 				return RandomV(_min, _max);
 			}
 
-			State random(const State& center, const std::vector<double>& noise) const {
+			template<typename K>
+			State random(const State& center, const std::vector<K>& noise) const {
 				if(noise.size() != 1) {
 					throw InvalidNoiseVectorException();
 				}
-				State noise_range = noise[0];
-				return project(this->compose(center, RandomV(-noise_range, noise_range)));
+				State noise_range = noise[0]; // assumes only one element!
+				return project(center + RandomV(-noise_range, noise_range)); // FIXME does not use compose here!!
 			}
 
 		private:

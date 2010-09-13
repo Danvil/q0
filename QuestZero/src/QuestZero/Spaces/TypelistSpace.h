@@ -8,6 +8,7 @@
 #ifndef TYPELISTSPACE_H_
 #define TYPELISTSPACE_H_
 
+#include "GetScalarType.h"
 #include <Danvil/Print.h>
 #include <loki/HierarchyGenerators.h>
 #include <loki/Typelist.h>
@@ -20,6 +21,8 @@ struct TypelistState
 : public Loki::Tuple<Typelist>,
   Danvil::Print::IPrintable
 {
+	typedef typename Private::GetScalarType<typename Loki::TL::TypeAt<Typelist, 0>::Result>::ScalarType ScalarType;
+
 	static const int N = Loki::TL::Length<Typelist>::value;
 
 	// FIXME is i the type index or the global index?
@@ -73,15 +76,15 @@ private:
 
 };
 
-template<class Typelist, class _State>
+template<class Typelist, class State_>
 struct TypelistSpace
 : public Loki::Tuple<Typelist>
 {
-	typedef _State State;
-
-	typedef double Scalar;
+	typedef State_ State;
 
 	static const int N = Loki::TL::Length<Typelist>::value;
+
+	struct InvalidNoiseVectorException {};
 
 	// FIXME is i the type index or the global index?
 	/** Valid indices reach are [1 | Length(Typelist)] */
@@ -100,8 +103,8 @@ struct TypelistSpace
 		Loki::Field<i>(*this) = space;
 	}
 
-	Scalar distance(const TypelistState<Typelist>& a, const TypelistState<Typelist>& b) const {
-		Scalar d = 0;
+	double distance(const TypelistState<Typelist>& a, const TypelistState<Typelist>& b) const {
+		double d = 0;
 		distanceImpl(Loki::Int2Type<0>(), d, a, b);
 		return d;
 	}
@@ -123,19 +126,22 @@ struct TypelistSpace
 		return compose(a, inverse(b));
 	}
 
-	State weightedSum(Scalar f1, const State& s1, Scalar f2, const State& s2) const {
+	template<typename K>
+	State weightedSum(K f1, const State& s1, K f2, const State& s2) const {
 		State s;
 		weightedSumImpl(Loki::Int2Type<0>(), s, f1, s1, f2, s2);
 		return s;
 	}
 
-	State weightedSum(Scalar f1, const State& s1, Scalar f2, const State& s2, Scalar f3, const State& s3) const {
+	template<typename K>
+	State weightedSum(K f1, const State& s1, K f2, const State& s2, K f3, const State& s3) const {
 		State s;
 		weightedSumImpl(Loki::Int2Type<0>(), s, f1, s1, f2, s2, f3, s3);
 		return s;
 	}
 
-	State weightedSum(const std::vector<Scalar>& factors, const std::vector<State>& states) const {
+	template<typename K>
+	State weightedSum(const std::vector<K>& factors, const std::vector<State>& states) const {
 		State s;
 		weightedSumImpl(Loki::Int2Type<0>(), s, factors, states);
 		return s;
@@ -143,6 +149,7 @@ struct TypelistSpace
 
 	// TODO this is default
 	State mean(const std::vector<State>& states) const {
+		typedef typename State::ScalarType Scalar;
 		return weightedSum(std::vector<Scalar>(states.size(), (Scalar)1), states);
 	}
 
@@ -161,7 +168,8 @@ struct TypelistSpace
 		return s;
 	}
 
-	State random(const State& center, const std::vector<Scalar>& noise) const {
+	template<typename K>
+	State random(const State& center, const std::vector<K>& noise) const {
 		State s;
 		randomImpl(Loki::Int2Type<0>(), s, 0, center, noise);
 		return s;
@@ -175,12 +183,12 @@ struct TypelistSpace
 
 private:
 	template<int i>
-	void distanceImpl(Loki::Int2Type<i>, Scalar& d, const State& a, const State& b) const {
+	void distanceImpl(Loki::Int2Type<i>, double& d, const State& a, const State& b) const {
 		d += space<i>().distance(a.template part<i>(), b.template part<i>());
 		differenceImpl(Loki::Int2Type<i+1>(), d, a, b);
 	}
 
-	void distanceImpl(Loki::Int2Type<N>, Scalar&, const State&, const State&) const {}
+	void distanceImpl(Loki::Int2Type<N>, double&, const State&, const State&) const {}
 
 	template<int i>
 	void inverseImpl(Loki::Int2Type<i>, State& s, const State& a) const {
@@ -198,24 +206,26 @@ private:
 
 	void composeImpl(Loki::Int2Type<N>, State&, const State&, const State&) const {}
 
-	template<int i>
-	void weightedSumImpl(Loki::Int2Type<i>, State& s, Scalar f1, const State& s1, Scalar f2, const State& s2) const {
+	template<typename K, int i>
+	void weightedSumImpl(Loki::Int2Type<i>, State& s, K f1, const State& s1, K f2, const State& s2) const {
 		s.template setPart<i>(space<i>().weightedSum(f1, s1.template part<i>(), f2, s2.template part<i>()));
 		weightedSumImpl(Loki::Int2Type<i+1>(), s, f1, s1, f2, s2);
 	}
 
-	void weightedSumImpl(Loki::Int2Type<N>, State& s, Scalar, const State&, Scalar, const State&) const {}
+	template<typename K>
+	void weightedSumImpl(Loki::Int2Type<N>, State& s, K, const State&, K, const State&) const {}
 
-	template<int i>
-	void weightedSumImpl(Loki::Int2Type<i>, State& s, Scalar f1, const State& s1, Scalar f2, const State& s2, Scalar f3, const State& s3) const {
+	template<typename K, int i>
+	void weightedSumImpl(Loki::Int2Type<i>, State& s, K f1, const State& s1, K f2, const State& s2, K f3, const State& s3) const {
 		s.template setPart<i>(space<i>().weightedSum(f1, s1.template part<i>(), f2, s2.template part<i>(), f3, s3.template part<i>()));
 		weightedSumImpl(Loki::Int2Type<i+1>(), s, f1, s1, f2, s2, f3, s3);
 	}
 
-	void weightedSumImpl(Loki::Int2Type<N>, State& s, Scalar, const State&, Scalar, const State&, Scalar, const State&) const {}
+	template<typename K>
+	void weightedSumImpl(Loki::Int2Type<N>, State& s, K, const State&, K, const State&, K, const State&) const {}
 
-	template<int i>
-	void weightedSumImpl(Loki::Int2Type<i>, State& s, const std::vector<Scalar>& scalars, const std::vector<State>& states) const {
+	template<typename K, int i>
+	void weightedSumImpl(Loki::Int2Type<i>, State& s, const std::vector<K>& scalars, const std::vector<State>& states) const {
 		typedef typename Loki::TL::TypeAt<Typelist, i - 1>::Result CurrentType;
 		std::vector<CurrentType> parts;
 		parts.reserve(states.size());
@@ -226,7 +236,8 @@ private:
 		weightedSumImpl(Loki::Int2Type<i+1>(), s, scalars, states);
 	}
 
-	void weightedSumImpl(Loki::Int2Type<N>, State& s, const std::vector<Scalar>&, const std::vector<State>&) const {}
+	template<typename K>
+	void weightedSumImpl(Loki::Int2Type<N>, State& s, const std::vector<K>&, const std::vector<State>&) const {}
 
 	template<int i>
 	void randomImpl(Loki::Int2Type<i>, State& s) const {
@@ -236,15 +247,19 @@ private:
 
 	void randomImpl(Loki::Int2Type<N>, State&) const {}
 
-	template<int i>
-	void randomImpl(Loki::Int2Type<i>, State& s, unsigned int start, const State& center, const std::vector<Scalar>& noise) const {
+	template<typename K, int i>
+	void randomImpl(Loki::Int2Type<i>, State& s, unsigned int start, const State& center, const std::vector<K>& noise) const {
 		unsigned int len = space<i>().dimension();
 		unsigned int end = start + len;
-		s.template setPart<i>(space<i>().random(center.template part<i>(), std::vector<Scalar>(noise.begin() + start, noise.begin() + end)));
+		if(end > noise.size()) {
+			throw InvalidNoiseVectorException();
+		}
+		s.template setPart<i>(space<i>().random(center.template part<i>(), std::vector<K>(noise.begin() + start, noise.begin() + end)));
 		randomImpl(Loki::Int2Type<i+1>(), s, end, center, noise);
 	}
 
-	void randomImpl(Loki::Int2Type<N>, State&, unsigned int, const State&, const std::vector<Scalar>&) const {}
+	template<typename K>
+	void randomImpl(Loki::Int2Type<N>, State&, unsigned int, const State&, const std::vector<K>&) const {}
 
 	template<int i>
 	void projectImpl(Loki::Int2Type<i>, State& s, const State& a) const {

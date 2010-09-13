@@ -28,14 +28,14 @@ namespace Problem07
 
 	typedef Spaces::Cartesian::CartesianSpace<state0> space0;
 	typedef Spaces::SO3::SO3Space<double> space1;
-	typedef Spaces::Cartesian::CartesianSpace<state2, Spaces::Cartesian::Operations::Linear<state2,float>, Spaces::Cartesian::Domains::Interval<state2> > space2;
+	typedef Spaces::Cartesian::CartesianSpace<state2, Spaces::Cartesian::Operations::Linear<state2>, Spaces::Cartesian::Domains::Interval<state2> > space2;
 	typedef LOKI_TYPELIST_3(space0,space1,space2) space_types;
 	typedef Spaces::TypelistSpace<space_types, state> space;
 
 	space FactorSpace() {
 		space myspace;
 		myspace.space<0>().setDomainRange(state0(3,4,5));
-		myspace.space<2>().setDomainRange(10);
+		myspace.space<2>().setDomainRange(10.0f);
 		return myspace;
 	}
 

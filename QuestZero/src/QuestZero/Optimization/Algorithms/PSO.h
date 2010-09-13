@@ -178,6 +178,7 @@ private:
 
 		template<class Space>
 		void Update(const Space& space, const GlobalData& globals) {
+			// TODO double or float?
 			double fl = globals.omega();
 			double fp = globals.psi_personal() * RandomNumbers::S.random01();
 			double fg = globals.psi_global() * RandomNumbers::S.random01();

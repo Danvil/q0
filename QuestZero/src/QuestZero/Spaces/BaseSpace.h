@@ -15,17 +15,17 @@ namespace Spaces {
 //---------------------------------------------------------------------------
 
 template<
-	typename _State,
+	typename State_,
 	class Operator,
 	class Domain,
-	class OperationFinal = OperationFinalPolicy::Projected<_State>
+	class OperationFinal = OperationFinalPolicy::Projected<State_>
 >
 struct BaseSpace
 : public Operator,
   public OperationFinal,
   public Domain
 {
-	typedef _State State;
+	typedef State_ State;
 
 	typedef double K;
 

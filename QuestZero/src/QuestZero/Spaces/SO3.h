@@ -54,8 +54,9 @@ namespace SO3 {
 			}
 
 			// TODO this is the default implementation
-			State weightedSum(K f1, const State& s1, K f2, const State& s2) const {
-				std::vector<K> factors;
+			template<typename S>
+			State weightedSum(S f1, const State& s1, S f2, const State& s2) const {
+				std::vector<S> factors;
 				factors.push_back(f1);
 				factors.push_back(f2);
 				std::vector<State> states;
@@ -65,8 +66,9 @@ namespace SO3 {
 			}
 
 			// TODO this is the default implementation
-			State weightedSum(K f1, const State& s1, K f2, const State& s2, K f3, const State& s3) const {
-				std::vector<K> factors;
+			template<typename S>
+			State weightedSum(S f1, const State& s1, S f2, const State& s2, S f3, const State& s3) const {
+				std::vector<S> factors;
 				factors.push_back(f1);
 				factors.push_back(f2);
 				factors.push_back(f3);
@@ -77,7 +79,8 @@ namespace SO3 {
 				return weightedSum(factors, states);
 			}
 
-			State weightedSum(const std::vector<K>& factors, const std::vector<State>& states) const {
+			template<typename S>
+			State weightedSum(const std::vector<S>& factors, const std::vector<State>& states) const {
 				if(factors.size() != states.size()) {
 					// Number of factors and states must be equal!
 					throw WeightedSumException();
@@ -100,8 +103,6 @@ namespace SO3 {
 		{
 			typedef Danvil::ctLinAlg::TQuaternion<K> State;
 
-			typedef double NoiseType;
-
 			Full() {}
 
 			size_t dimension() const {
@@ -118,7 +119,8 @@ namespace SO3 {
 				return Danvil::ctLinAlg::RotationTools::UniformRandom<K>(&RandomNumbers::Random01);
 			}
 
-			State random(const State& center, const std::vector<NoiseType>& noise) const {
+			template<typename NT>
+			State random(const State& center, const std::vector<NT>& noise) const {
 				assert(noise.size() == dimension());
 				K d = (K)noise[0];
 				return center * Danvil::ctLinAlg::RotationTools::UniformRandom<K>(d, &RandomNumbers::Random01);

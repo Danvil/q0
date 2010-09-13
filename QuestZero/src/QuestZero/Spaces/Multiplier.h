@@ -8,6 +8,7 @@
 #ifndef MULTIPLIER_H_
 #define MULTIPLIER_H_
 
+#include "GetScalarType.h"
 #include <Danvil/Print.h>
 #include <vector>
 
@@ -18,6 +19,8 @@ template<typename BaseState, unsigned int _N>
 struct MultiplierState
 : public Danvil::Print::IPrintable
 {
+	typedef typename Private::GetScalarType<BaseState>::ScalarType ScalarType;
+
 	static const unsigned int N = _N;
 
 	BaseState& operator[](int i) {
@@ -44,14 +47,12 @@ private:
 
 };
 
-template<typename BaseSpace, typename _State>
+template<typename BaseSpace, typename State_>
 struct MultiplierSpace
 {
-	typedef _State State;
+	typedef State_ State;
 
 	static const unsigned int N = State::N;
-
-	typedef double K;
 
 	struct InvalidNoiseVectorException {};
 
@@ -65,7 +66,7 @@ struct MultiplierSpace
 		return spaces[i];
 	}
 
-	unsigned int dimension() {
+	unsigned int dimension() const {
 		unsigned int n = 0;
 		for(unsigned int i=0; i<N; i++) {
 			n += spaces[i].dimension();
@@ -153,12 +154,13 @@ struct MultiplierSpace
 		return v;
 	}
 
+	template<typename K>
 	State random(const State& center, const std::vector<K>& noise) const {
 		State v;
 		size_t start = 0;
 		for(size_t i=0; i<N; i++) {
-			size_t len = center[i].dimension();
-			if(start + len >= noise.size()) {
+			size_t len = spaces[i].dimension();
+			if(start + len > noise.size()) {
 				throw InvalidNoiseVectorException();
 			}
 			v[i] = spaces[i].random(center[i], std::vector<K>(noise.begin() + start, noise.begin() + start + len));
@@ -174,7 +176,8 @@ struct MultiplierSpace
 
 	// TODO this is default
 	State mean(const std::vector<State>& states) const {
-		return weightedSum(std::vector<K>(states.size(), (K)1), states);
+		typedef typename State::ScalarType Scalar;
+		return weightedSum(std::vector<Scalar>(states.size(), (Scalar)1), states);
 	}
 
 	// TODO this is default
