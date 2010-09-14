@@ -36,8 +36,8 @@ namespace SO3 {
 
 			struct WeightedSumException {};
 
-			K distance(const State& a, const State& b) const {
-				return State::Distance(a, b);
+			double distance(const State& a, const State& b) const {
+				return (double)State::Distance(a, b);
 			}
 
 			State inverse(const State& a) const {
