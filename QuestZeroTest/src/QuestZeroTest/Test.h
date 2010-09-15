@@ -30,7 +30,7 @@ void TestAlgo(ALGO algo, const Space& space, const Function& function)
 }
 
 #ifdef DEBUG
-	template<typename State> struct MyTracer : ProgressAndBestToConsoleTracer<State> {};
+	template<typename State> struct MyTracer : ProgressAndBestToConsoleTracer<State, BetterMeansSmaller<State> > {};
 	const unsigned int Iterations = 10;
 #else
 	template<typename State> struct MyTracer : NoTracer<State> {};

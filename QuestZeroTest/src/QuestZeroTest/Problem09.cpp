@@ -57,13 +57,17 @@ namespace Problem09
 		return r;
 	}
 
-	typedef Danvil::ctLinAlg::Vec3f state;
+	typedef Danvil::ctLinAlg::Vec<float, 10> state;
 
 	typedef Spaces::Cartesian::CartesianSpace<state> space;
 
 	space FactorSpace() {
 		space U;
-		U.setDomainRange(state(3,4,5));
+		state range;
+		for(unsigned int i=0; i<state::Dimension; i++) {
+			range[i] = (state::ScalarType)(2 + i);
+		}
+		U.setDomainRange(range);
 		return U;
 	}
 
@@ -86,33 +90,47 @@ namespace Problem09
 		varf.space = s;
 		//varf.start_state = state(-1 + 2 * RandomNumbers::Random01(), -1 + 2 * RandomNumbers::Random01(), -1 + 2 * RandomNumbers::Random01());
 		//varf.end_state = state(-1 + 2 * RandomNumbers::Random01(), -1 + 2 * RandomNumbers::Random01(), -1 + 2 * RandomNumbers::Random01());
-		varf.start_state = state(0,0,0);
-		varf.end_state = state(1,1,1);
+		varf.start_state = state::FactorRepeat(0);
+		varf.end_state = state::FactorRepeat(1);
 		return varf;
 	}
 
 #ifdef DEBUG
-	template<typename State> struct MyTracer : ProgressAndBestToConsoleTracer<State> {};
+	template<typename State> struct MyTracer : ProgressAndBestToConsoleTracer<State, BetterMeansBigger<State> > {};
 #else
 	template<typename State> struct MyTracer : NoTracer<State> {};
 #endif
 
-	void run() {
-		range r = FactorRange();
-		space s = FactorSpace();
-		var_function f = FactorFunction(r, s);
-		cout << "----- Tracking of Sphere moving from " << f.start_state << " to " << f.end_state << " over 10 frames in Vec3f space ---- " << endl;
-		Tracking<time, state, ParticleFilter, InitialStatesPolicy::RepeatOne, TakePolicy::TakeBest, MyTracer> solver;
-		solver.particle_count_ = 1000;
+	range r = FactorRange();
+	space s = FactorSpace();
+	var_function f = FactorFunction(r, s);
+
+	template<bool UseAnnealing>
+	void runChoice()
+	{
+		if(UseAnnealing) {
+			cout << "~ Annealing is _ON__ ~" << endl;
+		} else {
+			cout << "~ Annealing is _OFF_ ~" << endl;
+		}
+		typedef InitialStatesPolicy::ManyPicker<state, InitialStatesPolicy::RepeatOne> init;
+		ParticleFilter<time, state, init, TakePolicy::TakeBest<state>, MyTracer<state>, UseAnnealing> solver;
+		solver.particle_count_ = 500;
 		// initial value and noise
 		solver.setDefaultState(f.start_state);
 		// step noise
-		solver.noise_.push_back(0.5);
-		solver.noise_.push_back(0.5);
-		solver.noise_.push_back(0.5);
+		for(unsigned int i=0; i<state::Dimension; i++) {
+			solver.noise_.push_back(0.5);
+		}
 		TSolution<time, state> sol = solver.track(r, s, f);
 		cout << sol << endl;
 		cout << "Solution mean score: " << sol.meanScore() << endl;
+	}
+
+	void run() {
+		cout << "----- Tracking of Sphere moving from " << f.start_state << " to " << f.end_state << " over 10 frames in Vec3f space ---- " << endl;
+		runChoice<false>();
+		runChoice<true>();
 	}
 
 }
