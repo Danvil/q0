@@ -59,6 +59,18 @@ struct SampleDataStorage
 		return _samples[i];
 	}
 
+	const Sample& sample(size_t i) const {
+		return _samples[i];
+	}
+
+	double score(size_t i) const {
+		return _samples[i].score();
+	}
+
+	const State& state(size_t i) const {
+		return _samples[i].state();
+	}
+
 	const std::vector<Sample>& samples() const { return _samples; }
 
 	std::vector<Sample>& samples() { return _samples; }
@@ -112,34 +124,6 @@ struct SampleDataStorage
 		for(size_t i=0; i<scores.size(); i++) {
 			setScore(indices[i], scores[i]);
 		}
-	}
-
-	template<class CMP>
-	const Sample& best() const {
-		CMP cmp;
-		if(_samples.size() == 0) {
-			throw std::runtime_error("Can not get best sample of empty sample set!");
-		}
-		const Sample* best_sample = &(_samples[0]);
-		for(size_t i=0; i<_samples.size(); ++i) {
-			const Sample* current = &(_samples[i]);
-			if(current->isScoreKnown()
-				&& (best_sample->isScoreUnknown() || cmp(current->score(), best_sample->score()))
-			) {
-				best_sample = current;
-			}
-		}
-		if(best_sample->isScoreUnknown()) {
-			throw std::runtime_error("Can not get best sample if all samples are unevaluated!");
-		}
-		return *best_sample;
-	}
-
-	template<class CMP>
-	std::vector<Sample> best(size_t n) const {
-		std::vector<Sample> temp = _samples;
-		std::sort(temp.begin(), temp.end(), CMP());
-		return std::vector<Sample>(temp.begin(), temp.begin() + n);
 	}
 
 private:
@@ -201,6 +185,18 @@ struct CachedSamplesDataStorage
 		return _samples[i];
 	}
 
+	const Sample& sample(size_t i) const {
+		return _samples[i];
+	}
+
+	double score(size_t i) const {
+		return _scores[i];
+	}
+
+	const State& state(size_t i) const {
+		return _states[i];
+	}
+
 	const std::vector<Sample>& samples() const { return _samples; }
 
 	std::vector<Sample>& samples() { return _samples; }
@@ -241,34 +237,6 @@ struct CachedSamplesDataStorage
 		for(size_t i=0; i<count(); i++) {
 			setScore(indices[i], scores[i]);
 		}
-	}
-
-	template<class CMP>
-	const Sample& best() const {
-		CMP cmp;
-		if(_samples.size() == 0) {
-			throw std::runtime_error("Can not get best sample of empty sample set!");
-		}
-		const Sample* best_sample = &(_samples[0]);
-		for(size_t i=0; i<_samples.size(); ++i) {
-			const Sample* current = &(_samples[i]);
-			if(current->isScoreKnown()
-				&& (best_sample->isScoreUnknown() || cmp(current->score(), best_sample->score()))
-			) {
-				best_sample = current;
-			}
-		}
-		if(best_sample->isScoreUnknown()) {
-			throw std::runtime_error("Can not get best sample if all samples are unevaluated!");
-		}
-		return *best_sample;
-	}
-
-	template<class CMP>
-	std::vector<Sample> best(size_t n) const {
-		std::vector<Sample> temp = _samples;
-		std::sort(temp.begin(), temp.end(), CMP());
-		return std::vector<Sample>(temp.begin(), temp.begin() + n);
 	}
 
 private:
@@ -387,8 +355,43 @@ public:
 	}
 
 	template<class CMP>
+	const Sample& best() const {
+		CMP cmp;
+		if(this->count() == 0) {
+			throw std::runtime_error("Can not get best sample of empty sample set!");
+		}
+		const Sample* best_sample = &(this->sample(0));
+		for(size_t i=0; i<this->count(); ++i) {
+			const Sample* current = &(this->sample(i));
+			if(current->isScoreKnown()
+				&& (best_sample->isScoreUnknown() || cmp(current->score(), best_sample->score()))
+			) {
+				best_sample = current;
+			}
+		}
+		if(best_sample->isScoreUnknown()) {
+			throw std::runtime_error("Can not get best sample if all samples are unevaluated!");
+		}
+		return *best_sample;
+	}
+
+	template<class CMP>
+	std::vector<Sample> best(size_t n) const {
+		std::vector<Sample> temp = this->samples();
+		std::sort(temp.begin(), temp.end(), CMP());
+		return std::vector<Sample>(temp.begin(), temp.begin() + n);
+	}
+
+	template<class CMP>
 	TSampleSet bestAsSet(size_t n) const {
 		return TSampleSet(this->template best<CMP>(n));
+	}
+
+	template<class ScoreMapper>
+	void mapScores(const ScoreMapper& mapper) {
+		for(size_t i=0; i<this->count(); i++) {
+			this->setScore(i, mapper(this->score(i)));
+		}
 	}
 
 	void print(std::ostream& os) const {
