@@ -8,36 +8,13 @@
 #ifndef PARTICLEFILTER_H_
 #define PARTICLEFILTER_H_
 
-#include <vector>
-
-template<typename Time, typename State, class VarFunction>
-struct PinnedFunction
-{
-	PinnedFunction(const VarFunction& f, const Time& t)
-	: f_(f),
-	  time_(t)
-	{}
-
-	void setTime(const Time& t) { time_ = t; }
-
-	double operator()(const State& state) const {
-		return f_(time_, state);
-	}
-
-	std::vector<double> operator()(const std::vector<State>& states) const {
-		return f_(time_, states);
-	}
-
-private:
-	VarFunction f_;
-	Time time_;
-};
-
+#include "QuestZero/Tracking/PinnedFunction.h"
 #include "QuestZero/Common/ScoreComparer.h"
 #include "QuestZero/Common/SampleSet.h"
 #include "QuestZero/Tracking/Solution.h"
+#include "QuestZero/Optimization/Algorithms/Annealing.h"
 
-template<typename Time, typename State, class StartingStates, class Take, class Tracer>
+template<typename Time, typename State, class StartingStates, class Take, class Tracer, bool UseAnnealing=false>
 struct ParticleFilter
 : public StartingStates,
   public Take,
@@ -64,16 +41,23 @@ struct ParticleFilter
 		for(Time t = range.begin(); t != range.end(); ++t) {
 			// set pin down time
 			pinned.setTime(t);
-			// apply motion model which is simply white noise
-			open_samples.addNoise(space, noise_);
-			// evaluate samples
-			open_samples.evaluateAll(pinned);
-			// create new sample set using weighted random drawing
-			try{
-				open_samples = open_samples.drawByScore(particle_count_);
-			} catch(typename SampleSet::CanNotNormalizeZeroListException& e) {
-				// tracker lost the object
-				return sol;
+			if(UseAnnealing) {
+				// use annealing to refine the sample set
+				ParticleAnnealing<State, Tracer> pa;
+				pa.settings_.noise_ = noise_;
+				open_samples = pa.optimize(open_samples, space, pinned);
+			} else {
+				// apply motion model which is simply white noise
+				open_samples.addNoise(space, noise_);
+				// evaluate samples
+				open_samples.evaluateAll(pinned);
+				// create new sample set using weighted random drawing
+				try{
+					open_samples = open_samples.drawByScore(particle_count_);
+				} catch(typename SampleSet::CanNotNormalizeZeroListException& e) {
+					// tracker lost the object
+					return sol;
+				}
 			}
 			// tracing
 			this->trace(open_samples);
@@ -83,5 +67,10 @@ struct ParticleFilter
 		return sol;
 	}
 };
+
+template<typename Time, typename State, class StartingStates, class Take, class Tracer>
+struct ParticleFilterWithAnnealing
+: public ParticleFilter<Time, State, StartingStates, Take, Tracer>
+{};
 
 #endif
