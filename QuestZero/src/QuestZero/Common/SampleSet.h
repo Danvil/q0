@@ -301,7 +301,7 @@ private:
 
 	/** Finds the index of the smallest value larger than the given value */
 	static size_t FindSmallestLargerThan(const std::vector<double>& list, double val) {
-		// FIXME use binary search here!
+		// FIXME use bisection search here!
 		for(size_t i=0; i<list.size(); ++i) {
 			if(val <= list[i]) {
 				return i;

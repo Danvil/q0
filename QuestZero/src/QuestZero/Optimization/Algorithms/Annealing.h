@@ -69,7 +69,7 @@ struct ParticleAnnealing
 			for(size_t i=0; i<noise.size(); ++i) {
 				noise[i] *= alpha;
 			}
-			current.addNoise(space, settings_.noise_);
+			current.addNoise(space, noise);
 			// find particle scores
 			current.evaluateUnknown(function);
 			// find best beta with respect to current scores
@@ -84,6 +84,7 @@ struct ParticleAnnealing
 			current.mapScores(exponentiation_score_mapper_);
 			// create new sample set using weighted random drawing
 			current = current.drawByScore(current.count());
+//			this->trace(current);
 			// FIXME do we have to break early? whats wrong here?
 			if(m == 0) {
 				break;
@@ -114,9 +115,9 @@ private:
 		  scores_(scores)
 		{}
 
-		static const T cMaxBetaExp = 3;
+		static const T cMaxBetaExp = 1;
 
-		static const T cMaxBeta = 1000; // = 10^cMaxBetaExp
+		static const T cMaxBeta = 10; // = 10^cMaxBetaExp
 
 		/** Returns alpha_target - D(beta) / N (suitable for root finding) */
 		T operator()(T u) const {
@@ -170,10 +171,14 @@ private:
 		typedef T ResultT;
 
 		static T Optimize_Bisect(T alphaTarget, const std::vector<T>& scores, T epsilon) {
-			BetaOptimizationProblem bop(alphaTarget, scores);
-			double u_best = BisectionRootFinder::Solve(bop, -3,+3/*-cMaxBetaExp, +cMaxBetaExp*/, epsilon);
-			// FIXME why is this not working? linker error?
-			return StateToBeta(u_best);
+			try {
+				BetaOptimizationProblem bop(alphaTarget, scores);
+				double u_best = BisectionRootFinder::Solve(bop, -1,+1/*-cMaxBetaExp, +cMaxBetaExp*/, epsilon);
+				// FIXME why is this not working? linker error?
+				return StateToBeta(u_best);
+			} catch(BisectionRootFinder::NoSlopeException& e) {
+				return cMaxBeta;
+			}
 		}
 
 	private:
