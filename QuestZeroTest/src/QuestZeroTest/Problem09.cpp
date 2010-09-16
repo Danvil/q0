@@ -14,6 +14,8 @@
 #include <Danvil/LinAlg.h>
 #include <boost/bind.hpp>
 #include <iostream>
+#include <sstream>
+#include <fstream>
 using std::cout;
 using std::endl;
 
@@ -57,7 +59,7 @@ namespace Problem09
 		return r;
 	}
 
-	typedef Danvil::ctLinAlg::Vec<float, 10> state;
+	typedef Danvil::ctLinAlg::Vec<float, 20> state;
 
 	typedef Spaces::Cartesian::CartesianSpace<state> space;
 
@@ -95,11 +97,44 @@ namespace Problem09
 		return varf;
 	}
 
-#ifdef DEBUG
-	template<typename State> struct MyTracer : ProgressAndBestToConsoleTracer<State, BetterMeansBigger<State> > {};
-#else
-	template<typename State> struct MyTracer : NoTracer<State> {};
-#endif
+	struct SaveAllToFile
+	{
+		SaveAllToFile() {}
+		void trace(const TSampleSet<state>& samples) {
+			std::stringstream fn_ss;
+			fn_ss << "/tmp/" << base_ << i_ << ".txt";
+			i_++;
+			std::ofstream ofs(fn_ss.str().c_str());
+			Danvil::Print::VectorToStream vts;
+			vts.setPlainTabStyle();
+			BOOST_FOREACH(const TSample<state>& x, samples.samples()) {
+				ofs << x.score();
+				if(!only_scores_) {
+					ofs << "\t";
+					vts.print(ofs, x.state());
+				}
+				ofs << endl;
+			}
+		}
+		void setBaseAndReset(const std::string& base, bool only_scores=true) {
+			base_ = base;
+			i_ = 0;
+			only_scores_ = only_scores;
+		}
+	private:
+		std::string base_;
+		unsigned int i_;
+		bool only_scores_;
+	};
+#define TRACER SaveAllToFile
+
+//#ifdef DEBUG
+//	template<typename State> struct MyTracer : ProgressAndBestToConsoleTracer<State, BetterMeansBigger<State> > {};
+//#else
+//	template<typename State> struct MyTracer : NoTracer<State> {};
+//#endif
+//	#define TRACER MyTracer<state>
+
 
 	range r = FactorRange();
 	space s = FactorSpace();
@@ -108,19 +143,22 @@ namespace Problem09
 	template<bool UseAnnealing>
 	void runChoice()
 	{
+		typedef InitialStatesPolicy::ManyPicker<state, InitialStatesPolicy::RepeatOne> init;
+		ParticleFilter<time, state, init, TakePolicy::TakeBest<state>, TRACER, UseAnnealing> solver;
 		if(UseAnnealing) {
 			cout << "~ Annealing is _ON__ ~" << endl;
+			solver.setBaseAndReset("samples_annealing_");
 		} else {
 			cout << "~ Annealing is _OFF_ ~" << endl;
+			solver.setBaseAndReset("samples_normal_");
 		}
-		typedef InitialStatesPolicy::ManyPicker<state, InitialStatesPolicy::RepeatOne> init;
-		ParticleFilter<time, state, init, TakePolicy::TakeBest<state>, MyTracer<state>, UseAnnealing> solver;
-		solver.particle_count_ = 500;
+		solver.particle_count_ = 1000;
 		// initial value and noise
 		solver.setDefaultState(f.start_state);
 		// step noise
+		double step_noise = 2 * std::sqrt(0.1);
 		for(unsigned int i=0; i<state::Dimension; i++) {
-			solver.noise_.push_back(0.5);
+			solver.noise_.push_back(step_noise);
 		}
 		TSolution<time, state> sol = solver.track(r, s, f);
 		cout << sol << endl;
