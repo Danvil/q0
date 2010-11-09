@@ -22,7 +22,7 @@ namespace Problem06
 	static const unsigned int N = 4;
 
 	typedef Danvil::ctLinAlg::TQuaternion<double> base_state;
-	typedef Spaces::MultiplierState<base_state, N> state;
+	typedef Spaces::MultiplierState<base_state, Spaces::MultiplierSizePolicies::FixedSize<N> > state;
 
 	typedef Spaces::SO3::SO3Space<double> base_space;
 	typedef Spaces::MultiplierSpace<base_space, state> space;

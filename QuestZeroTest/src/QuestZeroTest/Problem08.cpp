@@ -24,9 +24,9 @@ namespace Problem08
 	static const unsigned int N = 4;
 
 	typedef Danvil::ctLinAlg::Vec3<double> base_state_0;
-	typedef Spaces::MultiplierState<base_state_0, N> state0;
+	typedef Spaces::MultiplierState<base_state_0, Spaces::MultiplierSizePolicies::FixedSize<N> > state0;
 	typedef Danvil::ctLinAlg::TQuaternion<double> base_state_1;
-	typedef Spaces::MultiplierState<base_state_1, N> state1;
+	typedef Spaces::MultiplierState<base_state_1, Spaces::MultiplierSizePolicies::FixedSize<N> > state1;
 	typedef LOKI_TYPELIST_2(state0,state1) state_types;
 	typedef Spaces::TypelistState<state_types> state;
 

@@ -10,32 +10,62 @@
 
 #include "GetScalarType.h"
 #include <Danvil/Print.h>
+#include <boost/shared_array.hpp>
 #include <vector>
 
 namespace Spaces
 {
 
-template<typename BaseState, unsigned int _N>
+namespace MultiplierSizePolicies
+{
+	template<int N> struct FixedSize
+	{
+		unsigned int count() const { return N; }
+	};
+
+	struct DynamicSize
+	{
+		DynamicSize(int count) : count_(count) {}
+		unsigned int count() const { return count_; }
+	private:
+		unsigned int count_;
+	};
+}
+
+template<typename BaseState, class SizePolicy_>
 struct MultiplierState
 : public Danvil::Print::IPrintable
 {
 	typedef typename Private::GetScalarType<BaseState>::ScalarType ScalarType;
 
-	static const unsigned int N = _N;
+	typedef SizePolicy_ SizePolicy;
+
+	MultiplierState(SizePolicy sp=SizePolicy())
+	: size_policy_(sp) {
+		sub_ = boost::shared_array<BaseState>(new BaseState[count()]);
+	}
+
+	unsigned int count() const {
+		return size_policy_.count();
+	}
+
+	SizePolicy size_policy() const {
+		return size_policy_;
+	}
 
 	BaseState& operator[](int i) {
-		return sub[i];
+		return sub_[i];
 	}
 
 	const BaseState& operator[](int i) const {
-		return sub[i];
+		return sub_[i];
 	}
 
 	void print(std::ostream& os) const {
 		os << "[";
-		for(unsigned int i=0; i<N; i++) {
-			os << i << "=" << sub[i];
-			if(i != N-1) {
+		for(unsigned int i=0; i<count(); i++) {
+			os << i << "=" << sub_[i];
+			if(i != count()-1) {
 				os << ", ";
 			}
 		}
@@ -43,7 +73,8 @@ struct MultiplierState
 	}
 
 private:
-	BaseState sub[N];
+	SizePolicy size_policy_;
+	boost::shared_array<BaseState> sub_;
 
 };
 
@@ -52,48 +83,57 @@ struct MultiplierSpace
 {
 	typedef State_ State;
 
-	static const unsigned int N = State::N;
+	typedef typename State::SizePolicy SizePolicy;
 
 	struct InvalidNoiseVectorException {};
 
 	struct WeightedSumException {};
 
+	MultiplierSpace(SizePolicy sp=SizePolicy())
+	: size_policy_(sp) {
+		spaces_ = boost::shared_array<BaseSpace>(new BaseSpace[count()]);
+	}
+
+	unsigned int count() const {
+		return size_policy_.count();
+	}
+
 	BaseSpace& operator[](int i) {
-		return spaces[i];
+		return spaces_[i];
 	}
 
 	const BaseSpace& operator[](int i) const {
-		return spaces[i];
+		return spaces_[i];
 	}
 
 	unsigned int dimension() const {
 		unsigned int n = 0;
-		for(unsigned int i=0; i<N; i++) {
-			n += spaces[i].dimension();
+		for(unsigned int i=0; i<count(); i++) {
+			n += spaces_[i].dimension();
 		}
 		return n;
 	}
 
 	double distance(const State& a, const State& b) const {
 		double d = 0;
-		for(unsigned int i=0; i<N; ++i) {
-			d += spaces[i].distance(a[i], b[i]);
+		for(unsigned int i=0; i<count(); ++i) {
+			d += spaces_[i].distance(a[i], b[i]);
 		}
 		return d;
 	}
 
 	State inverse(const State& a) const {
 		State s;
-		for(unsigned int i=0; i<N; ++i) {
-			s[i] = spaces[i].inverse(a[i]);
+		for(unsigned int i=0; i<count(); ++i) {
+			s[i] = spaces_[i].inverse(a[i]);
 		}
 		return s;
 	}
 
 	State compose(const State& a, const State& b) const {
 		State s;
-		for(unsigned int i=0; i<N; ++i) {
-			s[i] = spaces[i].compose(a[i], b[i]);
+		for(unsigned int i=0; i<count(); ++i) {
+			s[i] = spaces_[i].compose(a[i], b[i]);
 		}
 		return s;
 	}
@@ -101,8 +141,8 @@ struct MultiplierSpace
 	template<typename K>
 	State weightedSum(K f1, const State& s1, K f2, const State& s2) const {
 		State s;
-		for(unsigned int i=0; i<N; ++i) {
-			s[i] = spaces[i].weightedSum(f1, s1[i], f2, s2[i]);
+		for(unsigned int i=0; i<count(); ++i) {
+			s[i] = spaces_[i].weightedSum(f1, s1[i], f2, s2[i]);
 		}
 		return s;
 	}
@@ -110,8 +150,8 @@ struct MultiplierSpace
 	template<typename K>
 	State weightedSum(K f1, const State& s1, K f2, const State& s2, K f3, const State& s3) const {
 		State s;
-		for(unsigned int i=0; i<N; ++i) {
-			s[i] = spaces[i].weightedSum(f1, s1[i], f2, s2[i], f3, s3[i]);
+		for(unsigned int i=0; i<count(); ++i) {
+			s[i] = spaces_[i].weightedSum(f1, s1[i], f2, s2[i], f3, s3[i]);
 		}
 		return s;
 	}
@@ -127,7 +167,7 @@ struct MultiplierSpace
 			throw WeightedSumException();
 		}
 		State s;
-		for(unsigned int i=0; i<N; ++i) {
+		for(unsigned int i=0; i<count(); ++i) {
 			std::vector<State> parts;
 			parts.reserve(states.size());
 			for(size_t k=0; k<states.size(); k++) {
@@ -140,16 +180,16 @@ struct MultiplierSpace
 
 	State project(const State& s) const {
 		State v;
-		for(size_t i=0; i<N; i++) {
-			v[i] = spaces[i].project(s[i]);
+		for(size_t i=0; i<count(); i++) {
+			v[i] = spaces_[i].project(s[i]);
 		}
 		return v;
 	}
 
 	State random() const {
 		State v;
-		for(size_t i=0; i<N; i++) {
-			v[i] = spaces[i].random();
+		for(size_t i=0; i<count(); i++) {
+			v[i] = spaces_[i].random();
 		}
 		return v;
 	}
@@ -158,12 +198,12 @@ struct MultiplierSpace
 	State random(const State& center, const std::vector<K>& noise) const {
 		State v;
 		size_t start = 0;
-		for(size_t i=0; i<N; i++) {
-			size_t len = spaces[i].dimension();
+		for(size_t i=0; i<count(); i++) {
+			size_t len = spaces_[i].dimension();
 			if(start + len > noise.size()) {
 				throw InvalidNoiseVectorException();
 			}
-			v[i] = spaces[i].random(center[i], std::vector<K>(noise.begin() + start, noise.begin() + start + len));
+			v[i] = spaces_[i].random(center[i], std::vector<K>(noise.begin() + start, noise.begin() + start + len));
 			start += len;
 		}
 		return v;
@@ -190,7 +230,8 @@ struct MultiplierSpace
 	}
 
 private:
-	BaseSpace spaces[N];
+	SizePolicy size_policy_;
+	boost::shared_array<BaseSpace> spaces_;
 
 };
 
