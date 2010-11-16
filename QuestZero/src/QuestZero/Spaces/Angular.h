@@ -10,9 +10,10 @@
 //---------------------------------------------------------------------------
 #include "BaseSpace.h"
 #include "QuestZero/Common/RandomNumbers.h"
-#include <Danvil/Tools/Small.h>
+#include <Danvil/Tools/MoreMath.h>
 #include <Danvil/Tools/Field.h>
 #include <Danvil/Print.h>
+#include <vector>
 #include <cassert>
 //---------------------------------------------------------------------------
 namespace Spaces {
@@ -37,7 +38,7 @@ namespace Angular {
 			double distance(const K& a, const K& b) const {
 				// compute shortest distance!
 				K w = Wrap(a - b);
-				return (double)Danvil::min(w, Danvil::C_2_PI - w);
+				return (double)Danvil::MoreMath::Min(w, Danvil::C_2_PI - w);
 			}
 
 			K inverse(const K& a) const {
@@ -80,7 +81,7 @@ namespace Angular {
 
 			/** Restrict the angle to [0,2Pi] */
 			static K Wrap(K x) {
-				return Small::Wrap(x, (K)Danvil::C_2_PI);
+				return Danvil::MoreMath::Wrap(x, (K)Danvil::C_2_PI);
 			}
 
 		protected:
@@ -108,13 +109,13 @@ namespace Angular {
 
 			State random() const {
 				// random number in [0, 2*Pi]
-				return RandomNumbers::Random01() * Danvil::C_2_PI;
+				return RandomNumbers::Uniform<K>() * Danvil::C_2_PI;
 			}
 
 			template<typename NT>
 			State random(const State& center, const std::vector<NT>& noise) const {
 				assert(noise.size() == dimension());
-				NT r = RandomNumbers::S.randomMP(noise[0]);
+				NT r = RandomNumbers::UniformMP(noise[0]);
 				return project(center + (K)r);
 			}
 
@@ -138,11 +139,11 @@ namespace Angular {
 			size_t dimension() const { return 1; }
 
 			K project(K x) const {
-				x = Small::Wrap(x, (K)Danvil::C_2_PI);
+				x = Danvil::MoreMath::Wrap(x, (K)Danvil::C_2_PI);
 				// project to nearest border
 				if(lower_ < upper_) {
 					// normal case: allowed is [lower|upper]
-					if(Danvil::Small::InInterval(x, lower_, upper_)) {
+					if(Danvil::MoreMath::InInterval(x, lower_, upper_)) {
 						// already in interval
 						return x;
 					} else {
@@ -152,22 +153,22 @@ namespace Angular {
 						if(d1 < d2) {
 							// the mid point of the excluded area lies in the right interval
 							K mu = upper_ + (d2 - d1) / 2;
-							return Danvil::Small::InInterval(x, upper_, mu) ? upper_ : lower_;
+							return Danvil::MoreMath::InInterval(x, upper_, mu) ? upper_ : lower_;
 						} else {
 							// the mid point of the excluded area lies in the left interval
 							K mu = (d1 - d2) / 2;
-							return Danvil::Small::InInterval(x, mu, lower_) ? lower_ : upper_;
+							return Danvil::MoreMath::InInterval(x, mu, lower_) ? lower_ : upper_;
 						}
 					}
 				} else {
 					// two-interval case: allowed is [0|upper] and [lower|2Pi]
-					if(Danvil::Small::InInterval(x, upper_, lower_)) {
+					if(Danvil::MoreMath::InInterval(x, upper_, lower_)) {
 						// already in interval
 						return x;
 					} else {
 						// mid point of excluded interval which is [upper|lower]
 						K mu = (lower_ - upper_) / 2;
-						return Danvil::Small::InInterval(x, upper_, mu) ? upper_ : lower_;
+						return Danvil::MoreMath::InInterval(x, upper_, mu) ? upper_ : lower_;
 					}
 				}
 			}
@@ -177,12 +178,12 @@ namespace Angular {
 					return RandomNumbers::Uniform<K>(lower_, upper_);
 				} else {
 					K r = RandomNumbers::Uniform<K>(lower_, upper_ + (K)Danvil::C_2_PI);
-					return Small::Wrap(r, (K)Danvil::C_2_PI);
+					return Danvil::MoreMath::Wrap(r, (K)Danvil::C_2_PI);
 				}
 			}
 
 			template<typename NT>
-			State random(K center, const std::vector<NT>& noise) const {
+			K random(K center, const std::vector<NT>& noise) const {
 				assert(noise.size() == dimension());
 				K r = center + RandomNumbers::UniformMP(noise[0]);
 				return project(r);
