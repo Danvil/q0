@@ -11,9 +11,10 @@
 #include "BaseSpace.h"
 #include "QuestZero/Common/RandomNumbers.h"
 #include <Danvil/LinAlg.h>
-#include <Danvil/LinAlg/RotationTools.h>
+#include <Danvil/SO3.h>
 #include <Danvil/Memops/Copy.h>
-#include <Danvil/Tools/Small.h>
+#include <Danvil/Tools/MoreMath.h>
+#include <Danvil/Tools/Field.h>
 #include <Danvil/Print.h>
 #include <Danvil/Ptr.h>
 #include <boost/foreach.hpp>
@@ -32,7 +33,7 @@ namespace SO3 {
 		template<typename K>
 		struct SO3Ops
 		{
-			typedef Danvil::ctLinAlg::TQuaternion<K> State;
+			typedef Danvil::SO3::Quaternion<K> State;
 
 			struct WeightedSumException {};
 
@@ -85,7 +86,7 @@ namespace SO3 {
 					// Number of factors and states must be equal!
 					throw WeightedSumException();
 				}
-				return Danvil::ctLinAlg::RotationTools::WeightedMean(states, factors, (K)1e-3);
+				return Danvil::SO3::RotationTools::WeightedMean(states, factors, (K)1e-3);
 			}
 
 		protected:
@@ -97,13 +98,10 @@ namespace SO3 {
 
 	namespace Domains
 	{
-		// TODO: allow states with variable dimension?
 		template<typename K>
 		struct Full
 		{
-			typedef Danvil::ctLinAlg::TQuaternion<K> State;
-
-			Full() {}
+			typedef Danvil::SO3::Quaternion<K> State;
 
 			size_t dimension() const {
 				return 3;
@@ -116,18 +114,60 @@ namespace SO3 {
 			}
 
 			State random() const {
-				return Danvil::ctLinAlg::RotationTools::UniformRandom<K>(&RandomNumbers::Random01);
+				return Danvil::SO3::RotationTools::UniformRandom<K>(&RandomNumbers::Uniform<K>);
 			}
 
 			template<typename NT>
 			State random(const State& center, const std::vector<NT>& noise) const {
 				assert(noise.size() == dimension());
 				K d = (K)noise[0];
-				return center * Danvil::ctLinAlg::RotationTools::UniformRandom<K>(d, &RandomNumbers::Random01);
+				return center * Danvil::SO3::RotationTools::UniformRandom<K>(d, &RandomNumbers::Uniform<K>);
 			}
 
 		protected:
 			~Full() {}
+		};
+
+		template<typename K>
+		struct MaxDistance
+		{
+			typedef Danvil::SO3::Quaternion<K> State;
+
+			MaxDistance(K max)
+			: max_(max) {}
+
+			size_t dimension() const {
+				return 3;
+			}
+
+			State project(const State& s) const {
+				// use a quaternion which has at most an rotation angle of PI
+				State r = (s.w >= 0) ? s : -s;
+				double angle = 2 * std::acos(r.w); // is in [0,PI], because r.w > 0!
+				if(angle < max) {
+					return r;
+				} else {
+					// reduce rotation by creating a rotation of maximal angle and given axis
+					return State::FactorVectorAngle(r.x, r.y, r.z, max);
+				}
+			}
+
+			State random() const {
+				return Danvil::SO3::RotationTools::UniformRandom<K>(max, &RandomNumbers::Uniform<K>);
+			}
+
+			template<typename NT>
+			State random(const State& center, const std::vector<NT>& noise) const {
+				assert(noise.size() == dimension());
+				K d = (K)noise[0];
+				State s = center * Danvil::SO3::RotationTools::UniformRandom<K>(d, &RandomNumbers::Uniform<K>);
+				return project(s);
+			}
+
+			DEFINE_FIELD(max, K)
+
+		protected:
+			~MaxDistance() {}
 		};
 	}
 
@@ -137,10 +177,10 @@ namespace SO3 {
 		typename K,
 		class Operator = Operations::SO3Ops<K>,
 		class Domain = Domains::Full<K>,
-		class OperationFinal = OperationFinalPolicy::Unprojected<Danvil::ctLinAlg::TQuaternion<K> >
+		class OperationFinal = OperationFinalPolicy::Unprojected<Danvil::SO3::Quaternion<K> >
 	>
 	struct SO3Space
-	: public BaseSpace<Danvil::ctLinAlg::TQuaternion<K>, Operator, Domain, OperationFinal>
+	: public BaseSpace<Danvil::SO3::Quaternion<K>, Operator, Domain, OperationFinal>
 	{ };
 }
 

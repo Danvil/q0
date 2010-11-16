@@ -312,7 +312,7 @@ private:
 
 	/** Randomly picks a value from a discreet probability distribution */
 	static size_t RandomPickFromDensity(const std::vector<double>& density) {
-		double r = RandomNumbers::Random01();
+		double r = RandomNumbers::Uniform<double>();
 		return FindSmallestLargerThan(density, r);
 		// TODO catch possible exceptions and transfer to InvalidDistributionException
 	}

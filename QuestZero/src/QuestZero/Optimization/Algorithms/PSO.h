@@ -152,7 +152,7 @@ private:
 			if(u <= 4) {
 				throw std::runtime_error("psi_personal + psi_global must be > 4!");
 			}
-			return 2.0 / Danvil::abs(2.0 - u - sqrt(u * u - 4.0 * u));
+			return 2.0 / std::abs(2.0 - u - sqrt(u * u - 4.0 * u));
 		}
 
 	private:
@@ -180,8 +180,8 @@ private:
 		void Update(const Space& space, const GlobalData& globals) {
 			// TODO double or float?
 			double fl = globals.omega();
-			double fp = globals.psi_personal() * RandomNumbers::S.random01();
-			double fg = globals.psi_global() * RandomNumbers::S.random01();
+			double fp = globals.psi_personal() * RandomNumbers::Uniform<double>();
+			double fg = globals.psi_global() * RandomNumbers::Uniform<double>();
 			State dl = space.difference(current, last);
 			State dp = space.difference(best, current);
 			State dg = space.difference(globals.best(), current);

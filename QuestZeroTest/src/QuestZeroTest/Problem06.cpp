@@ -11,7 +11,7 @@
 #include <QuestZero/Spaces/Multiplier.h>
 #include <QuestZero/Optimization/Functions.h>
 #include <Danvil/LinAlg.h>
-#include <Danvil/Tools/Small.h>
+#include <Danvil/Tools/MoreMath.h>
 #include <boost/bind.hpp>
 #include <iostream>
 using std::cout;
@@ -21,7 +21,7 @@ namespace Problem06
 {
 	static const unsigned int N = 4;
 
-	typedef Danvil::ctLinAlg::TQuaternion<double> base_state;
+	typedef Danvil::SO3::Quaternion<double> base_state;
 	typedef Spaces::MultiplierState<base_state, Spaces::MultiplierSizePolicies::FixedSize<N> > state;
 
 	typedef Spaces::SO3::SO3Space<double> base_space;
@@ -42,7 +42,7 @@ namespace Problem06
 		double operator()(const state& s) const {
 			double sum = 0;
 			for(unsigned int i=0; i<N; i++) {
-				double x = r[i]->fit(s[i].rotation());
+				double x = r[i]->fit(Danvil::SO3::ConvertToMatrix(s[i]));
 				sum += x*x;
 			}
 			return sum;

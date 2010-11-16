@@ -11,7 +11,7 @@
 #include <QuestZero/Spaces/TypelistSpace.h>
 #include <QuestZero/Optimization/Functions.h>
 #include <Danvil/LinAlg.h>
-#include <Danvil/Tools/Small.h>
+#include <Danvil/Tools/MoreMath.h>
 #include <boost/bind.hpp>
 #include <iostream>
 using std::cout;
@@ -21,7 +21,7 @@ namespace Problem07
 {
 
 	typedef Danvil::ctLinAlg::Vec3f state0;
-	typedef Danvil::ctLinAlg::TQuaternion<double> state1;
+	typedef Danvil::SO3::Quaternion<double> state1;
 	typedef float state2;
 	typedef LOKI_TYPELIST_3(state0,state1,state2) state_types;
 	typedef Spaces::TypelistState<state_types> state;
@@ -44,7 +44,7 @@ namespace Problem07
 		state0 s1 = s.part<0>();
 		state1 s2 = s.part<1>();
 		state2 s3 = s.part<2>();
-		return sqrt(s1.x*s1.x + s1.y*s1.y + s1.z*s1.z) + Danvil::abs(s2.w) + Danvil::abs(s2.x) + Danvil::abs(s2.y) + Danvil::abs(s2.z) + Danvil::abs(s3);
+		return std::sqrt(s1.x*s1.x + s1.y*s1.y + s1.z*s1.z) + std::abs(s2.w) + std::abs(s2.x) + std::abs(s2.y) + std::abs(s2.z) + std::abs(s3);
 	}
 
 	typedef Functions::BoostFunctionSingleWrapper<state> function;

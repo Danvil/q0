@@ -10,7 +10,7 @@
 
 #include "QuestZero/Common/RandomNumbers.h"
 #include <Danvil/LinAlg.h>
-#include <Danvil/LinAlg/RotationTools.h>
+#include <Danvil/SO3.h>
 #include <vector>
 #include <cmath>
 #include <iostream>
@@ -49,18 +49,18 @@ public:
 		const K cRange = 10.0;
 		const K cNoise = 0.01;
 		//M R = AxisAngle.Random(Optimization.RandomNumbers.Generator).ToMatrix(); // FIXME why not working in mono?
-		Danvil::ctLinAlg::TQuaternion<K> q = Danvil::ctLinAlg::RotationTools::UniformRandom<K>(&RandomNumbers::Random01);
+		Danvil::SO3::Quaternion<K> q = Danvil::SO3::RotationTools::UniformRandom<K>(&RandomNumbers::Uniform<K>);
 		cout << "Registration rotation: " << q << endl;
-		M R = q.rotation();
+		M R = Danvil::SO3::ConvertToMatrix(q);
 		for(size_t i=0; i<point_count; i++) {
 			V x(
-				RandomNumbers::S.randomMP(cRange),
-				RandomNumbers::S.randomMP(cRange),
-				RandomNumbers::S.randomMP(cRange));
+				RandomNumbers::UniformMP(cRange),
+				RandomNumbers::UniformMP(cRange),
+				RandomNumbers::UniformMP(cRange));
 			V noise(
-				RandomNumbers::S.randomMP(cNoise),
-				RandomNumbers::S.randomMP(cNoise),
-				RandomNumbers::S.randomMP(cNoise));
+				RandomNumbers::UniformMP(cNoise),
+				RandomNumbers::UniformMP(cNoise),
+				RandomNumbers::UniformMP(cNoise));
 			original.push_back(x);
 			target.push_back(R * x + noise);
 		}

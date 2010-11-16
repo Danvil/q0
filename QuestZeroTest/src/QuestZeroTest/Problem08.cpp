@@ -13,7 +13,8 @@
 #include <QuestZero/Spaces/Multiplier.h>
 #include <QuestZero/Optimization/Functions.h>
 #include <Danvil/LinAlg.h>
-#include <Danvil/Tools/Small.h>
+#include <Danvil/SO3.h>
+
 #include <boost/bind.hpp>
 #include <iostream>
 using std::cout;
@@ -25,7 +26,7 @@ namespace Problem08
 
 	typedef Danvil::ctLinAlg::Vec3<double> base_state_0;
 	typedef Spaces::MultiplierState<base_state_0, Spaces::MultiplierSizePolicies::FixedSize<N> > state0;
-	typedef Danvil::ctLinAlg::TQuaternion<double> base_state_1;
+	typedef Danvil::SO3::Quaternion<double> base_state_1;
 	typedef Spaces::MultiplierState<base_state_1, Spaces::MultiplierSizePolicies::FixedSize<N> > state1;
 	typedef LOKI_TYPELIST_2(state0,state1) state_types;
 	typedef Spaces::TypelistState<state_types> state;
@@ -57,7 +58,7 @@ namespace Problem08
 		double operator()(const state& s) const {
 			double sum = 0;
 			for(unsigned int i=0; i<N; i++) {
-				double x = r[i]->fit(s.part<1>()[i].rotation(), s.part<0>()[i]);
+				double x = r[i]->fit(Danvil::SO3::ConvertToMatrix(s.part<1>()[i]), s.part<0>()[i]);
 				sum += x*x;
 			}
 			return sum;

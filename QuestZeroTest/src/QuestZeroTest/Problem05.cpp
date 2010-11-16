@@ -12,7 +12,7 @@
 #include <QuestZero/Spaces/TypelistSpace.h>
 #include <QuestZero/Optimization/Functions.h>
 #include <Danvil/LinAlg.h>
-#include <Danvil/Tools/Small.h>
+#include <Danvil/SO3.h>
 #include <boost/bind.hpp>
 #include <iostream>
 using std::cout;
@@ -22,7 +22,7 @@ namespace Problem05
 {
 
 	typedef Danvil::ctLinAlg::Vec3<double> state0;
-	typedef Danvil::ctLinAlg::TQuaternion<double> state1;
+	typedef Danvil::SO3::Quaternion<double> state1;
 	typedef LOKI_TYPELIST_2(state0,state1) state_types;
 	typedef Spaces::TypelistState<state_types> state;
 
@@ -41,7 +41,7 @@ namespace Problem05
 	: public Benchmarks::PointCloudRegistration<double>
 	{
 		double operator()(const state& state) const {
-			return fit(state.part<1>().rotation(), state.part<0>());
+			return fit(Danvil::SO3::ConvertToMatrix(state.part<1>()), state.part<0>());
 		}
 	};
 

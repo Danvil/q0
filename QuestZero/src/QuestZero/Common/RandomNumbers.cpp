@@ -7,7 +7,5 @@
 
 #include "RandomNumbers.h"
 
-boost::mt19937 RandomNumbers::gen;
-
-RandomNumbers RandomNumbers::S;
+boost::mt19937 RandomNumbers::Generator;
 

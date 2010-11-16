@@ -15,65 +15,50 @@
 #include <stdexcept>
 //---------------------------------------------------------------------------
 
-class RandomNumbers
+namespace RandomNumbers
 {
-public:
-	/** Random number in [a,b] */
-	template<typename K>
-	K random(K a, K b) const {
-		throw std::runtime_error("Function K random(K,K) is not implemented for this type!");
-	}
+	extern boost::mt19937 Generator;
 
-	/** Random number in [-a,+a] */
-	template<typename K>
-	K randomMP(const K a) const {
-		return random(-a, +a);
-	}
-
-	/** Random number in [0,a] */
-	template<typename K>
-	K randomP(const K a) const {
-		return random(0, a);
-	}
-
-	/** Random number in [0,1] */
-	double random01() const {
-		return random(0.0, 1.0);
-	}
-
-	/** Random number in [0,1] */
-	unsigned int random(unsigned int a) const {
-		return (unsigned int)random((int)0, (int)(a + 1));
-	}
-
-public:
-	float random(float a, float b) const {
-		boost::uniform_real<float> dist(a, b);
-		boost::variate_generator<boost::mt19937&, boost::uniform_real<float> > die(gen, dist);
+	template<typename DIST>
+	typename DIST::result_type Generate(const DIST& dist) {
+		boost::variate_generator<boost::mt19937&, DIST> die(Generator, dist);
 		return die();
 	}
 
-	double random(double a, double b) const {
-		boost::uniform_real<double> dist(a, b);
-		boost::variate_generator<boost::mt19937&, boost::uniform_real<double> > die(gen, dist);
-		return die();
+	/** Random real in [0,1] */
+	template<typename K>
+	K Uniform() {
+		return Generate(boost::uniform_real<K>(0, 1));
 	}
 
-	int random(int a, int b) const {
-		boost::uniform_int<int> dist(a, b);
-		boost::variate_generator<boost::mt19937&, boost::uniform_int<int> > die(gen, dist);
-		return die();
+	/** Random real in [0,range] */
+	template<typename K>
+	K Uniform(K range) {
+		return Generate(boost::uniform_real<K>(0, range));
 	}
 
-private:
-	// FIXME random number generator
-	static boost::mt19937 gen;
+	/** Random real in [a,b] */
+	template<typename K>
+	K Uniform(K a, K b) {
+		return Generate(boost::uniform_real<K>(a, b));
+	}
 
-public:
-	static RandomNumbers S;
+	/** Random real in [-range,+range] */
+	template<typename K>
+	K UniformMP(K range) {
+		return Generate(boost::uniform_real<K>(-range, range));
+	}
 
-	static double Random01() {
-		return S.random01();
+	/** Random integer in [0,range] */
+	template<typename K>
+	K Index(K range) {
+		return Generate(boost::uniform_int<K>(0, range));
+	}
+
+	/** Random integer in [a,b] */
+	template<typename K>
+	K Index(K a, K b) {
+		return Generate(boost::uniform_int<K>(a, b));
 	}
 
 };

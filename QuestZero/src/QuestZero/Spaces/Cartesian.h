@@ -115,7 +115,7 @@ namespace Cartesian {
 			State project(const State& s) const {
 				State v;
 				for(size_t i=0; i<dimension(); i++) {
-					v[i] = Danvil::clamped(s[i], _min[i], _max[i]);
+					v[i] = Danvil::MoreMath::Clamp(s[i], _min[i], _max[i]);
 				}
 				return v;
 			}
@@ -137,7 +137,7 @@ namespace Cartesian {
 			static State RandomV(const State& min, const State& max) {
 				State v;
 				for(size_t i=0; i<v.dimension(); i++) {
-					v[i] = RandomNumbers::S.random(min[i], max[i]);
+					v[i] = RandomNumbers::Uniform(min[i], max[i]);
 				}
 				return v;
 			}
@@ -178,7 +178,7 @@ namespace Cartesian {
 			}
 
 			State project(const State& s) const {
-				return Danvil::clamped(s, _min, _max);
+				return Danvil::MoreMath::Clamp(s, _min, _max);
 			}
 
 			State random() const {
@@ -196,7 +196,7 @@ namespace Cartesian {
 
 		private:
 			static State RandomV(const State& min, const State& max) {
-				return RandomNumbers::S.random(min, max);
+				return RandomNumbers::Uniform(min, max);
 			}
 
 			State _min, _max;

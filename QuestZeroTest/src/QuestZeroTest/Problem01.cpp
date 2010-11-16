@@ -93,7 +93,7 @@ namespace Problem02
 
 namespace Problem03
 {
-	typedef Danvil::ctLinAlg::TQuaternion<double> state;
+	typedef Danvil::SO3::Quaternion<double> state;
 
 	typedef Spaces::SO3::SO3Space<double> Space;
 
@@ -103,7 +103,7 @@ namespace Problem03
 	: public Benchmarks::PointCloudRegistration<double>
 	{
 		double operator()(const state& x) const {
-			return fit(x.rotation());
+			return fit(Danvil::SO3::ConvertToMatrix(x));
 		}
 	};
 
@@ -148,7 +148,7 @@ namespace Problem04
 	: public Benchmarks::PointCloudRegistration<double>
 	{
 		double operator()(const state& x) const {
-			return fit(x.sr[0].rotation(), x.sc);
+			return fit(Danvil::SO3::ConvertToMatrix(x.sr[0]), x.sc);
 		}
 	};
 

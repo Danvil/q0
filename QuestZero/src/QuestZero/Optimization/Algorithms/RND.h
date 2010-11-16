@@ -11,7 +11,7 @@
 #include "QuestZero/Common/ScoreComparer.h"
 #include "QuestZero/Common/Sample.h"
 #include "QuestZero/Common/SampleSet.h"
-#include <Danvil/Tools/Small.h>
+#include <Danvil/Tools/MoreMath.h>
 #include <string>
 
 /// <summary>
@@ -47,7 +47,7 @@ struct RND
 		// in every iteration add new particles and delete the worst particles
 		while(true) {
 			// add new samples by randomly selecting points
-			int target_add = Danvil::max((size_t)0, 2 * particleCount - open.count());
+			int target_add = Danvil::MoreMath::Max((size_t)0, 2 * particleCount - open.count());
 			open.add(space.randomMany(target_add));
 			// evaluate the chunk
 			open.evaluateUnknown(function);
