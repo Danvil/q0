@@ -131,6 +131,8 @@ namespace Angular {
 		struct Interval
 		{
 			// FIXME enforce float or double for K
+			Interval()
+			{}
 
 			Interval(K lower, K upper)
 			: lower_(lower),
