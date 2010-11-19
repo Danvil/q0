@@ -122,7 +122,7 @@ struct Cartesian
 			K y = v[i + 1];
 			K a = y - x * x;
 			K b = x - 1;
-			sum += 100 * a * a + b * b;
+			sum += K(100) * a * a + b * b;
 		}
 		return sum;
 	}
@@ -137,7 +137,7 @@ struct Cartesian
 		K sum = 0;
 		for(unsigned int i = 0; i < v.dimension(); i++) {
 			K x = v[i];
-			sum += x * x + 10 * (1 - cos(Danvil::C_2_PI * x));
+			sum += x * x + K(10) * (K(1) - K(2) * std::cos(Danvil::Pi<K>() * x));
 		}
 		return sum;
 	}
@@ -151,7 +151,7 @@ struct Cartesian
 	static K Step(const V& v) {
 		K sum = 0;
 		for(unsigned int i = 0; i < v.dimension(); i++) {
-			K a = floor(v[i] + 0.5);
+			K a = std::floor(v[i] + K(0.5));
 			sum += a * a;
 		}
 		return sum;
@@ -168,9 +168,9 @@ struct Cartesian
 		for(unsigned int i = 0; i < v.dimension(); i++) {
 			K x = v[i];
 			sum += x * x;
-			prod *= cos(Danvil::C_2_PI * x);
+			prod *= std::cos(K(2) * Danvil::Pi<K>() * x);
 		}
-		return Danvil::C_EULER + 20 - 20 * exp(-0.2 * sqrt(sum / v.dimension())) - exp(prod / v.dimension());
+		return Danvil::E<K>() + K(20) - K(20) * std::exp(-K(0.2) * std::sqrt(sum / K(v.dimension()))) - std::exp(prod / K(v.dimension()));
 	}
 
 	/// <summary>
@@ -185,9 +185,9 @@ struct Cartesian
 		for(unsigned int i = 0; i < v.dimension(); i++) {
 			K x = v[i];
 			sum += x * x;
-			prod *= cos(x / sqrt(i + 1));
+			prod *= std::cos(x / std::sqrt(i + 1));
 		}
-		return 1 + sum / 4000 - prod;
+		return 1 + sum / K(4000) - prod;
 	}
 
 };

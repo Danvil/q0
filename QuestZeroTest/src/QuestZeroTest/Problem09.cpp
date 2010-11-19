@@ -6,7 +6,7 @@
  */
 
 #include "Benchmarks/Cartesian.h"
-#include "QuestZero/Optimization/Functions.h"
+#include "QuestZero/Optimization/Deterministic/Functions.h"
 #include "QuestZero/Spaces/Cartesian.h"
 #include "QuestZero/Tracking/Algorithms/ParticleFilter/ParticleFilter.h"
 #include "QuestZero/Tracking/Tracking.h"
