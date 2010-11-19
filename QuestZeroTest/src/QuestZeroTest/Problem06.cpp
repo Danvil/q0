@@ -9,7 +9,7 @@
 #include "Benchmarks/PointCloudRegistration.h"
 #include <QuestZero/Spaces/SO3.h>
 #include <QuestZero/Spaces/Multiplier.h>
-#include <QuestZero/Optimization/Deterministic/Functions.h>
+#include <QuestZero/Optimization/Functions.h>
 #include <Danvil/LinAlg.h>
 #include <Danvil/Tools/MoreMath.h>
 #include <boost/bind.hpp>

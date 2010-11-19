@@ -9,7 +9,7 @@
 #include "Benchmarks/Cartesian.h"
 #include "Benchmarks/PointCloudRegistration.h"
 #include <QuestZero/Optimization/Optimization.h>
-#include <QuestZero/Optimization/Deterministic/Functions.h>
+#include <QuestZero/Optimization/Functions.h>
 #include <QuestZero/Spaces/Cartesian.h>
 #include <QuestZero/Spaces/SO3.h>
 #include <QuestZero/Spaces/Mixed2.h>

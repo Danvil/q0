@@ -10,7 +10,7 @@
 #include <QuestZero/Spaces/Cartesian.h>
 #include <QuestZero/Spaces/SO3.h>
 #include <QuestZero/Spaces/TypelistSpace.h>
-#include <QuestZero/Optimization/Deterministic/Functions.h>
+#include <QuestZero/Optimization/Functions.h>
 #include <Danvil/LinAlg.h>
 #include <Danvil/SO3.h>
 #include <boost/bind.hpp>
