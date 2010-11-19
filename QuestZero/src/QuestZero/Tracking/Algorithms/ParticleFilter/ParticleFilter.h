@@ -54,7 +54,7 @@ struct ParticleFilter
 				// create new sample set using weighted random drawing
 				try{
 					open_samples = open_samples.drawByScore(particle_count_);
-				} catch(typename SampleSet::CanNotNormalizeZeroListException& e) {
+				} catch(typename SampleSet::CanNotNormalizeZeroListException&) {
 					// tracker lost the object
 					return sol;
 				}

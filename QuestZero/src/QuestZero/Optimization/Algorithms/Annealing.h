@@ -74,7 +74,7 @@ struct ParticleAnnealing
 			current.evaluateUnknown(function);
 			// find best beta with respect to current scores
 			double beta = BetaOptimizationProblem<double>::Optimize_Bisect(alpha, current.scores(), 1e-2);
-			if(beta > BetaOptimizationProblem<double>::cMaxBeta * 0.99) {
+			if(beta > BetaOptimizationProblem<double>::cMaxBeta() * 0.99) {
 				// we can not distinguish the scores anymore, so we assume that we have enough accuracy and quit
 				// FIXME is this test good? this imposes some kind of scale on the score!
 				break;
@@ -115,9 +115,8 @@ private:
 		  scores_(scores)
 		{}
 
-		static const T cMaxBetaExp = 1;
-
-		static const T cMaxBeta = 10; // = 10^cMaxBetaExp
+		static T cMaxBetaExp() { return 1; }
+		static T cMaxBeta() { return 10; } // = 10^cMaxBetaExp
 
 		/** Returns alpha_target - D(beta) / N (suitable for root finding) */
 		T operator()(T u) const {
@@ -173,11 +172,11 @@ private:
 		static T Optimize_Bisect(T alphaTarget, const std::vector<T>& scores, T epsilon) {
 			try {
 				BetaOptimizationProblem bop(alphaTarget, scores);
-				double u_best = BisectionRootFinder::Solve(bop, -1,+1/*-cMaxBetaExp, +cMaxBetaExp*/, epsilon);
+				double u_best = BisectionRootFinder::Solve(bop, -cMaxBetaExp(), +cMaxBetaExp(), epsilon);
 				// FIXME why is this not working? linker error?
 				return StateToBeta(u_best);
-			} catch(BisectionRootFinder::NoSlopeException& e) {
-				return cMaxBeta;
+			} catch(BisectionRootFinder::NoSlopeException&) {
+				return cMaxBeta();
 			}
 		}
 

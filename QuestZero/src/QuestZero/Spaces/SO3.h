@@ -164,6 +164,7 @@ namespace SO3 {
 				return project(s);
 			}
 
+#undef max // MSVC hack
 			DEFINE_FIELD(max, K)
 
 		protected:
