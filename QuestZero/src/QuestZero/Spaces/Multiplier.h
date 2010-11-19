@@ -25,6 +25,7 @@ namespace MultiplierSizePolicies
 
 	struct DynamicSize
 	{
+		DynamicSize() : count_(0) {}
 		DynamicSize(int count) : count_(count) {}
 		unsigned int count() const { return count_; }
 	private:
