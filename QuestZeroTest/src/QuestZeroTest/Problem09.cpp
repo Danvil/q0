@@ -18,6 +18,7 @@
 #include <fstream>
 using std::cout;
 using std::endl;
+using namespace Q0;
 
 template<typename Time, typename State, class Space, class Function>
 struct MovingMinima

@@ -7,7 +7,7 @@
 
 #ifndef QUESTZERO_ALGORITHMS_PSO_H_
 #define QUESTZERO_ALGORITHMS_PSO_H_
-
+//---------------------------------------------------------------------------
 #include "QuestZero/Common/ScoreComparer.h"
 #include "QuestZero/Common/RandomNumbers.h"
 #include "QuestZero/Common/Sample.h"
@@ -15,6 +15,9 @@
 #include <boost/foreach.hpp>
 #include <vector>
 #include <string>
+//---------------------------------------------------------------------------
+namespace Q0 {
+//---------------------------------------------------------------------------
 
 /// <summary>
 /// The particle swarm algorithm
@@ -215,4 +218,7 @@ private:
 
 };
 
+//---------------------------------------------------------------------------
+}
+//---------------------------------------------------------------------------
 #endif

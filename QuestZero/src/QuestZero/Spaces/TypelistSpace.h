@@ -7,14 +7,16 @@
 
 #ifndef TYPELISTSPACE_H_
 #define TYPELISTSPACE_H_
-
+//---------------------------------------------------------------------------
 #include "GetScalarType.h"
 #include <Danvil/Print.h>
 #include <loki/HierarchyGenerators.h>
 #include <loki/Typelist.h>
 #include <vector>
-
+//---------------------------------------------------------------------------
+namespace Q0 {
 namespace Spaces {
+//---------------------------------------------------------------------------
 
 template<class Typelist>
 struct TypelistState
@@ -271,7 +273,7 @@ private:
 
 };
 
-
-}
-
+//---------------------------------------------------------------------------
+}}
+//---------------------------------------------------------------------------
 #endif

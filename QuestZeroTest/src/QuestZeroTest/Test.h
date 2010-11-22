@@ -17,6 +17,7 @@
 #include <iostream>
 using std::cout;
 using std::endl;
+using namespace Q0;
 
 template<typename ALGO, class Space, class Function>
 void TestAlgo(ALGO algo, const Space& space, const Function& function)

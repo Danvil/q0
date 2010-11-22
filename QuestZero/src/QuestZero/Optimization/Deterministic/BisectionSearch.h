@@ -7,8 +7,11 @@
 
 #ifndef DETERMINISTIC_BISECTIONSEARCH_H_
 #define DETERMINISTIC_BISECTIONSEARCH_H_
-
+//---------------------------------------------------------------------------
 #include <cmath>
+//---------------------------------------------------------------------------
+namespace Q0 {
+//---------------------------------------------------------------------------
 
 /** Finds the root of a *monoton* function defined on a subset [min,max] of the real numbers */
 struct BisectionRootFinder
@@ -69,4 +72,7 @@ struct BisectionRootFinder
 	}
 };
 
+//---------------------------------------------------------------------------
+}
+//---------------------------------------------------------------------------
 #endif

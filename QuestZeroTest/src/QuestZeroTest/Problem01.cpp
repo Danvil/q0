@@ -19,6 +19,7 @@
 #include <iostream>
 using std::cout;
 using std::endl;
+using namespace Q0;
 //---------------------------------------------------------------------------
 
 template<typename State>

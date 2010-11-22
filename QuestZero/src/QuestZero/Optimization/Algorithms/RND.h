@@ -7,12 +7,15 @@
 
 #ifndef ALGORITHMS_RND_H
 #define ALGORITHMS_RND_H
-
+//---------------------------------------------------------------------------
 #include "QuestZero/Common/ScoreComparer.h"
 #include "QuestZero/Common/Sample.h"
 #include "QuestZero/Common/SampleSet.h"
 #include <Danvil/Tools/MoreMath.h>
 #include <string>
+//---------------------------------------------------------------------------
+namespace Q0 {
+//---------------------------------------------------------------------------
 
 /// <summary>
 /// A optimization algorithm which tries to find the minimum of a function with stupid randomness
@@ -66,4 +69,7 @@ struct RND
 	}
 };
 
+//---------------------------------------------------------------------------
+}
+//---------------------------------------------------------------------------
 #endif

@@ -14,11 +14,11 @@
 #include <QuestZero/Optimization/Functions.h>
 #include <Danvil/LinAlg.h>
 #include <Danvil/SO3.h>
-
 #include <boost/bind.hpp>
 #include <iostream>
 using std::cout;
 using std::endl;
+using namespace Q0;
 
 namespace Problem08
 {

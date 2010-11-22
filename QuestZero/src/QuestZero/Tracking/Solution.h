@@ -7,12 +7,15 @@
 
 #ifndef SOLUTION_H_
 #define SOLUTION_H_
-
+//---------------------------------------------------------------------------
 #include "QuestZero/Common/Sample.h"
 #include "TimeRange.h"
 #include <Danvil/Print.h>
 #include <boost/foreach.hpp>
 #include <vector>
+//---------------------------------------------------------------------------
+namespace Q0 {
+//---------------------------------------------------------------------------
 
 template<typename Time, typename State>
 struct TSolution
@@ -138,4 +141,7 @@ private:
 	std::vector<Item> items_;
 };
 
+//---------------------------------------------------------------------------
+}
+//---------------------------------------------------------------------------
 #endif

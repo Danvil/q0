@@ -14,14 +14,21 @@
 #include <boost/random/variate_generator.hpp>
 #include <stdexcept>
 //---------------------------------------------------------------------------
+namespace Q0 {
+//---------------------------------------------------------------------------
 
 namespace RandomNumbers
 {
-	extern boost::mt19937 Generator;
+
+	inline
+	boost::mt19937& Generator() {
+		static boost::mt19937 generator;
+		return generator;
+	}
 
 	template<typename DIST>
 	typename DIST::result_type Generate(const DIST& dist) {
-		boost::variate_generator<boost::mt19937&, DIST> die(Generator, dist);
+		boost::variate_generator<boost::mt19937&, DIST> die(Generator(), dist);
 		return die();
 	}
 
@@ -63,5 +70,7 @@ namespace RandomNumbers
 
 };
 
+//---------------------------------------------------------------------------
+}
 //---------------------------------------------------------------------------
 #endif

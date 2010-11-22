@@ -7,12 +7,15 @@
 
 #ifndef ALGORITHMS_ANNEALING_H_
 #define ALGORITHMS_ANNEALING_H_
-
+//---------------------------------------------------------------------------
 #include "QuestZero/Common/SampleSet.h"
 #include "QuestZero/Optimization/Deterministic/BisectionSearch.h"
 #include <vector>
 #include <cassert>
 #include <cmath>
+//---------------------------------------------------------------------------
+namespace Q0 {
+//---------------------------------------------------------------------------
 
 /**
  * This is after "Articulated Body Motion Capture by Annealed Particle Filtering" by Deutscher, Blake and Reid
@@ -193,4 +196,7 @@ private:
 
 };
 
+//---------------------------------------------------------------------------
+}
+//---------------------------------------------------------------------------
 #endif

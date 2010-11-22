@@ -9,6 +9,9 @@
 #define QUESTZERO_TRACER_NOTRACER_H_
 
 #include "QuestZero/Policies/TracePolicy.h"
+//---------------------------------------------------------------------------
+namespace Q0 {
+//---------------------------------------------------------------------------
 
 template<typename State>
 struct NoTracer
@@ -17,4 +20,7 @@ struct NoTracer
 	void trace(const TSampleSet<State>&) {}
 };
 
+//---------------------------------------------------------------------------
+}
+//---------------------------------------------------------------------------
 #endif

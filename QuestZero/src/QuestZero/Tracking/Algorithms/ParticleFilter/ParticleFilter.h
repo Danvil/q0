@@ -7,12 +7,15 @@
 
 #ifndef PARTICLEFILTER_H_
 #define PARTICLEFILTER_H_
-
+//---------------------------------------------------------------------------
 #include "QuestZero/Tracking/PinnedFunction.h"
 #include "QuestZero/Common/ScoreComparer.h"
 #include "QuestZero/Common/SampleSet.h"
 #include "QuestZero/Tracking/Solution.h"
 #include "QuestZero/Optimization/Algorithms/Annealing.h"
+//---------------------------------------------------------------------------
+namespace Q0 {
+//---------------------------------------------------------------------------
 
 template<typename Time, typename State, class StartingStates, class Take, class Tracer, bool UseAnnealing=false>
 struct ParticleFilter
@@ -73,4 +76,7 @@ struct ParticleFilterWithAnnealing
 : public ParticleFilter<Time, State, StartingStates, Take, Tracer>
 {};
 
+//---------------------------------------------------------------------------
+}
+//---------------------------------------------------------------------------
 #endif
