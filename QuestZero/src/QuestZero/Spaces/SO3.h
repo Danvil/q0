@@ -134,8 +134,8 @@ namespace SO3 {
 		{
 			typedef Danvil::SO3::Quaternion<K> State;
 
-			MaxDistance(K max)
-			: max_(max) {}
+			MaxDistance(K range = Danvil::Pi<K>())
+			: range_(range) {}
 
 			size_t dimension() const {
 				return 3;
@@ -145,16 +145,16 @@ namespace SO3 {
 				// use a quaternion which has at most an rotation angle of PI
 				State r = (s.w >= 0) ? s : -s;
 				double angle = 2 * std::acos(r.w); // is in [0,PI], because r.w > 0!
-				if(angle < max) {
+				if(angle < range_) {
 					return r;
 				} else {
 					// reduce rotation by creating a rotation of maximal angle and given axis
-					return State::FactorVectorAngle(r.x, r.y, r.z, max);
+					return State::FactorVectorAngle(r.x, r.y, r.z, range_);
 				}
 			}
 
 			State random() const {
-				return Danvil::SO3::RotationTools::UniformRandom<K>(max, &RandomNumbers::Uniform<K>);
+				return Danvil::SO3::RotationTools::UniformRandom<K>(range_, &RandomNumbers::Uniform<K>);
 			}
 
 			template<typename NT>
@@ -165,8 +165,7 @@ namespace SO3 {
 				return project(s);
 			}
 
-#undef max // MSVC hack
-			DEFINE_FIELD(max, K)
+			DEFINE_FIELD(range, K)
 
 		protected:
 			~MaxDistance() {}
