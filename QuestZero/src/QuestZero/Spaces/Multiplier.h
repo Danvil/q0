@@ -10,6 +10,7 @@
 //---------------------------------------------------------------------------
 #include "GetScalarType.h"
 #include <Danvil/Print.h>
+#include <Danvil/Tools/Debug.h>
 #include <boost/shared_array.hpp>
 #include <vector>
 //---------------------------------------------------------------------------
@@ -51,23 +52,21 @@ struct MultiplierState
 		return size_policy_.count();
 	}
 
-	SizePolicy size_policy() const {
-		return size_policy_;
-	}
-
-	BaseState& operator[](int i) {
+	BaseState& operator[](size_t i) {
+		DEBUG_ASSERT_MESSAGE(i < count(), "Index out of bound");
 		return sub_[i];
 	}
 
-	const BaseState& operator[](int i) const {
+	const BaseState& operator[](size_t i) const {
+		DEBUG_ASSERT_MESSAGE(i < count(), "Index out of bound");
 		return sub_[i];
 	}
 
 	void print(std::ostream& os) const {
 		os << "[";
-		for(unsigned int i=0; i<count(); i++) {
+		for(size_t i=0; i<count(); ++i) {
 			os << i << "=" << sub_[i];
-			if(i != count()-1) {
+			if(i != count() - 1) {
 				os << ", ";
 			}
 		}
@@ -75,8 +74,8 @@ struct MultiplierState
 	}
 
 private:
-	SizePolicy size_policy_;
 	boost::shared_array<BaseState> sub_;
+	SizePolicy size_policy_;
 
 };
 
@@ -100,17 +99,19 @@ struct MultiplierSpace
 		return size_policy_.count();
 	}
 
-	BaseSpace& operator[](int i) {
+	BaseSpace& operator[](size_t i) {
+		DEBUG_ASSERT_MESSAGE(i < count(), "Index out of bound");
 		return spaces_[i];
 	}
 
-	const BaseSpace& operator[](int i) const {
+	const BaseSpace& operator[](size_t i) const {
+		DEBUG_ASSERT_MESSAGE(i < count(), "Index out of bound");
 		return spaces_[i];
 	}
 
 	unsigned int dimension() const {
 		unsigned int n = 0;
-		for(unsigned int i=0; i<count(); i++) {
+		for(size_t i=0; i<count(); i++) {
 			n += spaces_[i].dimension();
 		}
 		return n;
@@ -118,23 +119,23 @@ struct MultiplierSpace
 
 	double distance(const State& a, const State& b) const {
 		double d = 0;
-		for(unsigned int i=0; i<count(); ++i) {
+		for(size_t i=0; i<count(); ++i) {
 			d += spaces_[i].distance(a[i], b[i]);
 		}
 		return d;
 	}
 
 	State inverse(const State& a) const {
-		State s;
-		for(unsigned int i=0; i<count(); ++i) {
+		State s(size_policy_);
+		for(size_t i=0; i<count(); ++i) {
 			s[i] = spaces_[i].inverse(a[i]);
 		}
 		return s;
 	}
 
 	State compose(const State& a, const State& b) const {
-		State s;
-		for(unsigned int i=0; i<count(); ++i) {
+		State s(size_policy_);
+		for(size_t i=0; i<count(); ++i) {
 			s[i] = spaces_[i].compose(a[i], b[i]);
 		}
 		return s;
@@ -142,8 +143,8 @@ struct MultiplierSpace
 
 	template<typename K>
 	State weightedSum(K f1, const State& s1, K f2, const State& s2) const {
-		State s;
-		for(unsigned int i=0; i<count(); ++i) {
+		State s(size_policy_);
+		for(size_t i=0; i<count(); ++i) {
 			s[i] = spaces_[i].weightedSum(f1, s1[i], f2, s2[i]);
 		}
 		return s;
@@ -151,8 +152,8 @@ struct MultiplierSpace
 
 	template<typename K>
 	State weightedSum(K f1, const State& s1, K f2, const State& s2, K f3, const State& s3) const {
-		State s;
-		for(unsigned int i=0; i<count(); ++i) {
+		State s(size_policy_);
+		for(size_t i=0; i<count(); ++i) {
 			s[i] = spaces_[i].weightedSum(f1, s1[i], f2, s2[i], f3, s3[i]);
 		}
 		return s;
@@ -168,8 +169,8 @@ struct MultiplierSpace
 			// Must have at least one element for WeightedSum!
 			throw WeightedSumException();
 		}
-		State s;
-		for(unsigned int i=0; i<count(); ++i) {
+		State s(size_policy_);
+		for(size_t i=0; i<count(); ++i) {
 			std::vector<State> parts;
 			parts.reserve(states.size());
 			for(size_t k=0; k<states.size(); k++) {
@@ -181,7 +182,7 @@ struct MultiplierSpace
 	}
 
 	State project(const State& s) const {
-		State v;
+		State v(size_policy_);
 		for(size_t i=0; i<count(); i++) {
 			v[i] = spaces_[i].project(s[i]);
 		}
@@ -189,7 +190,7 @@ struct MultiplierSpace
 	}
 
 	State random() const {
-		State v;
+		State v(size_policy_);
 		for(size_t i=0; i<count(); i++) {
 			v[i] = spaces_[i].random();
 		}
@@ -198,7 +199,7 @@ struct MultiplierSpace
 
 	template<typename K>
 	State random(const State& center, const std::vector<K>& noise) const {
-		State v;
+		State v(size_policy_);
 		size_t start = 0;
 		for(size_t i=0; i<count(); i++) {
 			size_t len = spaces_[i].dimension();
