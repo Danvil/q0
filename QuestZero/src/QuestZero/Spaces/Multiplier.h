@@ -48,6 +48,17 @@ struct MultiplierState
 		sub_ = boost::shared_array<BaseState>(new BaseState[count()]);
 	}
 
+	MultiplierState& operator=(const MultiplierState& rhs) {
+		if(&rhs != this) {
+			size_policy_ = rhs.size_policy_;
+			sub_ = boost::shared_array<BaseState>(new BaseState[count()]);
+			for(size_t i=0; i<count(); i++) {
+				sub_[i] = rhs.sub_[i];
+			}
+		}
+		return *this;
+	}
+
 	unsigned int count() const {
 		return size_policy_.count();
 	}
