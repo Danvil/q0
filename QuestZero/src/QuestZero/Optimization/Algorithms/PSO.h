@@ -26,7 +26,8 @@ namespace Q0 {
 /// See Particle Swarm Optimization: Developments, Application and Ressources, Eberhart, R. and Shi, Y.
 /// </summary>
 template<
-	typename State,
+	class State,
+	class Score,
 	class Target,
 	class StartingStates,
 	class Take,
@@ -38,8 +39,8 @@ struct PSO
   public Take,
   public Tracer
 {
-	typedef TSample<State> Sample;
-	typedef TSampleSet<State> SampleSet;
+	typedef TSample<State,Score> Sample;
+	typedef TSampleSet<State,Score> SampleSet;
 
 	PSO() {}
 
@@ -66,7 +67,7 @@ struct PSO
 
 	template<class Space, class Function>
 	Sample optimize(const Space& space, const Function& function) {
-		typedef BetterMeansSmaller<State> CMP;
+		typedef BetterMeansSmaller<State,Score> CMP;
 		globals.set(settings);
 		// generate start samples
 		SampleSet initial(this->pickMany(space, settings.particleCount));

@@ -20,11 +20,11 @@ namespace TakePolicy {
 	//---------------------------------------------------------------------------
 
 	/** Returns the state with best score from the set */
-	template<typename State>
+	template<typename State, typename Score>
 	struct TakeBest
 	{
 		template<class Space, class CMP>
-		const TSample<State>& take(const Space&, const TSampleSet<State>& many) {
+		const TSample<State,Score>& take(const Space&, const TSampleSet<State,Score>& many) {
 			return many.template best<CMP>();
 		}
 
@@ -35,18 +35,18 @@ namespace TakePolicy {
 	//---------------------------------------------------------------------------
 
 	// this will yield a compiler error if this policy is used with something else than BetterMeansBigger
-	template<class State, class CMP> struct CmpChecker;
-	template<class State> struct CmpChecker<State, BetterMeansBigger<State> > {};
+	template<class State, typename Score, class CMP> struct CmpChecker;
+	template<class State, typename Score> struct CmpChecker<State, Score, BetterMeansBigger<State,Score> > {};
 
 	/** Returns a weighted mean of all sample states in the set weighted by sample score
 	 * Works only with BetterMeansBigger SampleSets!
 	 */
-	template<typename State>
+	template<typename State, typename Score>
 	struct TakeMean
 	{
 		template<class Space, class CMP>
-		TSample<State> take(const Space& space, const TSampleSet<State>& many) {
-			CmpChecker<State, CMP>(); // test
+		TSample<State,Score> take(const Space& space, const TSampleSet<State,Score>& many) {
+			CmpChecker<State,Score, CMP>(); // test
 			// FIXME this weighting assumes, that greater scores are better ... but what else do we have ?
 			std::vector<double> scores_normalized = many.scores();
 			double score_sum = 0;
@@ -61,7 +61,7 @@ namespace TakePolicy {
 			for(size_t i=0; i<scores_normalized.size(); ++i) {
 				scores_normalized[i] *= scl;
 			}
-			return TSample<State>(space.weightedSum(scores_normalized, many.states()), mixed_score);
+			return TSample<State,Score>(space.weightedSum(scores_normalized, many.states()), mixed_score);
 		}
 
 	protected:

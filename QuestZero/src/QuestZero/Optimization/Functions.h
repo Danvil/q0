@@ -13,7 +13,7 @@ namespace Functions
 	 * A valid function object should look like this:
 	 * struct f {
 	 *   std::vector<double> operator()(const std::vector<State>& states) { ... }
-	 *   double operator()(const <State& state) { ... }
+	 *   double operator()(const State& state) { ... }
 	 * };
 	 * If only one of the two methods is present, you can use the base classes
 	 *  - AddParallel
@@ -32,8 +32,8 @@ namespace Functions
 		std::vector<ReturnType> operator()(const std::vector<State>& states) const {
 			std::vector<ReturnType> scores;
 			scores.reserve(states.size());
-			for(size_t i=0; i<states.size(); ++i) {
-				scores.push_back((*this)(states[i]));
+			for(typename std::vector<State>::const_iterator it=states.begin(); it!=states.end(); ++it) {
+				scores.push_back((*this)(*it));
 			}
 			return scores;
 		}
@@ -57,17 +57,20 @@ namespace Functions
 		{
 			typedef boost::function<ReturnType(const State&)> FunctorType;
 
-			void setFunctor(const FunctorType& f) { _functor = f; }
+			void set_functor(const FunctorType& f) { functor_ = f; }
 
 			ReturnType operator()(const State& state) const {
-				return _functor(state);
+				return functor_(state);
 			}
 
 		private:
-			FunctorType _functor;
+			FunctorType functor_;
 		};
 	}
 
+	/**
+	 * An evaluation function object constructed from a boost::function which evaluates a single state
+	 */
 	template<typename State, typename ReturnType=DefaultReturnType>
 	struct BoostFunctionSingleWrapper
 	: public AddParallel<State, Private::BoostFunctionSingleWrapperHelper<State, ReturnType>, ReturnType>
@@ -80,17 +83,20 @@ namespace Functions
 		{
 			typedef boost::function<std::vector<ReturnType>(const std::vector<State>&)> FunctorType;
 
-			void setFunctor(const FunctorType& f) { _functor = f; }
+			void set_functor(const FunctorType& f) { functor_ = f; }
 
 			std::vector<ReturnType> operator()(const std::vector<State>& states) const {
-				return _functor(states);
+				return functor_(states);
 			}
 
 		private:
-			FunctorType _functor;
+			FunctorType functor_;
 		};
 	}
 
+	/**
+	 * An evaluation function object constructed from a boost::function which evaluates a list of states
+	 */
 	template<typename State, typename ReturnType=DefaultReturnType>
 	struct BoostFunctionParallelWrapper
 	: public AddSingle<State, Private::BoostFunctionParallelWrapperHelper<State, ReturnType>, ReturnType>

@@ -14,15 +14,15 @@
 namespace Q0 {
 //---------------------------------------------------------------------------
 
-template<typename State, class CMP>
+template<typename State, typename Score, class CMP>
 struct ProgressAndBestToConsoleTracer
-: public ITracePolicy<State>
+: public ITracePolicy<State,Score>
 {
 	ProgressAndBestToConsoleTracer()
 	: _count(1)
 	{}
 
-	void trace(const TSampleSet<State>& samples) {
+	void trace(const TSampleSet<State,Score>& samples) {
 		std::cout << "Optimization Progress (" << _count++ << "): best=" << samples.template best<CMP>() << std::endl;
 	}
 

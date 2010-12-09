@@ -19,20 +19,22 @@ namespace Q0 {
 
 template<
 	typename _State,
-	template<typename,class,class,class,class> class Algorithm,
+	typename _Score,
+	template<class,class,class,class,class,class> class Algorithm,
 	class Target = TargetPolicy::ScoreTarget<double>,
-	template<typename> class SinglePicker = InitialStatesPolicy::RandomPicker,
-	template<typename> class Take = TakePolicy::TakeBest,
-	template<typename> class Tracer = NoTracer
+	template<class> class SinglePicker = InitialStatesPolicy::RandomPicker,
+	template<class,class> class Take = TakePolicy::TakeBest,
+	template<class,class> class Tracer = NoTracer
 >
 struct Optimization
-: public Algorithm<_State, Target, InitialStatesPolicy::ManyPicker<_State, SinglePicker>, Take<_State>, Tracer<_State> >
+: public Algorithm<_State, _Score, Target, InitialStatesPolicy::ManyPicker<_State, SinglePicker>, Take<_State,_Score>, Tracer<_State,_Score> >
 {
 	typedef _State State;
+	typedef _Score Score;
 
 	template<class Space, class Function>
-	static TSample<State> Optimize(const Space& space, const Function& function) {
-		Optimization<State, Algorithm, Target, SinglePicker, Take, Tracer> x;
+	static TSample<State,Score> Optimize(const Space& space, const Function& function) {
+		Optimization<State, Score, Algorithm, Target, SinglePicker, Take, Tracer> x;
 		return x.optimize(space, function);
 	}
 };

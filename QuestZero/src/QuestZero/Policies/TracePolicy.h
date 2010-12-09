@@ -6,10 +6,10 @@
 namespace Q0 {
 //---------------------------------------------------------------------------
 
-template<typename State>
+template<typename State, typename Score>
 struct ITracePolicy
 {
-	virtual void trace(const TSampleSet<State>& samples) = 0;
+	virtual void trace(const TSampleSet<State,Score>& samples) = 0;
 };
 
 //---------------------------------------------------------------------------

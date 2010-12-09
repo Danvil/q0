@@ -10,13 +10,13 @@ namespace Q0 {
 
 //---------------------------------------------------------------------------
 
-template<typename State>
+template<typename State, typename Score>
 class TSample
 : public Danvil::Print::IPrintable
 {
 private:
 	State _state;
-	double _score;
+	Score _score;
 	bool _isKnown;
 
 public:
@@ -28,7 +28,7 @@ public:
 	  _isKnown(false) {
 	}
 
-	TSample(const State& state, double score)
+	TSample(const State& state, Score score)
 	: _state(state),
 	  _score(score),
 	  _isKnown(true) {
@@ -51,7 +51,7 @@ public:
 		return _state;
 	}
 
-	double score() const {
+	Score score() const {
 		assert(_isKnown);
 		return _score;
 	}
@@ -64,7 +64,7 @@ public:
 		return _isKnown;
 	}
 
-	void setScore(double score) {
+	void setScore(Score score) {
 		_score = score;
 		_isKnown = true;
 	}
@@ -86,8 +86,8 @@ public:
 
 //---------------------------------------------------------------------------
 
-template<typename State>
-bool operator<(const TSample<State>& a, const TSample<State>& b) {
+template<typename State, typename Score>
+bool operator<(const TSample<State,Score>& a, const TSample<State,Score>& b) {
 	return a.isScoreKnown() && (b.isScoreUnknown() || a.score() < b.score());
 }
 

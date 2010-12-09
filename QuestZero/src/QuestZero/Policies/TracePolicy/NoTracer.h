@@ -13,11 +13,11 @@
 namespace Q0 {
 //---------------------------------------------------------------------------
 
-template<typename State>
+template<typename State, typename Score>
 struct NoTracer
-: public ITracePolicy<State>
+: public ITracePolicy<State, Score>
 {
-	void trace(const TSampleSet<State>&) {}
+	void trace(const TSampleSet<State, Score>&) {}
 };
 
 //---------------------------------------------------------------------------

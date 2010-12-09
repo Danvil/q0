@@ -17,10 +17,10 @@ namespace Q0 {
  * - Functions 'states()' and 'scores()' copies states/numbers
  * - Function 'best(int)' copies all samples and performs a sort
  */
-template<typename State>
+template<typename State, typename Score>
 struct SampleDataStorage
 {
-	typedef TSample<State> Sample;
+	typedef TSample<State,Score> Sample;
 
 	SampleDataStorage() {}
 
@@ -65,7 +65,7 @@ struct SampleDataStorage
 		return _samples[i];
 	}
 
-	double score(size_t i) const {
+	Score score(size_t i) const {
 		return _samples[i].score();
 	}
 
@@ -100,8 +100,8 @@ struct SampleDataStorage
 		return unknown_states;
 	}
 
-	std::vector<double> scores() const {
-		std::vector<double> r;
+	std::vector<Score> scores() const {
+		std::vector<Score> r;
 		r.reserve(_samples.size());
 		BOOST_FOREACH(const Sample& s, _samples) {
 			r.push_back(s.score());
@@ -109,19 +109,19 @@ struct SampleDataStorage
 		return r;
 	}
 
-	void setScore(size_t i, double score) {
+	void setScore(size_t i, Score score) {
 		assert(i < _samples.size());
 		_samples[i].setScore(score);
 	}
 
-	void setScores(const std::vector<double>& scores) {
+	void setScores(const std::vector<Score>& scores) {
 		assert(scores.size() == _samples.size());
 		for(size_t i=0; i<_samples.size(); i++) {
 			setScore(i, scores[i]);
 		}
 	}
 
-	void setScores(const std::vector<double>& scores, const std::vector<size_t>& indices) {
+	void setScores(const std::vector<Score>& scores, const std::vector<size_t>& indices) {
 		assert(scores.size() == indices.size());
 		for(size_t i=0; i<scores.size(); i++) {
 			setScore(indices[i], scores[i]);
@@ -134,10 +134,10 @@ private:
 
 //---------------------------------------------------------------------------
 
-template<typename State>
+template<typename State,typename Score>
 struct CachedSamplesDataStorage
 {
-	typedef TSample<State> Sample;
+	typedef TSample<State,Score> Sample;
 
 	CachedSamplesDataStorage() {}
 
@@ -191,7 +191,7 @@ struct CachedSamplesDataStorage
 		return _samples[i];
 	}
 
-	double score(size_t i) const {
+	Score score(size_t i) const {
 		return _scores[i];
 	}
 
@@ -205,7 +205,7 @@ struct CachedSamplesDataStorage
 
 	const std::vector<State>& states() const { return _states; }
 
-	const std::vector<double>& scores() const { return _scores; }
+	const std::vector<Score>& scores() const { return _scores; }
 
 	std::vector<State> statesWithUnknownScore(std::vector<size_t>& indices) const {
 		indices.clear();
@@ -221,20 +221,20 @@ struct CachedSamplesDataStorage
 		return unknown_states;
 	}
 
-	void setScore(size_t i, double score) {
+	void setScore(size_t i, Score score) {
 		assert(i < _samples.size());
 		_samples[i].setScore(score);
 		_scores[i] = score;
 	}
 
-	void setScores(const std::vector<double>& scores) {
+	void setScores(const std::vector<Score>& scores) {
 		assert(scores.size() == _samples.size());
 		for(size_t i=0; i<_samples.size(); i++) {
 			setScore(i, scores[i]);
 		}
 	}
 
-	void setScores(const std::vector<double>& scores, const std::vector<size_t>& indices) {
+	void setScores(const std::vector<Score>& scores, const std::vector<size_t>& indices) {
 		assert(scores.size() == indices.size());
 		for(size_t i=0; i<count(); i++) {
 			setScore(indices[i], scores[i]);
@@ -243,13 +243,13 @@ struct CachedSamplesDataStorage
 
 private:
 	std::vector<State> _states;
-	std::vector<double> _scores;
+	std::vector<Score> _scores;
 	std::vector<Sample> _samples;
 };
 
 //---------------------------------------------------------------------------
 
-template<typename State, class DataStorage = SampleDataStorage<State> >
+template<typename State, typename Score, class DataStorage = SampleDataStorage<State,Score> >
 struct TSampleSet
 : public DataStorage,
   public Danvil::Print::IPrintable
@@ -258,7 +258,7 @@ struct TSampleSet
 
 	struct InvalidDistributionException {};
 
-	typedef TSample<State> Sample;
+	typedef TSample<State,Score> Sample;
 
 	TSampleSet() { }
 
@@ -277,14 +277,14 @@ struct TSampleSet
 
 private:
 	/** Computes the density of the probability distribution got by normalizing the samples scores */
-	std::vector<double> scoreDensity() const {
+	std::vector<Score> scoreDensity() const {
 		if(this->count() == 0) {
 			throw CanNotNormalizeZeroListException();
 		}
 		// we first build the density using the unnormalized scores
-		std::vector<double> d;
+		std::vector<Score> d;
 		d.reserve(this->count());
-		double last = 0;
+		Score last = 0;
 		for(size_t i=0; i<this->count(); ++i) {
 			last += (*this)[i].score();
 			d.push_back(last);
@@ -294,7 +294,7 @@ private:
 		if(last == 0) {
 			throw CanNotNormalizeZeroListException();
 		}
-		double scl = 1.0 / last;
+		Score scl = Score(1) / last;
 		for(size_t i=0; i<d.size(); ++i) {
 			d[i] *= scl;
 		}
@@ -302,7 +302,7 @@ private:
 	}
 
 	/** Finds the index of the smallest value larger than the given value */
-	static size_t FindSmallestLargerThan(const std::vector<double>& list, double val) {
+	static size_t FindSmallestLargerThan(const std::vector<Score>& list, Score val) {
 		// FIXME use bisection search here!
 		for(size_t i=0; i<list.size(); ++i) {
 			if(val <= list[i]) {
@@ -313,8 +313,8 @@ private:
 	}
 
 	/** Randomly picks a value from a discreet probability distribution */
-	static size_t RandomPickFromDensity(const std::vector<double>& density) {
-		double r = RandomNumbers::Uniform<double>();
+	static size_t RandomPickFromDensity(const std::vector<Score>& density) {
+		Score r = RandomNumbers::Uniform<Score>();
 		return FindSmallestLargerThan(density, r);
 		// TODO catch possible exceptions and transfer to InvalidDistributionException
 	}
@@ -322,7 +322,7 @@ private:
 public:
 	/** Randomly picks samples using a probability which is proportional to the sample score */
 	TSampleSet drawByScore(unsigned int n) const {
-		std::vector<double> density = scoreDensity();
+		std::vector<Score> density = scoreDensity();
 		TSampleSet picked;
 		for(unsigned int i=0; i<n; ++i) {
 			size_t p = RandomPickFromDensity(density);
@@ -333,7 +333,7 @@ public:
 
 	/** Adds noise to all states invalidating the scores */
 	template<class Space>
-	void addNoise(const Space& space, const std::vector<double>& noise) {
+	void addNoise(const Space& space, const std::vector<Score>& noise) {
 		for(size_t i=0; i<this->count(); ++i) {
 			Sample& sample = (*this)[i];
 			sample.setState(space.random(sample.state(), noise));
@@ -345,14 +345,14 @@ public:
 	void evaluateUnknown(const Function& f) {
 		std::vector<size_t> unknown_ids;
 		std::vector<State> unknown_states = this->statesWithUnknownScore(unknown_ids);
-		std::vector<double> scores = f(unknown_states);
+		std::vector<Score> scores = f(unknown_states);
 		this->setScores(scores, unknown_ids);
 	}
 
 	/** Evaluates all samples (also if the sample score is already known) */
 	template<class Function>
 	void evaluateAll(const Function& f) {
-		std::vector<double> scores = f(this->states());
+		std::vector<Score> scores = f(this->states());
 		this->setScores(scores);
 	}
 
