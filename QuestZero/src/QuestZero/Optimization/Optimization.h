@@ -32,11 +32,11 @@ struct Optimization
 	typedef _State State;
 	typedef _Score Score;
 
-	template<class Space, class Function>
-	static TSample<State,Score> Optimize(const Space& space, const Function& function) {
-		Optimization<State, Score, Algorithm, Target, SinglePicker, Take, Tracer> x;
-		return x.optimize(space, function);
-	}
+//	template<class Space, class Function>
+//	static TSample<State,Score> Optimize(const Space& space, const Function& function) {
+//		Optimization<State, Score, Algorithm, Target, SinglePicker, Take, Tracer> x;
+//		return x.optimize(space, function);
+//	}
 };
 
 //---------------------------------------------------------------------------

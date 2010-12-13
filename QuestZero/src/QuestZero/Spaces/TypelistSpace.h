@@ -51,7 +51,7 @@ struct TypelistState
 	}
 
 	void print(std::ostream& os) const {
-		os << "[";
+		os << "[TL: ";
 		printImpl(Loki::Int2Type<0>(), os);
 		os << "]";
 	}
@@ -67,7 +67,8 @@ private:
 
 	template<int i>
 	void printImpl(Loki::Int2Type<i>, std::ostream& os) const {
-		os << i << "=" << part<i>();
+		//os << i << "=" << part<i>();
+		os << part<i>();
 		if(i != N - 1) {
 			os << ", ";
 		}

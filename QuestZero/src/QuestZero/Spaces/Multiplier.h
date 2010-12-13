@@ -29,6 +29,8 @@ namespace MultiplierSizePolicies
 	{
 		DynamicSize() : count_(0) {}
 		DynamicSize(int count) : count_(count) {}
+		DynamicSize(const DynamicSize& rhs) : count_(rhs.count_) {}
+		DynamicSize& operator=(const DynamicSize& rhs) { count_ = rhs.count_; return *this; }
 		unsigned int count() const { return count_; }
 	private:
 		unsigned int count_;
@@ -43,18 +45,27 @@ struct MultiplierState
 
 	typedef SizePolicy_ SizePolicy;
 
-	MultiplierState(SizePolicy sp=SizePolicy())
+	MultiplierState() {
+		// size_policy_ has default value
+		sub_ = boost::shared_array<BaseState>(new BaseState[count()]);
+	}
+
+	MultiplierState(SizePolicy sp)
 	: size_policy_(sp) {
 		sub_ = boost::shared_array<BaseState>(new BaseState[count()]);
+	}
+
+	MultiplierState(const MultiplierState& rhs)
+	: size_policy_(rhs.size_policy_) {
+		sub_ = boost::shared_array<BaseState>(new BaseState[count()]);
+		copy_from(rhs.sub_);
 	}
 
 	MultiplierState& operator=(const MultiplierState& rhs) {
 		if(&rhs != this) {
 			size_policy_ = rhs.size_policy_;
 			sub_ = boost::shared_array<BaseState>(new BaseState[count()]);
-			for(size_t i=0; i<count(); i++) {
-				sub_[i] = rhs.sub_[i];
-			}
+			copy_from(rhs.sub_);
 		}
 		return *this;
 	}
@@ -74,14 +85,22 @@ struct MultiplierState
 	}
 
 	void print(std::ostream& os) const {
-		os << "[";
+		os << "[X: ";
 		for(size_t i=0; i<count(); ++i) {
-			os << i << "=" << sub_[i];
+			//os << i << "=" << sub_[i];
+			os << sub_[i];
 			if(i != count() - 1) {
 				os << ", ";
 			}
 		}
 		os << "]";
+	}
+
+private:
+	void copy_from(const boost::shared_array<BaseState>& data) {
+		for(size_t i=0; i<count(); i++) {
+			sub_[i] = data[i];
+		}
 	}
 
 private:

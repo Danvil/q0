@@ -66,13 +66,14 @@ struct PSO
 	PSOSettings settings;
 
 	template<class Space, class Function>
-	Sample optimize(const Space& space, const Function& function) {
+	Sample Optimize(const Space& space, const Function& function) {
 		typedef BetterMeansSmaller<State,Score> CMP;
 		globals.set(settings);
 		// generate start samples
-		SampleSet initial(this->pickMany(space, settings.particleCount));
-		BOOST_FOREACH(const Sample& s, initial.samples()) {
-			particles.push_back(ParticleData(s.state()));
+		std::vector<State> initial_states = this->pickMany(space, settings.particleCount);
+		BOOST_FOREACH(const State& s, initial_states) {
+			LOG_DEBUG << "PSO: Picked initial state: " << s;
+			particles.push_back(ParticleData(s));
 		}
 		// iterate
 		while(true) {

@@ -22,10 +22,10 @@ namespace InitialStatesPolicy {
 	: public SinglePicker<State>
 	{
 		template<class Space>
-		std::vector<State> pickMany(const Space& space, unsigned int n) {
+		std::vector<State> pickMany(const Space& space, size_t n) {
 			std::vector<State> states;
 			states.reserve(n);
-			for(unsigned int i=0; i<n; i++) {
+			for(size_t i=0; i<n; ++i) {
 				states.push_back(this->pick(space));
 			}
 			return states;
@@ -41,7 +41,7 @@ namespace InitialStatesPolicy {
 	struct RandomPicker
 	{
 		template<class Space>
-		State pick(const Space& space) {
+		State pick(const Space& space) const {
 			return space.random();
 		}
 
@@ -54,15 +54,18 @@ namespace InitialStatesPolicy {
 	template<typename State>
 	struct RepeatOne
 	{
-		void setDefaultState(const State& state) { _defaultState = state; }
+		void setDefaultState(const State& state) {
+			LOG_DEBUG << "RepeatOne default state: " << state;
+			default_state_ = state;
+		}
 
 		template<class Space>
-		const State& pick(const Space&) {
-			return _defaultState;
+		const State& pick(const Space&) const {
+			return default_state_;
 		}
 
 	private:
-		State _defaultState;
+		State default_state_;
 
 	protected:
 		~RepeatOne() {}
@@ -73,27 +76,27 @@ namespace InitialStatesPolicy {
 	template<typename State>
 	struct RepeatMany
 	{
-		RepeatMany() : _index(0) {}
+		RepeatMany() : index_(0) {}
 
-		struct EmptyValueListException {};
+		struct EmptyValueListException : public std::runtime_error {};
 
 		void setValues(const std::vector<State>& states) {
-			_states = states;
+			states_ = states;
 		}
 
 		template<class Space>
 		const State& pick(const Space&) {
-			if(_states.size() == 0) {
+			if(states_.size() == 0) {
 				throw EmptyValueListException();
 			}
-			const State& state = _states[_index];
-			_index = (_index + 1) % _states.size();
+			const State& state = states_[index_];
+			index_ = (index_ + 1) % states_.size();
 			return state;
 		}
 
 	private:
-		size_t _index;
-		std::vector<State> _states;
+		size_t index_;
+		std::vector<State> states_;
 
 	protected:
 		~RepeatMany() {}
@@ -113,7 +116,7 @@ namespace InitialStatesPolicy {
 		}
 
 		template<class Space>
-		State pick(const Space& space) {
+		State pick(const Space& space) const{
 			return space.random(_state, _noise);
 		}
 
