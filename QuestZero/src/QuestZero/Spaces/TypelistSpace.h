@@ -9,6 +9,7 @@
 #define TYPELISTSPACE_H_
 //---------------------------------------------------------------------------
 #include "GetScalarType.h"
+#include "QuestZero/Common/Exceptions.h"
 #include <Danvil/Print.h>
 #include <loki/HierarchyGenerators.h>
 #include <loki/Typelist.h>
@@ -87,8 +88,6 @@ struct TypelistSpace
 
 	static const int N = Loki::TL::Length<Typelist>::value;
 
-	struct InvalidNoiseVectorException {};
-
 	// FIXME is i the type index or the global index?
 	/** Valid indices reach are [1 | Length(Typelist)] */
 	template<int i>
@@ -104,6 +103,12 @@ struct TypelistSpace
 	template<int i>
 	void setSpace(const typename Loki::TL::TypeAt<Typelist, i>::Result& space) {
 		Loki::Field<i>(*this) = space;
+	}
+
+	unsigned int dimension() const {
+		unsigned int sum = 0;
+		dimensionImpl(Loki::Int2Type<0>(), sum);
+		return sum;
 	}
 
 	double distance(const TypelistState<Typelist>& a, const TypelistState<Typelist>& b) const {
@@ -186,6 +191,14 @@ struct TypelistSpace
 
 private:
 	template<int i>
+	void dimensionImpl(Loki::Int2Type<i>, unsigned int& sum) const {
+		sum += space<i>().dimension();
+		dimensionImpl(Loki::Int2Type<i+1>(), sum);
+	}
+
+	void dimensionImpl(Loki::Int2Type<N>, unsigned int&) const {}
+
+	template<int i>
 	void distanceImpl(Loki::Int2Type<i>, double& d, const State& a, const State& b) const {
 		d += space<i>().distance(a.template part<i>(), b.template part<i>());
 		differenceImpl(Loki::Int2Type<i+1>(), d, a, b);
@@ -254,9 +267,7 @@ private:
 	void randomImpl(Loki::Int2Type<i>, State& s, unsigned int start, const State& center, const std::vector<K>& noise) const {
 		unsigned int len = space<i>().dimension();
 		unsigned int end = start + len;
-		if(end > noise.size()) {
-			throw InvalidNoiseVectorException();
-		}
+		INVALID_SIZE_EXCEPTION(end > noise.size())
 		s.template setPart<i>(space<i>().random(center.template part<i>(), std::vector<K>(noise.begin() + start, noise.begin() + end)));
 		randomImpl(Loki::Int2Type<i+1>(), s, end, center, noise);
 	}

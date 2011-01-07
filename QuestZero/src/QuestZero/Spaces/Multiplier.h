@@ -9,6 +9,7 @@
 #define MULTIPLIER_H_
 //---------------------------------------------------------------------------
 #include "GetScalarType.h"
+#include "QuestZero/Common/Exceptions.h"
 #include <Danvil/Print.h>
 #include <Danvil/Tools/Debug.h>
 #include <boost/shared_array.hpp>
@@ -74,6 +75,14 @@ struct MultiplierState
 		return size_policy_.count();
 	}
 
+	unsigned int dimension() const {
+		unsigned int d = 0;
+		for(size_t i=0; i<count(); ++i) {
+			d += sub_[i].dimension();
+		}
+		return 0;
+	}
+
 	BaseState& operator[](size_t i) {
 		DEBUG_ASSERT_MESSAGE(i < count(), "Index out of bound");
 		return sub_[i];
@@ -115,10 +124,6 @@ struct MultiplierSpace
 	typedef State_ State;
 
 	typedef typename State::SizePolicy SizePolicy;
-
-	struct InvalidNoiseVectorException {};
-
-	struct WeightedSumException {};
 
 	MultiplierSpace(SizePolicy sp=SizePolicy())
 	: size_policy_(sp) {
@@ -191,14 +196,8 @@ struct MultiplierSpace
 
 	template<typename K>
 	State weightedSum(const std::vector<K>& factors, const std::vector<State>& states) const {
-		if(factors.size() != states.size()) {
-			// Number of factors and states must be equal!
-			throw WeightedSumException();
-		}
-		if(states.size() == 0) {
-			// Must have at least one element for WeightedSum!
-			throw WeightedSumException();
-		}
+		INVALID_SIZE_EXCEPTION(factors.size() != states.size()) // Number of factors and states must be equal!
+		INVALID_SIZE_EXCEPTION(states.size() == 0) // Must have at least one element for WeightedSum!
 		State s(size_policy_);
 		for(size_t i=0; i<count(); ++i) {
 			std::vector<State> parts;
@@ -233,9 +232,7 @@ struct MultiplierSpace
 		size_t start = 0;
 		for(size_t i=0; i<count(); i++) {
 			size_t len = spaces_[i].dimension();
-			if(start + len > noise.size()) {
-				throw InvalidNoiseVectorException();
-			}
+			INVALID_SIZE_EXCEPTION(start + len > noise.size())
 			v[i] = spaces_[i].random(center[i], std::vector<K>(noise.begin() + start, noise.begin() + start + len));
 			start += len;
 		}

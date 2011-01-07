@@ -37,6 +37,7 @@ namespace InitialStatesPolicy {
 
 	//---------------------------------------------------------------------------
 
+	/** Picks a random state each time using the random function of the space */
 	template<typename State>
 	struct RandomPicker
 	{
@@ -51,6 +52,7 @@ namespace InitialStatesPolicy {
 
 	//---------------------------------------------------------------------------
 
+	/** Always picks the previously set state without modification */
 	template<typename State>
 	struct RepeatOne
 	{
@@ -73,6 +75,7 @@ namespace InitialStatesPolicy {
 
 	//---------------------------------------------------------------------------
 
+	/** Repeatedly picks states from a previously set of states without modification */
 	template<typename State>
 	struct RepeatMany
 	{
@@ -104,25 +107,26 @@ namespace InitialStatesPolicy {
 
 	//---------------------------------------------------------------------------
 
+	/** Picks a randomly modified state by using the random function of the space */
 	template<typename State>
 	struct OneWithNoise
 	{
-		void setMeanStartingValue(const State& state) {
-			_state = state;
+		void set_mean(const State& state) {
+			mean_ = state;
 		}
 
-		void setStartingNoise(const std::vector<double>& noise) {
-			_noise = noise;
+		void set_noise(const std::vector<double>& noise) {
+			noise_ = noise;
 		}
 
 		template<class Space>
 		State pick(const Space& space) const{
-			return space.random(_state, _noise);
+			return space.random(mean_, noise_);
 		}
 
 	private:
-		State _state;
-		std::vector<double> _noise;
+		State mean_;
+		std::vector<double> noise_;
 
 	protected:
 		~OneWithNoise() {}

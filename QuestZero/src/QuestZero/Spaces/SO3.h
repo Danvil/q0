@@ -10,6 +10,7 @@
 //---------------------------------------------------------------------------
 #include "BaseSpace.h"
 #include "QuestZero/Common/RandomNumbers.h"
+#include "QuestZero/Common/Exceptions.h"
 #include <Danvil/LinAlg.h>
 #include <Danvil/SO3.h>
 #include <Danvil/Memops/Copy.h>
@@ -21,7 +22,7 @@
 #include <boost/range.hpp>
 #include <vector>
 #include <cassert>
-#include <stdexcept>
+#include <cmath>
 //---------------------------------------------------------------------------
 namespace Q0 {
 namespace Spaces {
@@ -35,8 +36,6 @@ namespace SO3 {
 		struct SO3Ops
 		{
 			typedef Danvil::SO3::Quaternion<K> State;
-
-			struct WeightedSumException {};
 
 			double distance(const State& a, const State& b) const {
 				return (double)State::Distance(a, b);
@@ -83,10 +82,7 @@ namespace SO3 {
 
 			template<typename S>
 			State weightedSum(const std::vector<S>& factors, const std::vector<State>& states) const {
-				if(factors.size() != states.size()) {
-					// Number of factors and states must be equal!
-					throw WeightedSumException();
-				}
+				INVALID_SIZE_EXCEPTION(factors.size() != states.size()) // Number of factors and states must be equal!
 				return Danvil::SO3::RotationTools::WeightedMean(states, factors, (K)1e-3);
 			}
 
@@ -121,7 +117,8 @@ namespace SO3 {
 			template<typename NT>
 			State random(const State& center, const std::vector<NT>& noise) const {
 				assert(noise.size() == dimension());
-				K d = (K)noise[0];
+				// FIXME correct noise for SO3
+				K d = K(std::sqrt(noise[0]*noise[0] + noise[1]*noise[1] + noise[2]*noise[2]));
 				return center * Danvil::SO3::RotationTools::UniformRandom<K>(d, &RandomNumbers::Uniform<K>);
 			}
 
@@ -160,7 +157,8 @@ namespace SO3 {
 			template<typename NT>
 			State random(const State& center, const std::vector<NT>& noise) const {
 				assert(noise.size() == dimension());
-				K d = (K)noise[0];
+				// FIXME correct noise for SO3
+				K d = K(std::sqrt(noise[0]*noise[0] + noise[1]*noise[1] + noise[2]*noise[2]));
 				State s = center * Danvil::SO3::RotationTools::UniformRandom<K>(d, &RandomNumbers::Uniform<K>);
 				return project(s);
 			}

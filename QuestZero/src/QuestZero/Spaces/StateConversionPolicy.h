@@ -8,6 +8,8 @@
 #ifndef STATECONVERSIONPOLICY_H_
 #define STATECONVERSIONPOLICY_H_
 //---------------------------------------------------------------------------
+#include "QuestZero/Exceptions.h"
+//---------------------------------------------------------------------------
 namespace Q0 {
 namespace Spaces {
 //---------------------------------------------------------------------------
@@ -19,23 +21,17 @@ namespace StateConversionPolicy
 	{
 		typedef typename State::ScalarType K;
 
-		struct InvalidNumberCountException {};
-
 		size_t numbersCount() const {
 			return State::Dimension;
 		}
 
 		void write(size_t n, K* data) const {
-			if(n != numbersCount()) {
-				throw InvalidNumberCountException();
-			}
+			INVALID_SIZE_EXCEPTION(n != numbersCount())
 			Danvil::Memops::Copy<K, State::Dimension>(data, this->begin());
 		}
 
 		void read(size_t n, const K* data) {
-			if(n != numbersCount()) {
-				throw InvalidNumberCountException();
-			}
+			INVALID_SIZE_EXCEPTION(n != numbersCount())
 			Danvil::Memops::Copy<K, State::Dimension>(this->begin(), data);
 		}
 	};
@@ -44,8 +40,6 @@ namespace StateConversionPolicy
 	struct ToStdVector
 	{
 		typedef typename State::ScalarType K;
-
-		struct InvalidNumberCountException {};
 
 		size_t numbersCount() const {
 			return State::Dimension;
@@ -58,9 +52,7 @@ namespace StateConversionPolicy
 		}
 
 		void read(const State& state, const std::vector<K>& v) {
-			if(v.size() != numbersCount()) {
-				throw InvalidNumberCountException();
-			}
+			INVALID_SIZE_EXCEPTION(v.size() != numbersCount())
 			Danvil::Memops::Copy<K, State::Dimension>(this->begin(), v.base());
 		}
 	};

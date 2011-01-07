@@ -11,6 +11,7 @@
 #include "GetScalarType.h"
 #include "BaseSpace.h"
 #include "QuestZero/Common/RandomNumbers.h"
+#include "QuestZero/Common/Exceptions.h"
 #include <Danvil/LinAlg.h>
 #include <Danvil/Memops/Copy.h>
 #include <vector>
@@ -30,7 +31,7 @@ namespace Cartesian {
 			struct WeightedSumException {};
 
 			double distance(const State& a, const State& b) const {
-				return (double)Danvil::ctLinAlg::Distance(a, b);
+				return double(Danvil::ctLinAlg::Distance(a, b));
 			}
 
 			State inverse(const State& a) const {
@@ -59,14 +60,8 @@ namespace Cartesian {
 
 			template<typename K>
 			State weightedSum(const std::vector<K>& factors, const std::vector<State>& states) const {
-				if(factors.size() != states.size()) {
-					// Number of factors and states must be equal!
-					throw WeightedSumException();
-				}
-				if(states.size() == 0) {
-					// Must have at least one element for WeightedSum!
-					throw WeightedSumException();
-				}
+				INVALID_SIZE_EXCEPTION(factors.size() != states.size()) // Number of factors and states must be equal!
+				INVALID_SIZE_EXCEPTION(states.size() == 0)  // Must have at least one element for WeightedSum!
 				typedef typename Private::GetScalarType<State>::ScalarType S;
 				State c = (S)(factors[0]) * states[0];
 				for(size_t i=1; i<states.size(); i++) {
@@ -88,25 +83,23 @@ namespace Cartesian {
 		template<typename State>
 		struct Box
 		{
-			struct InvalidNoiseVectorException {};
-
 			Box() {}
 
 			Box(const State& min, const State& max)
-			: _min(min),
-			  _max(max) {}
+			: min_(min),
+			  max_(max) {}
 
 			void setDomainRange(const State& range) {
-				_min = -range;
-				_max = range;
+				min_ = -range;
+				max_ = range;
 			}
 
 			void setDomainMin(const State& min) {
-				_min = min;
+				min_ = min;
 			}
 
 			void setDomainMax(const State& max) {
-				_max = max;
+				max_ = max;
 			}
 
 			size_t dimension() const {
@@ -116,34 +109,35 @@ namespace Cartesian {
 			State project(const State& s) const {
 				State v;
 				for(size_t i=0; i<dimension(); i++) {
-					v[i] = Danvil::MoreMath::Clamp(s[i], _min[i], _max[i]);
+					v[i] = Danvil::MoreMath::Clamp(s[i], min_[i], max_[i]);
 				}
 				return v;
 			}
 
 			State random() const {
-				return RandomV(_min, _max);
-			}
-
-			template<typename K>
-			State random(const State& center, const std::vector<K>& noise) const {
-				if(noise.size() != State::Dimension) {
-					throw InvalidNoiseVectorException();
-				}
-				State noise_range = State::FactorFromPointer(noise.data());
-				return project(center + RandomV(-noise_range, noise_range));
-			}
-
-		private:
-			static State RandomV(const State& min, const State& max) {
 				State v;
-				for(size_t i=0; i<v.dimension(); i++) {
-					v[i] = RandomNumbers::Uniform(min[i], max[i]);
+				for(size_t i=0; i<dimension(); i++) {
+					v[i] = RandomNumbers::Uniform(min_[i], max_[i]);
 				}
 				return v;
 			}
 
-			State _min, _max;
+			template<typename K>
+			State random(const State& center, const std::vector<K>& noise) const {
+				INVALID_SIZE_EXCEPTION(noise.size() != dimension())
+				State v;
+				typedef typename State::ScalarType S;
+				for(size_t i=0; i<dimension(); i++) {
+					S n = S(noise[i]);
+					S c_min = std::max(min_[i], center[i] - n);
+					S c_max = std::min(max_[i], center[i] + n);
+					v[i] = RandomNumbers::Uniform(c_min, c_max);
+				}
+				return v;
+			}
+
+		private:
+			State min_, max_;
 
 		protected:
 			~Box() {}
@@ -153,25 +147,23 @@ namespace Cartesian {
 		template<typename State>
 		struct Interval
 		{
-			struct InvalidNoiseVectorException {};
-
 			Interval() {}
 
 			Interval(const State& min, const State& max)
-			: _min(min),
-			  _max(max) {}
+			: min_(min),
+			  max_(max) {}
 
 			void setDomainRange(const State& range) {
-				_min = -range;
-				_max = range;
+				min_ = -range;
+				max_ = range;
 			}
 
 			void setDomainMin(const State& min) {
-				_min = min;
+				min_ = min;
 			}
 
 			void setDomainMax(const State& max) {
-				_max = max;
+				max_ = max;
 			}
 
 			size_t dimension() const {
@@ -179,28 +171,24 @@ namespace Cartesian {
 			}
 
 			State project(const State& s) const {
-				return Danvil::MoreMath::Clamp(s, _min, _max);
+				return Danvil::MoreMath::Clamp(s, min_, max_);
 			}
 
 			State random() const {
-				return RandomV(_min, _max);
+				return RandomNumbers::Uniform(min_, max_);
 			}
 
 			template<typename K>
 			State random(const State& center, const std::vector<K>& noise) const {
-				if(noise.size() != 1) {
-					throw InvalidNoiseVectorException();
-				}
-				State noise_range = noise[0]; // assumes only one element!
-				return project(center + RandomV(-noise_range, noise_range)); // FIXME does not use compose here!!
+				INVALID_SIZE_EXCEPTION(noise.size() == dimension())
+				State n = State(noise[0]);
+				State c_min = std::max(min_, center - n);
+				State c_max = std::min(max_, center + n);
+				return RandomNumbers::Uniform(c_min, c_max);
 			}
 
 		private:
-			static State RandomV(const State& min, const State& max) {
-				return RandomNumbers::Uniform(min, max);
-			}
-
-			State _min, _max;
+			State min_, max_;
 
 		protected:
 			~Interval() {}
