@@ -81,8 +81,52 @@ namespace Cartesian {
 	{
 		// TODO: allow states with variable dimension?
 		template<typename State>
+		struct Infinite
+		{
+			typedef typename State::ScalarType S;
+
+			Infinite() {}
+
+			size_t dimension() const {
+				return State::Dimension;
+			}
+
+			const State& project(const State& s) const {
+				return s;
+			}
+
+			State random() const {
+				// FIXME this functions does not make sense ...
+				State v;
+				for(size_t i=0; i<dimension(); i++) {
+					v[i] = RandomNumbers::Normal<S>();
+				}
+				return v;
+			}
+
+			template<typename K>
+			State random(const State& center, const std::vector<K>& noise) const {
+				INVALID_SIZE_EXCEPTION(noise.size() != dimension())
+				State v;
+				for(size_t i=0; i<dimension(); i++) {
+					S n = S(noise[i]);
+					S c_min = center[i] - n;
+					S c_max = center[i] + n;
+					v[i] = RandomNumbers::Uniform(c_min, c_max);
+				}
+				return v;
+			}
+
+		protected:
+			~Infinite() {}
+		};
+
+		// TODO: allow states with variable dimension?
+		template<typename State>
 		struct Box
 		{
+			typedef typename State::ScalarType S;
+
 			Box() {}
 
 			Box(const State& min, const State& max)
@@ -126,11 +170,13 @@ namespace Cartesian {
 			State random(const State& center, const std::vector<K>& noise) const {
 				INVALID_SIZE_EXCEPTION(noise.size() != dimension())
 				State v;
-				typedef typename State::ScalarType S;
 				for(size_t i=0; i<dimension(); i++) {
 					S n = S(noise[i]);
-					S c_min = std::max(min_[i], center[i] - n);
-					S c_max = std::min(max_[i], center[i] + n);
+					S c1 = center[i] - n;
+					S c2 = center[i] + n;
+					assert(min_[i] < c2 && c1 < max_[i]);
+					S c_min = std::max(min_[i], c1);
+					S c_max = std::min(max_[i], c2);
 					v[i] = RandomNumbers::Uniform(c_min, c_max);
 				}
 				return v;
@@ -200,7 +246,7 @@ namespace Cartesian {
 	template<
 		typename State,
 		class Operator = Operations::Linear<State>,
-		class Domain = Domains::Box<State>,
+		class Domain = Domains::Infinite<State>,
 		class OperationFinal = OperationFinalPolicy::Projected<State>
 	>
 	struct CartesianSpace

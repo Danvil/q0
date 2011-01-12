@@ -11,6 +11,7 @@
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int.hpp>
 #include <boost/random/uniform_real.hpp>
+#include <boost/random/normal_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
 #include <stdexcept>
 //---------------------------------------------------------------------------
@@ -30,6 +31,12 @@ namespace RandomNumbers
 	typename DIST::result_type Generate(const DIST& dist) {
 		boost::variate_generator<boost::mt19937&, DIST> die(Generator(), dist);
 		return die();
+	}
+
+	/** Random real in [0,1] */
+	template<typename K>
+	K Normal() {
+		return Generate(boost::normal_distribution<K>(0, 1));
 	}
 
 	/** Random real in [0,1] */
