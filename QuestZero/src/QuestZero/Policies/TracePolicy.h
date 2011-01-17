@@ -13,6 +13,23 @@ struct ITracePolicy
 };
 
 //---------------------------------------------------------------------------
+
+template<typename State, typename Score>
+struct ProgressToConsoleTracer
+{
+	ProgressToConsoleTracer()
+	: _count(1)
+	{}
+
+	void trace(const TSampleSet<State,Score>& samples) {
+		std::cout << "Optimization Progress (" << _count++ << ")" << std::endl;
+	}
+
+private:
+	unsigned long _count;
+};
+
+//---------------------------------------------------------------------------
 }
 //---------------------------------------------------------------------------
 #endif

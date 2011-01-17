@@ -332,8 +332,8 @@ public:
 	}
 
 	/** Adds noise to all states invalidating the scores */
-	template<class Space>
-	void addNoise(const Space& space, const std::vector<Score>& noise) {
+	template<class Space, typename K>
+	void addNoise(const Space& space, const std::vector<K>& noise) {
 		for(size_t i=0; i<this->count(); ++i) {
 			Sample& sample = (*this)[i];
 			sample.setState(space.random(sample.state(), noise));
@@ -400,6 +400,14 @@ public:
 		os << "[Sample Set = {";
 		BOOST_FOREACH(const Sample& s, this->samples()) {
 			os << s << ", ";
+		}
+		os << "}]";
+	}
+
+	void printInLines(std::ostream& os) const {
+		os << "[Sample Set = {";
+		BOOST_FOREACH(const Sample& s, this->samples()) {
+			os << "\t" << s << "\n";
 		}
 		os << "}]";
 	}

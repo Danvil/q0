@@ -23,14 +23,15 @@ namespace Q0 {
  */
 template<
 	typename State,
+	typename Score,
 	class Tracer
 >
 struct ParticleAnnealing
 : public Tracer
 {
-	typedef TSample<State> Sample;
+	typedef TSample<State, Score> Sample;
 
-	typedef TSampleSet<State> SampleSet;
+	typedef TSampleSet<State, Score> SampleSet;
 
 	struct Settings
 	{
@@ -75,9 +76,12 @@ struct ParticleAnnealing
 			current.addNoise(space, noise);
 			// find particle scores
 			current.evaluateUnknown(function);
+
+			current.printInLines(std::cout);
+
 			// find best beta with respect to current scores
-			double beta = BetaOptimizationProblem<double>::Optimize_Bisect(alpha, current.scores(), 1e-2);
-			if(beta > BetaOptimizationProblem<double>::cMaxBeta() * 0.99) {
+			double beta = BetaOptimizationProblem<Score>::Optimize_Bisect(alpha, current.scores(), 1e-2);
+			if(beta > BetaOptimizationProblem<Score>::cMaxBeta() * 0.99) {
 				// we can not distinguish the scores anymore, so we assume that we have enough accuracy and quit
 				// FIXME is this test good? this imposes some kind of scale on the score!
 				break;

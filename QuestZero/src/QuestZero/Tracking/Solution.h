@@ -17,7 +17,7 @@
 namespace Q0 {
 //---------------------------------------------------------------------------
 
-template<typename Time, typename State>
+template<typename Time, typename State, typename Score>
 struct TSolution
 : public Danvil::Print::IPrintable
 {
@@ -35,7 +35,7 @@ struct TSolution
 		}
 	}
 
-	void set(const Time& t, const TSample<State>& sample) {
+	void set(const Time& t, const TSample<State, Score>& sample) {
 		unsigned int index = range_.timeToIndex(t);
 		Item& i = items_[index];
 		i.state = sample.state();
@@ -47,11 +47,11 @@ struct TSolution
 		return itemByTime(t).state;
 	}
 
-	const double& score(const Time& t) const {
+	const Score& score(const Time& t) const {
 		return itemByTime(t).score;
 	}
 
-	bool areAllEvaluated() const {
+	bool AreAllEvaluated() const {
 		BOOST_FOREACH(const Item& i, items_) {
 			if(!i.isEvaluated) {
 				return false;
@@ -60,7 +60,7 @@ struct TSolution
 		return true;
 	}
 
-	double totalScore() const {
+	double ComputeTotalScore() const {
 		double sum = 0;
 		BOOST_FOREACH(const Item& i, items_) {
 			sum += i.score;
@@ -68,11 +68,11 @@ struct TSolution
 		return sum;
 	}
 
-	double meanScore() const {
-		return totalScore() / (double)items_.size();
+	double ComputeMeanScore() const {
+		return ComputeTotalScore() / (double)items_.size();
 	}
 
-	double initialScore() const {
+	double GetInitialScore() const {
 		if(items_.size() == 0) {
 			throw TimeRangeException();
 		}
@@ -83,7 +83,7 @@ struct TSolution
 		return i.score;
 	}
 
-	double finalScore() const {
+	double GetFinalScore() const {
 		if(items_.size() == 0) {
 			throw TimeRangeException();
 		}
@@ -94,8 +94,8 @@ struct TSolution
 		return i.score;
 	}
 
-	std::vector<double> scoreList() const {
-		std::vector<double> scores;
+	std::vector<Score> CreateScoreList() const {
+		std::vector<Score> scores;
 		scores.reserve(items_.size());
 		for(size_t k=0; k<items_.size(); ++k) {
 			const Item& i = items_[k];
@@ -105,6 +105,19 @@ struct TSolution
 			scores.push_back(i.score);
 		}
 		return scores;
+	}
+
+	std::vector<State> CreateStateList() const {
+		std::vector<State> states;
+		states.reserve(items_.size());
+		for(size_t k=0; k<items_.size(); ++k) {
+			const Item& i = items_[k];
+			if(!i.isEvaluated) {
+				throw UnkownScoreException();
+			}
+			states.push_back(i.state);
+		}
+		return states;
 	}
 
 	void print(std::ostream& os) const {
@@ -128,7 +141,7 @@ private:
 
 		Time time;
 		State state;
-		double score;
+		Score score;
 		bool isEvaluated;
 	};
 

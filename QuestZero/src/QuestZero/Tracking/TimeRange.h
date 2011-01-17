@@ -26,8 +26,19 @@ struct TTimeRange
 	  fps_(60.0)
 	{}
 
+	TTimeRange(Time a, Time b, double fps=60.0)
+	: begin_(a),
+	  end_(b),
+	  fps_(fps)
+	{}
+
+	/** First time */
 	const Time& begin() const { return begin_; }
 
+	/** Last time (inclusive) */
+	const Time& last() const { return end_ - 1; }
+
+	/** Time after last time (exclusive) */
 	const Time& end() const { return end_; }
 
 	Time frameCount() const {

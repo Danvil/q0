@@ -8,7 +8,7 @@
 #ifndef PARTICLEFILTER_H_
 #define PARTICLEFILTER_H_
 //---------------------------------------------------------------------------
-#include "QuestZero/Tracking/PinnedFunction.h"
+#include "QuestZero/Tracking/Functions.h"
 #include "QuestZero/Common/ScoreComparer.h"
 #include "QuestZero/Common/SampleSet.h"
 #include "QuestZero/Tracking/Solution.h"
@@ -17,27 +17,27 @@
 namespace Q0 {
 //---------------------------------------------------------------------------
 
-template<typename Time, typename State, class StartingStates, class Take, class Tracer, bool UseAnnealing=false>
+template<typename Time, typename State, typename Score, class StartingStates, class Take, class Tracer, bool UseAnnealing>
 struct ParticleFilter
 : public StartingStates,
   public Take,
   public Tracer
 {
-	typedef TSolution<Time, State> Solution;
+	typedef TSolution<Time, State, Score> Solution;
 	typedef TTimeRange<Time> TimeRange;
-	typedef TSampleSet<State> SampleSet;
+	typedef TSampleSet<State, Score> SampleSet;
 
 	unsigned long particle_count_;
 
 	std::vector<double> noise_;
 
 	template<class Space, class VarFunction>
-	Solution track(const TimeRange& range, const Space& space, const VarFunction& function) {
-		typedef BetterMeansBigger<State> CMP;
+	Solution Track(const TimeRange& range, const Space& space, const VarFunction& function) {
+		typedef BetterMeansBigger<State, Score> CMP;
 		// prepare the solution
 		Solution sol(range);
 		// pin down varying function
-		PinnedFunction<Time,State,VarFunction> pinned(function, range.begin());
+		PinnedFunction<Time, State, Score, VarFunction> pinned(function, range.begin());
 		// initialize sample set with random samples
 		SampleSet open_samples(this->pickMany(space, particle_count_));
 		// tracking loop
@@ -46,7 +46,7 @@ struct ParticleFilter
 			pinned.setTime(t);
 			if(UseAnnealing) {
 				// use annealing to refine the sample set
-				ParticleAnnealing<State, Tracer> pa;
+				ParticleAnnealing<State, Score, Tracer> pa;
 				pa.settings_.noise_ = noise_;
 				open_samples = pa.optimize(open_samples, space, pinned);
 			} else {
@@ -71,9 +71,9 @@ struct ParticleFilter
 	}
 };
 
-template<typename Time, typename State, class StartingStates, class Take, class Tracer>
+template<typename Time, typename State, typename Score, class StartingStates, class Take, class Tracer>
 struct ParticleFilterWithAnnealing
-: public ParticleFilter<Time, State, StartingStates, Take, Tracer>
+: public ParticleFilter<Time, State, Score, StartingStates, Take, Tracer, true>
 {};
 
 //---------------------------------------------------------------------------
