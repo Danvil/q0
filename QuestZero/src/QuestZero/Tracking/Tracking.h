@@ -26,10 +26,10 @@ template<
 	template<typename,typename,typename,class,class,class> class Algorithm,
 	template<typename> class SinglePicker = InitialStatesPolicy::RandomPicker,
 	template<typename,typename> class Take = TakePolicy::TakeMean,
-	template<typename,typename> class Tracer = NoTracer
+	template<typename,typename,typename> class Tracer = NoTrackingTracer
 >
 struct Tracking
-: public Algorithm<Time_, State_, Score_, InitialStatesPolicy::ManyPicker<State_, SinglePicker>, Take<State_,Score_>, Tracer<State_, Score_> >
+: public Algorithm<Time_, State_, Score_, InitialStatesPolicy::ManyPicker<State_, SinglePicker>, Take<State_,Score_>, Tracer<Time_, State_, Score_> >
 {
 	typedef Time_ Time;
 
