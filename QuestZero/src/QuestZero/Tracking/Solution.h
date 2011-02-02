@@ -27,11 +27,13 @@ struct TSolution
 
 	struct UnkownScoreException {};
 
+	TSolution() {}
+
 	TSolution(const TimeRange& range)
 	: range_(range) {
 		items_.resize(range_.frameCount());
 		for(size_t i=0; i<items_.size(); ++i) {
-			items_[i].time = range.timeToIndex(i);
+			items_[i].time = range.indexToTime(i);
 		}
 	}
 
