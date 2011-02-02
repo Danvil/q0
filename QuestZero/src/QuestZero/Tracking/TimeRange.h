@@ -8,6 +8,8 @@
 #ifndef TIMERANGE_H_
 #define TIMERANGE_H_
 //---------------------------------------------------------------------------
+#include <Danvil/Tools/MoreMath.h>
+//---------------------------------------------------------------------------
 namespace Q0 {
 //---------------------------------------------------------------------------
 
@@ -62,6 +64,20 @@ struct TTimeRange
 			throw OutOfRangeException();
 		}
 		return (size_t)(t - begin_);
+	}
+
+	Time indexToTime(size_t frame) const {
+		if(frame < 0 || (size_t)frameCount() <= frame) {
+			throw OutOfRangeException();
+		}
+		return (Time)(begin_ + frame);
+	}
+
+	size_t percentToIndex(float p) const {
+		if(p < 0 || 1 < p) {
+			throw OutOfRangeException();
+		}
+		return Danvil::MoreMath::RoundToInt(float(begin_) + p * float(end_ - begin_ - 1));
 	}
 
 	/** Number in [0,1[ indicating the position of the given time in the time range */
