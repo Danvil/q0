@@ -37,6 +37,10 @@ struct TSolution
 		}
 	}
 
+	bool IsEmpty() const {
+		return items_.size() == 0;
+	}
+
 	void set(const Time& t, const TSample<State, Score>& sample) {
 		unsigned int index = range_.timeToIndex(t);
 		Item& i = items_[index];
@@ -96,28 +100,34 @@ struct TSolution
 		return i.score;
 	}
 
-	std::vector<Score> CreateScoreList() const {
+	std::vector<Score> CreateScoreList(bool throw_if_unknown=true) const {
 		std::vector<Score> scores;
 		scores.reserve(items_.size());
 		for(size_t k=0; k<items_.size(); ++k) {
 			const Item& i = items_[k];
-			if(!i.isEvaluated) {
-				throw UnkownScoreException();
+			if(i.isEvaluated) {
+				scores.push_back(i.score);
+			} else {
+				if(throw_if_unknown) {
+					throw UnkownScoreException();
+				}
 			}
-			scores.push_back(i.score);
 		}
 		return scores;
 	}
 
-	std::vector<State> CreateStateList() const {
+	std::vector<State> CreateStateList(bool throw_if_unknown=true) const {
 		std::vector<State> states;
 		states.reserve(items_.size());
 		for(size_t k=0; k<items_.size(); ++k) {
 			const Item& i = items_[k];
-			if(!i.isEvaluated) {
-				throw UnkownScoreException();
+			if(i.isEvaluated) {
+				states.push_back(i.state);
+			} else {
+				if(throw_if_unknown) {
+					throw UnkownScoreException();
+				}
 			}
-			states.push_back(i.state);
 		}
 		return states;
 	}

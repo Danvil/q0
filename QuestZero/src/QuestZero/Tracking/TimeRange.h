@@ -43,6 +43,10 @@ struct TTimeRange
 	/** Time after last time (exclusive) */
 	const Time& end() const { return end_; }
 
+	bool isEmpty() const {
+		return end_ == begin_;
+	}
+
 	Time frameCount() const {
 		return end_ - begin_;
 	}
