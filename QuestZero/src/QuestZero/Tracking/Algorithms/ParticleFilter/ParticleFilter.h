@@ -62,10 +62,10 @@ struct ParticleFilter
 					return sol;
 				}
 			}
-			// tracing
-			this->trace(open_samples, sol);
 			// save best sample
 			sol.set(t, this->template take<Space, CMP>(space, open_samples));
+			// tracing
+			this->trace(open_samples, sol);
 		}
 		return sol;
 	}
