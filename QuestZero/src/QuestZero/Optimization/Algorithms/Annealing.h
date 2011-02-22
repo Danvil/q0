@@ -77,7 +77,7 @@ struct ParticleAnnealing
 			// find particle scores
 			current.evaluateUnknown(function);
 
-			current.printInLines(std::cout);
+			//current.printInLines(std::cout);
 
 			// find best beta with respect to current scores
 			double beta = BetaOptimizationProblem<Score>::Optimize_Bisect(alpha, current.scores(), 1e-2);
