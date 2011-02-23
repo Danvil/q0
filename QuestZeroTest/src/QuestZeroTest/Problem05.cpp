@@ -27,7 +27,7 @@ namespace Problem05
 	typedef LOKI_TYPELIST_2(state0,state1) state_types;
 	typedef Spaces::TypelistState<state_types> state;
 
-	typedef Spaces::Cartesian::CartesianSpace<state0> space0;
+	typedef Spaces::Cartesian::FiniteCartesianSpace<state0> space0;
 	typedef Spaces::SO3::SO3Space<double> space1;
 	typedef LOKI_TYPELIST_2(space0,space1) space_types;
 	typedef Spaces::TypelistSpace<space_types, state> space;
@@ -41,7 +41,8 @@ namespace Problem05
 	struct RegistrationFunction
 	: public Benchmarks::PointCloudRegistration<double>
 	{
-		double operator()(const state& state) const {
+		typedef double Score;
+		Score operator()(const state& state) const {
 			return fit(Danvil::SO3::ConvertToMatrix(state.part<1>()), state.part<0>());
 		}
 	};

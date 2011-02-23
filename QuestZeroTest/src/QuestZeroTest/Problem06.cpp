@@ -34,16 +34,17 @@ namespace Problem06
 
 	struct MultiRegistrationFunction
 	{
+		typedef double Score;
 		void createProblem(size_t n) {
 			for(unsigned int i=0; i<N; i++) {
 				r[i] = Danvil::Ptr(new Benchmarks::PointCloudRegistration<double>(N));
 			}
 		}
 
-		double operator()(const state& s) const {
-			double sum = 0;
+		Score operator()(const state& s) const {
+			Score sum = 0;
 			for(unsigned int i=0; i<N; i++) {
-				double x = r[i]->fit(Danvil::SO3::ConvertToMatrix(s[i]));
+				Score x = r[i]->fit(Danvil::SO3::ConvertToMatrix(s[i]));
 				sum += x*x;
 			}
 			return sum;

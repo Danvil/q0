@@ -33,7 +33,7 @@ namespace Problem01
 {
 	typedef Danvil::ctLinAlg::Vec3f State;
 
-	typedef Spaces::Cartesian::CartesianSpace<State> Space;
+	typedef Spaces::Cartesian::FiniteCartesianSpace<State> Space;
 
 	Space FactorSpace() {
 		Space space;
@@ -41,13 +41,13 @@ namespace Problem01
 		return space;
 	}
 
-	typedef Functions::BoostFunctionSingleWrapper<State> Function;
+	typedef Functions::BoostFunctionSingleWrapper<State,double> Function;
 
 	Function FactorFunction() {
 		Function f;
 		boost::function<double(const State&)> f1 = boost::bind(&Benchmarks::Cartesian<State>::Rastrigin, _1);
 		State minima(0,1,2);
-		f.setFunctor(boost::bind(&shiftedMinima<State>, f1, minima, _1));
+		f.set_functor(boost::bind(&shiftedMinima<State>, f1, minima, _1));
 		return f;
 	}
 
@@ -63,7 +63,7 @@ namespace Problem02
 {
 	typedef Danvil::ctLinAlg::Vec<double, 31> State;
 
-	typedef Spaces::Cartesian::CartesianSpace<State> Space;
+	typedef Spaces::Cartesian::FiniteCartesianSpace<State> Space;
 
 	Space FactorSpace() {
 		Space space;
@@ -73,14 +73,14 @@ namespace Problem02
 		return space;
 	}
 
-	typedef Functions::BoostFunctionSingleWrapper<State> Function;
+	typedef Functions::BoostFunctionSingleWrapper<State,double> Function;
 
 	Function FactorFunction() {
 		Function f;
 		boost::function<double(const State&)> f1 = boost::bind(&Benchmarks::Cartesian<State>::Rastrigin, _1);
 		State minima;
 		for(unsigned int i=0; i<State::Dimension; i++) { minima[i] = 0.1 * (double)i; }
-		f.setFunctor(boost::bind(&shiftedMinima<State>, f1, minima, _1));
+		f.set_functor(boost::bind(&shiftedMinima<State>, f1, minima, _1));
 		return f;
 	}
 
@@ -103,6 +103,7 @@ namespace Problem03
 	struct RegistrationFunction
 	: public Benchmarks::PointCloudRegistration<double>
 	{
+		typedef double Score;
 		double operator()(const state& x) const {
 			return fit(Danvil::SO3::ConvertToMatrix(x));
 		}
@@ -127,7 +128,7 @@ namespace Problem03
 namespace Problem04
 {
 	typedef Danvil::ctLinAlg::Vec3<double> State1;
-	typedef Spaces::Cartesian::CartesianSpace<State1> Space1;
+	typedef Spaces::Cartesian::FiniteCartesianSpace<State1> Space1;
 
 	typedef Spaces::SO3::SO3Space<double> Space2;
 
@@ -148,6 +149,7 @@ namespace Problem04
 	struct RegistrationFunction
 	: public Benchmarks::PointCloudRegistration<double>
 	{
+		typedef double Score;
 		double operator()(const state& x) const {
 			return fit(Danvil::SO3::ConvertToMatrix(x.sr[0]), x.sc);
 		}

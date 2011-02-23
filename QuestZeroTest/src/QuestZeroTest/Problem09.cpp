@@ -10,7 +10,7 @@
 #include "QuestZero/Spaces/Cartesian.h"
 #include "QuestZero/Tracking/Algorithms/ParticleFilter/ParticleFilter.h"
 #include "QuestZero/Tracking/Tracking.h"
-#include <QuestZero/Policies/TracePolicy/ProgressAndBestToConsoleTracer.h>
+#include <QuestZero/Policies/TracePolicy.h>
 #include <Danvil/LinAlg.h>
 #include <boost/bind.hpp>
 #include <iostream>
@@ -19,6 +19,9 @@
 using std::cout;
 using std::endl;
 using namespace Q0;
+
+const unsigned int Problem9Dimension = 10;
+const unsigned int Problem9Particles = 1000;
 
 template<typename Time, typename State, class Space, class Function>
 struct MovingMinima
@@ -51,6 +54,8 @@ namespace Problem09
 {
 	typedef long time;
 
+	typedef double score;
+
 	typedef TTimeRange<time> range;
 
 	range FactorRange() {
@@ -60,9 +65,9 @@ namespace Problem09
 		return r;
 	}
 
-	typedef Danvil::ctLinAlg::Vec<float, 20> state;
+	typedef Danvil::ctLinAlg::Vec<float, Problem9Dimension> state;
 
-	typedef Spaces::Cartesian::CartesianSpace<state> space;
+	typedef Spaces::Cartesian::FiniteCartesianSpace<state> space;
 
 	space FactorSpace() {
 		space U;
@@ -84,9 +89,9 @@ namespace Problem09
 
 	var_function FactorFunction(const range& r, const space& s) {
 		base_function basef;
-		boost::function<double(const state&)> rawfnct = boost::bind(&Benchmarks::Cartesian<state>::Sphere, _1);
-		boost::function<double(const state&)> basefnct = boost::bind(&score_mapper, rawfnct, _1);
-		basef.setFunctor(basefnct);
+		boost::function<score(const state&)> rawfnct = boost::bind(&Benchmarks::Cartesian<state>::Sphere, _1);
+		boost::function<score(const state&)> basefnct = boost::bind(&score_mapper, rawfnct, _1);
+		basef.set_functor(basefnct);
 		var_function varf;
 		varf.f = basef;
 		varf.range = r;
@@ -101,14 +106,15 @@ namespace Problem09
 	struct SaveAllToFile
 	{
 		SaveAllToFile() {}
-		void trace(const TSampleSet<state>& samples) {
+		void NotifySamples(const TSampleSet<state,score>& samples) {
 			std::stringstream fn_ss;
 			fn_ss << "/tmp/" << base_ << i_ << ".txt";
 			i_++;
 			std::ofstream ofs(fn_ss.str().c_str());
 			Danvil::Print::VectorToStream vts;
 			vts.setPlainTabStyle();
-			BOOST_FOREACH(const TSample<state>& x, samples.samples()) {
+			typedef TSample<state,score> sample;
+			BOOST_FOREACH(const sample& x, samples.samples()) {
 				ofs << x.score();
 				if(!only_scores_) {
 					ofs << "\t";
@@ -145,7 +151,7 @@ namespace Problem09
 	void runChoice()
 	{
 		typedef InitialStatesPolicy::ManyPicker<state, InitialStatesPolicy::RepeatOne> init;
-		ParticleFilter<time, state, init, TakePolicy::TakeBest<state>, TRACER, UseAnnealing> solver;
+		ParticleFilter<time, state, score, init, TakePolicy::TakeBest<state,score>, TRACER, TracePolicy::Solution::None<time,state,score>, UseAnnealing> solver;
 		if(UseAnnealing) {
 			cout << "~ Annealing is _ON__ ~" << endl;
 			solver.setBaseAndReset("samples_annealing_");
@@ -161,9 +167,9 @@ namespace Problem09
 		for(unsigned int i=0; i<state::Dimension; i++) {
 			solver.noise_.push_back(step_noise);
 		}
-		TSolution<time, state> sol = solver.track(r, s, f);
+		TSolution<time, state, score> sol = solver.Track(r, s, f);
 		cout << sol << endl;
-		cout << "Solution mean score: " << sol.meanScore() << endl;
+		cout << "Solution mean score: " << sol.ComputeMeanScore() << endl;
 	}
 
 	void run() {

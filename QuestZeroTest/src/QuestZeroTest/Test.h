@@ -8,7 +8,7 @@
 #ifndef TEST_H_
 #define TEST_H_
 
-#include <QuestZero/Policies/TracePolicy/ProgressAndBestToConsoleTracer.h>
+#include <QuestZero/Policies/TracePolicy.h>
 #include <QuestZero/Optimization/Algorithms/RND.h>
 #include <QuestZero/Optimization/Algorithms/PSO.h>
 #include <QuestZero/Optimization/Optimization.h>
@@ -24,40 +24,45 @@ void TestAlgo(ALGO algo, const Space& space, const Function& function)
 {
 	Danvil::Timer timer;
 	timer.start();
-	TSample<typename ALGO::State> best = algo.optimize(space, function);
+	TSample<typename ALGO::State, typename ALGO::Score> best = algo.Optimize(space, function);
 	timer.stop();
 	cout << "Time: " << timer.getElapsedTimeInMilliSec() << " ms" << endl;
 	cout << "Result: " << best << endl;
 }
 
 #ifdef DEBUG
-	template<typename State> struct MyTracer : ProgressAndBestToConsoleTracer<State, BetterMeansSmaller<State> > {};
-	const unsigned int Iterations = 10;
+	typedef TargetPolicy::ScoreTargetWithMaxChecks<double,true> TargetChecker;
 #else
-	template<typename State> struct MyTracer : NoTracer<State> {};
-	const unsigned int Iterations = 100;
+	typedef TargetPolicy::ScoreTargetWithMaxChecks<double,false> TargetChecker;
 #endif
 
-//#define FIXED_CHECKS
-#ifdef FIXED_CHECKS
-	typedef TargetPolicy::FixedChecks<double,unsigned long> TargetChecker;
-#else
-	typedef TargetPolicy::ScoreTargetWithMaxChecks<double,unsigned long> TargetChecker;
-#endif
+const unsigned int cIterationCount = 10;
+const double cScoreGoal = 1e-3;
+const unsigned int cParticleCount = 1000;
 
 template<class Space, class Function>
 void TestProblem(const Space& space, const Function& function)
 {
 	cout << "----- RND -----" << endl;
-	Optimization<typename Space::State, RND, TargetChecker, InitialStatesPolicy::RandomPicker, TakePolicy::TakeBest, MyTracer> algoRnd;
-	algoRnd.setMaxCount(Iterations);
-	algoRnd.particleCount = 1000;
+	Optimization<
+		typename Space::State,
+		typename Function::Score,
+		RND,
+		TargetChecker,
+		InitialStatesPolicy::RandomPicker,
+		TakePolicy::TakeBest,
+		TracePolicy::Samples::None
+	> algoRnd;
+	algoRnd.SetMaximumIterationCount(cIterationCount);
+	algoRnd.SetTargetScore(cScoreGoal);
+	algoRnd.particleCount = cParticleCount;
 	TestAlgo(algoRnd, space, function);
 
 	cout << "----- PSO -----" << endl;
-	Optimization<typename Space::State, PSO, TargetChecker, InitialStatesPolicy::RandomPicker, TakePolicy::TakeBest, MyTracer> algoPso;
-	algoPso.setMaxCount(Iterations);
-	algoPso.settings.particleCount = 1000;
+	Optimization<typename Space::State, typename Function::Score, PSO, TargetChecker, InitialStatesPolicy::RandomPicker, TakePolicy::TakeBest, TracePolicy::Samples::None> algoPso;
+	algoPso.SetMaximumIterationCount(cIterationCount);
+	algoRnd.SetTargetScore(cScoreGoal);
+	algoPso.settings.particleCount = cParticleCount;
 	TestAlgo(algoPso, space, function);
 
 	cout << endl;

@@ -27,9 +27,9 @@ namespace Problem07
 	typedef LOKI_TYPELIST_3(state0,state1,state2) state_types;
 	typedef Spaces::TypelistState<state_types> state;
 
-	typedef Spaces::Cartesian::CartesianSpace<state0> space0;
+	typedef Spaces::Cartesian::FiniteCartesianSpace<state0> space0;
 	typedef Spaces::SO3::SO3Space<double> space1;
-	typedef Spaces::Cartesian::CartesianSpace<state2, Spaces::Cartesian::Operations::Linear<state2>, Spaces::Cartesian::Domains::Interval<state2> > space2;
+	typedef Spaces::Cartesian::IntervalSpace<state2> space2;
 	typedef LOKI_TYPELIST_3(space0,space1,space2) space_types;
 	typedef Spaces::TypelistSpace<space_types, state> space;
 
@@ -52,7 +52,7 @@ namespace Problem07
 
 	function FactorFunction() {
 		function f;
-		f.setFunctor(boost::bind(&sample02, _1));
+		f.set_functor(boost::bind(&sample02, _1));
 		return f;
 	}
 

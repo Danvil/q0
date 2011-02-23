@@ -31,7 +31,7 @@ namespace Problem08
 	typedef LOKI_TYPELIST_2(state0,state1) state_types;
 	typedef Spaces::TypelistState<state_types> state;
 
-	typedef Spaces::Cartesian::CartesianSpace<base_state_0> base_space_0;
+	typedef Spaces::Cartesian::FiniteCartesianSpace<base_state_0> base_space_0;
 	typedef Spaces::MultiplierSpace<base_space_0, state0> space0;
 	typedef Spaces::SO3::SO3Space<double> base_space_1;
 	typedef Spaces::MultiplierSpace<base_space_1, state1> space1;
@@ -46,19 +46,20 @@ namespace Problem08
 		return myspace;
 	}
 
-	class MultiRegistrationFunctionWPos
+	struct MultiRegistrationFunctionWPos
 	{
-	public:
+		typedef double Score;
+
 		void createProblem(size_t n) {
 			for(unsigned int i=0; i<N; i++) {
 				r[i] = Danvil::Ptr(new Benchmarks::PointCloudRegistration<double>(N));
 			}
 		}
 
-		double operator()(const state& s) const {
-			double sum = 0;
+		Score operator()(const state& s) const {
+			Score sum = 0;
 			for(unsigned int i=0; i<N; i++) {
-				double x = r[i]->fit(Danvil::SO3::ConvertToMatrix(s.part<1>()[i]), s.part<0>()[i]);
+				Score x = r[i]->fit(Danvil::SO3::ConvertToMatrix(s.part<1>()[i]), s.part<0>()[i]);
 				sum += x*x;
 			}
 			return sum;
