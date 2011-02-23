@@ -13,6 +13,7 @@
 #include "QuestZero/Common/SampleSet.h"
 #include <Danvil/Tools/MoreMath.h>
 #include <string>
+#include <vector>
 //---------------------------------------------------------------------------
 namespace Q0 {
 //---------------------------------------------------------------------------
@@ -22,17 +23,21 @@ namespace Q0 {
 /// </summary>
 template<
 	typename State,
+	class Score,
 	class Target,
 	class StartingStates,
 	class Take,
-	class Tracer
+	class NotifySamples
 >
 struct RND
 : public Target,
   public StartingStates,
   public Take,
-  public Tracer
+  public NotifySamples
 {
+	typedef TSample<State,Score> Sample;
+	typedef TSampleSet<State,Score> SampleSet;
+
 	RND() {
 		particleCount = 100;
 	}
@@ -44,23 +49,23 @@ struct RND
 	unsigned int particleCount;
 
 	template<class Space, class Function>
-	TSample<State> optimize(const Space& space, const Function& function) {
-		typedef BetterMeansSmaller<State> CMP;
-		TSampleSet<State> open(this->pickMany(space, particleCount));
+	Sample Optimize(const Space& space, const Function& function) {
+		typedef BetterMeansSmaller<Score> CMP;
+		SampleSet open(this->template pickMany(space, particleCount));
 		// in every iteration add new particles and delete the worst particles
 		while(true) {
 			// add new samples by randomly selecting points
 			int target_add = Danvil::MoreMath::Max((size_t)0, 2 * particleCount - open.count());
-			open.add(space.randomMany(target_add));
+			open.AddManyStates(space.template randomMany(target_add));
 			// evaluate the chunk
 			open.evaluateUnknown(function);
 			// pick the best
 			// check if the best in this chunk is better than the best so far
-			open = open.template best<CMP>(particleCount);
+			open = open.template FindBestSamples<CMP>(particleCount);
 			// update progress bar
-			this->trace(open);
+			this->NotifySamples(open);
 			// check if break condition is satisfied
-			if(this->reached(open.template best<CMP>().score())) {
+			if(this->IsTargetReached(open.template FindBestScore<CMP>())) {
 				break;
 			}
 		}

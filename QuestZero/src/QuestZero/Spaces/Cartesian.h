@@ -245,13 +245,29 @@ namespace Cartesian {
 
 	template<
 		typename State,
-		class Operator = Operations::Linear<State>,
 		class Domain = Domains::Infinite<State>,
+		class Operator = Operations::Linear<State>,
 		class OperationFinal = OperationFinalPolicy::Projected<State>
 	>
 	struct CartesianSpace
 	: public BaseSpace<State, Operator, Domain, OperationFinal>
 	{ };
+
+	template<typename State>
+	struct InfiniteCartesianSpace
+	: public BaseSpace<State, Operations::Linear<State>, Domains::Infinite<State>, OperationFinalPolicy::Unprojected<State> >
+	{ };
+
+	template<typename State>
+	struct FiniteCartesianSpace
+	: public BaseSpace<State, Operations::Linear<State>, Domains::Box<State>, OperationFinalPolicy::Projected<State> >
+	{ };
+
+	template<typename K>
+	struct IntervalSpace
+	: public BaseSpace<K, Operations::Linear<K>, Domains::Interval<K>, OperationFinalPolicy::Projected<K> >
+	{ };
+
 }
 
 //---------------------------------------------------------------------------

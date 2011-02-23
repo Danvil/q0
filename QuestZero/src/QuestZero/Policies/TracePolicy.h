@@ -2,41 +2,80 @@
 #define QUEST_ZERO_ITRACER_H_
 //---------------------------------------------------------------------------
 #include "QuestZero/Common/SampleSet.h"
+#include "QuestZero/Common/ScoreComparer.h"
 #include "QuestZero/Tracking/Solution.h"
+#include <boost/function.hpp>
+#include <iostream>
 //---------------------------------------------------------------------------
 namespace Q0 {
 //---------------------------------------------------------------------------
 
-template<typename State, typename Score>
-struct ITracePolicy
+namespace TracePolicy
 {
-	virtual void trace(const TSampleSet<State,Score>& samples) = 0;
-};
-
-//---------------------------------------------------------------------------
-
-template<typename State, typename Score>
-struct ProgressToConsoleTracer
-{
-	ProgressToConsoleTracer()
-	: _count(1)
-	{}
-
-	void trace(const TSampleSet<State,Score>& samples) {
-		std::cout << "Optimization Progress (" << _count++ << ")" << std::endl;
+	/** Policies for samples notification */
+	namespace Samples
+	{
+		/** Does nothing */
+		template<typename State, typename Score>
+		struct None {
+			void NotifySamples(const TSampleSet<State,Score>&) {}
+		};
+		/** Prints the best particle to the console */
+		template<typename State, typename Score, template<typename> class ScoreCmp=BetterMeansSmaller>
+		struct BestToConsole {
+			void NotifySamples(const TSampleSet<State,Score>& samples) {
+				std::cout << "Current best sample: " << samples.template FindBestSample<ScoreCmp>() << std::endl;
+			}
+		};
+		/** Forwards the call to a function */
+		template<typename State, typename Score>
+		struct Forward {
+			typedef boost::function<void(const TSampleSet<State,Score>&)> Functor;
+			void SetNotifySamplesFunctor(const Functor& f) {
+				samples_functor_ = f;
+			}
+			void NotifySamples(const TSampleSet<State,Score>& samples) {
+				if(samples_functor_) {
+					samples_functor_(samples);
+				}
+			}
+		private:
+			Functor samples_functor_;
+		};
 	}
 
-private:
-	unsigned long _count;
-};
-
-//---------------------------------------------------------------------------
-
-template<typename Time, typename State, typename Score>
-struct NoTrackingTracer
-{
-	void trace(const TSampleSet<State, Score>&, const TSolution<Time, State, Score>&) {}
-};
+	/** Policies for solution notification */
+	namespace Solution
+	{
+		/** Does nothing */
+		template<typename Time, typename State, typename Score>
+		struct None {
+			void NotifySolution(const TSolution<Time, State, Score>&) {}
+		};
+		/** Prints the solution to the console */
+		template<typename Time, typename State, typename Score>
+		struct Console {
+			void NotifySolution(const TSolution<Time, State, Score>& solution) {
+				std::cout << "Current solution: " << solution << std::endl;
+			}
+		};
+		/** Forwards the call to a function */
+		template<typename Time, typename State, typename Score>
+		struct Forward {
+			typedef boost::function<void(const TSolution<Time, State, Score>&)> Functor;
+			void SetNotifySolutionFunctor(const Functor& f) {
+				solution_functor_ = f;
+			}
+			void NotifySolution(const TSolution<Time, State, Score>& solution) {
+				if(solution_functor_) {
+					solution_functor_(solution);
+				}
+			}
+		private:
+			Functor solution_functor_;
+		};
+	}
+}
 
 //---------------------------------------------------------------------------
 }

@@ -24,10 +24,10 @@ namespace Q0 {
 template<
 	typename State,
 	typename Score,
-	class Tracer
+	class NotifySamples
 >
 struct ParticleAnnealing
-: public Tracer
+: public NotifySamples
 {
 	typedef TSample<State, Score> Sample;
 
@@ -76,9 +76,6 @@ struct ParticleAnnealing
 			current.addNoise(space, noise);
 			// find particle scores
 			current.evaluateUnknown(function);
-
-			//current.printInLines(std::cout);
-
 			// find best beta with respect to current scores
 			double beta = BetaOptimizationProblem<Score>::Optimize_Bisect(alpha, current.scores(), 1e-2);
 			if(beta > BetaOptimizationProblem<Score>::cMaxBeta() * 0.99) {
@@ -91,7 +88,8 @@ struct ParticleAnnealing
 			current.mapScores(exponentiation_score_mapper_);
 			// create new sample set using weighted random drawing
 			current = current.drawByScore(current.count());
-//			this->trace(current);
+			// notify about samples
+			this->NotifySamples(current);
 			// FIXME do we have to break early? whats wrong here?
 			if(m == 0) {
 				break;

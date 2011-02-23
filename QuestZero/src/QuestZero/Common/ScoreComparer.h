@@ -13,25 +13,33 @@
 namespace Q0 {
 //---------------------------------------------------------------------------
 
-template<typename State, typename Score>
+template<typename Score>
 struct BetterMeansSmaller
 {
-	bool operator()(Score a, Score b) {
+	static bool compare(Score a, Score b) {
 		return a < b;
 	}
-	bool operator()(const TSample<State,Score>& a, const TSample<State,Score>& b) {
-		return a.score() < b.score();
+	bool operator()(Score a, Score b) {
+		return compare(a, b);
+	}
+	template<typename U>
+	bool operator()(const TSample<U,Score>& a, const TSample<U,Score>& b) {
+		return compare(a.score(), b.score());
 	}
 };
 
-template<typename State, typename Score>
+template<typename Score>
 struct BetterMeansBigger
 {
-	bool operator()(Score a, Score b) {
+	static bool compare(Score a, Score b) {
 		return a > b;
 	}
-	bool operator()(const TSample<State,Score>& a, const TSample<State,Score>& b) {
-		return a.score() > b.score();
+	bool operator()(Score a, Score b) {
+		return compare(a, b);
+	}
+	template<typename U>
+	bool operator()(const TSample<U,Score>& a, const TSample<U,Score>& b) {
+		return compare(a, b);
 	}
 };
 

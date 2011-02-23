@@ -17,11 +17,12 @@
 namespace Q0 {
 //---------------------------------------------------------------------------
 
-template<typename Time, typename State, typename Score, class StartingStates, class Take, class Tracer, bool UseAnnealing>
+template<typename Time, typename State, typename Score, class StartingStates, class Take, class NotifySamples, class NotifySolution, bool UseAnnealing>
 struct ParticleFilter
 : public StartingStates,
   public Take,
-  public Tracer
+  public NotifySamples,
+  public NotifySolution
 {
 	typedef TSolution<Time, State, Score> Solution;
 	typedef TTimeRange<Time> TimeRange;
@@ -33,7 +34,7 @@ struct ParticleFilter
 
 	template<class Space, class VarFunction>
 	Solution Track(const TimeRange& range, const Space& space, const VarFunction& function) {
-		typedef BetterMeansBigger<State, Score> CMP;
+		typedef BetterMeansBigger<Score> CMP;
 		// prepare the solution
 		Solution sol(range);
 		// pin down varying function
@@ -46,7 +47,7 @@ struct ParticleFilter
 			pinned.setTime(t);
 			if(UseAnnealing) {
 				// use annealing to refine the sample set
-				ParticleAnnealing<State, Score, Tracer> pa;
+				ParticleAnnealing<State, Score, NotifySamples> pa;
 				pa.settings_.noise_ = noise_;
 				open_samples = pa.optimize(open_samples, space, pinned);
 			} else {
@@ -65,15 +66,16 @@ struct ParticleFilter
 			// save best sample
 			sol.set(t, this->template take<Space, CMP>(space, open_samples));
 			// tracing
-			this->trace(open_samples, sol);
+			this->NotifySamples(open_samples);
+			this->NotifySolution(sol);
 		}
 		return sol;
 	}
 };
 
-template<typename Time, typename State, typename Score, class StartingStates, class Take, class Tracer>
+template<typename Time, typename State, typename Score, class StartingStates, class Take, class NotifySamples, class NotifySolution>
 struct ParticleFilterWithAnnealing
-: public ParticleFilter<Time, State, Score, StartingStates, Take, Tracer, true>
+: public ParticleFilter<Time, State, Score, StartingStates, Take, NotifySamples, NotifySolution, true>
 {};
 
 //---------------------------------------------------------------------------

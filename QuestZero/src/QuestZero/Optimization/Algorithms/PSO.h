@@ -19,6 +19,20 @@
 namespace Q0 {
 //---------------------------------------------------------------------------
 
+struct PSOSettings
+{
+	PSOSettings() {
+		particleCount = 200;
+		factor_velocity = 1.0;
+		factor_personal = 2.05;
+		factor_global = 2.05;
+	}
+	unsigned int particleCount;
+	double factor_velocity;
+	double factor_personal;
+	double factor_global;
+};
+
 /// <summary>
 /// The particle swarm algorithm
 /// See http://en.wikipedia.org/wiki/Particle_swarm_optimization
@@ -31,13 +45,13 @@ template<
 	class Target,
 	class StartingStates,
 	class Take,
-	class Tracer
+	class NotifySamples
 >
 struct PSO
 : public Target,
   public StartingStates,
   public Take,
-  public Tracer
+  public NotifySamples
 {
 	typedef TSample<State,Score> Sample;
 	typedef TSampleSet<State,Score> SampleSet;
@@ -48,26 +62,11 @@ struct PSO
 
 	std::string name() const { return "PSO"; }
 
-	class PSOSettings
-	{
-	public:
-		PSOSettings() {
-			particleCount = 200;
-			factor_velocity = 1.0;
-			factor_personal = 2.05;
-			factor_global = 2.05;
-		}
-		unsigned int particleCount;
-		double factor_velocity;
-		double factor_personal;
-		double factor_global;
-	};
-
 	PSOSettings settings;
 
 	template<class Space, class Function>
 	Sample Optimize(const Space& space, const Function& function) {
-		typedef BetterMeansSmaller<State,Score> CMP;
+		typedef BetterMeansSmaller<Score> CMP;
 		globals.set(settings);
 		// generate start samples
 		std::vector<State> initial_states = this->pickMany(space, settings.particleCount);
@@ -82,24 +81,24 @@ struct PSO
 			// evaluate samples
 			samples.evaluateUnknown(function);
 			// update global best
-			const Sample& best = samples.template best<CMP>();
-			if(!globals.isSet() || CMP()(best.score(), globals.bestScore())) {
+			const Sample& best = samples.template FindBestSample<CMP>();
+			if(!globals.isSet() || CMP::compare(best.score(), globals.best_score())) {
 				globals.set(best);
 			}
 			// update personal best and particle
 			for(size_t i = 0; i < particles.size(); i++) {
 				const Sample& s = samples[i];
 				ParticleData& p = particles[i];
-				if(CMP()(s.score(), p.best_score)) {
-					p.best = s.state();
-					p.best_score = s.score();
+				if(CMP::compare(s.score(), p.best_score_)) {
+					p.best_state_ = s.state();
+					p.best_score_ = s.score();
 				}
 				p.Update(space, globals);
 			}
 			// trace
-			this->trace(bestSamples());
+			this->NotifySamples(bestSamples());
 			// check if break condition is satisfied
-			if(this->reached(globals.bestScore())) {
+			if(this->IsTargetReached(globals.best_score())) {
 				break;
 			}
 		}
@@ -111,75 +110,68 @@ private:
 	{
 	public:
 		GlobalData()
-		: _isBestSet(false) {}
+		: is_best_set(false) {}
 
-		void set(PSOSettings x) {
-			_omega = x.factor_velocity;
-			_psi_personal = x.factor_personal;
-			_psi_global = x.factor_global;
-			double K = computeK();
-			_omega *= K;
-			_psi_personal *= K;
-			_psi_global *= K;
-			_best_score = 1e12;
+		void set(const PSOSettings& x) {
+			omega_ = x.factor_velocity;
+			psi_personal_ = x.factor_personal;
+			psi_global_ = x.factor_global;
+			double k = ComputeK();
+			omega_ *= k;
+			psi_personal_ *= k;
+			psi_global_ *= k;
+			best_score_ = 1e12;
 		}
 
-		double omega() const { return _omega; }
+		double omega() const { return omega_; }
 
-		double psi_personal() const { return _psi_personal; }
+		double psi_personal() const { return psi_personal_; }
 
-		double psi_global() const { return _psi_global; }
+		double psi_global() const { return psi_global_; }
 
-		bool isSet() const { return _isBestSet; }
+		bool isSet() const { return is_best_set; }
 
-		double bestScore() const { return _best_score; }
+		double best_score() const { return best_score_; }
 
-		const State& best() const { return _best; }
+		const State& best_state() const { return best_state_; }
 
 		void set(const Sample& s) {
-			_best = s.state();
-			_best_score = s.score();
-			_isBestSet = true;
+			best_state_ = s.state();
+			best_score_ = s.score();
+			is_best_set = true;
 		}
 
 	private:
-		double _omega;
-		double _psi_personal;
-		double _psi_global;
-
-	private:
-		/// <summary>
-		/// Constriction Factor (see Clerc, 1999)
-		/// </summary>
-		/// <returns></returns>
-		double computeK() {
-			double u = _psi_personal + _psi_global;
+		/** Construction factor (see Clerc, 1999) */
+		double ComputeK() {
+			double u = psi_personal_ + psi_global_;
 			if(u <= 4) {
 				throw std::runtime_error("psi_personal + psi_global must be > 4!");
 			}
 			return 2.0 / std::abs(2.0 - u - sqrt(u * u - 4.0 * u));
 		}
 
-	private:
-		bool _isBestSet;
-		State _best;
-		double _best_score;
+		double omega_;
+		double psi_personal_;
+		double psi_global_;
+		bool is_best_set;
+		State best_state_;
+		double best_score_;
 	};
 
-	class ParticleData
+	struct ParticleData
 	{
-	public:
 		ParticleData(State x) {
 			last = x;
 			current = x;
-			best = x;
-			best_score = 1e12;
+			best_state_ = x;
+			best_score_ = 1e12;
 		}
 
 		State last;
 		State current;
-		State best;
-		double best_score;
+		State best_state_;
+		double best_score_;
 
 		template<class Space>
 		void Update(const Space& space, const GlobalData& globals) {
@@ -188,8 +180,8 @@ private:
 			double fp = globals.psi_personal() * RandomNumbers::Uniform<double>();
 			double fg = globals.psi_global() * RandomNumbers::Uniform<double>();
 			State dl = space.difference(current, last);
-			State dp = space.difference(best, current);
-			State dg = space.difference(globals.best(), current);
+			State dp = space.difference(best_state_, current);
+			State dg = space.difference(globals.best_state(), current);
 			last = current;
 			State delta = space.weightedSum(fl, dl, fp, dp, fg, dg);
 			// FIXME we should bound the "velocity" i.e. the maximal distance made in a step
@@ -213,7 +205,7 @@ private:
 	SampleSet bestSamples() const {
 		std::vector<Sample> samples;
 		BOOST_FOREACH(const ParticleData& p, particles) {
-			samples.push_back(Sample(p.best, p.best_score));
+			samples.push_back(Sample(p.best_state_, p.best_score_));
 		}
 		return SampleSet(samples);
 	}

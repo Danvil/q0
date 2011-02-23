@@ -11,7 +11,7 @@
 #include "QuestZero/Common/SampleSet.h"
 #include "QuestZero/Tracking/TimeRange.h"
 #include "QuestZero/Tracking/Solution.h"
-#include "QuestZero/Policies/TracePolicy/NoTracer.h"
+#include "QuestZero/Policies/TracePolicy.h"
 #include "QuestZero/Policies/InitialStatesPolicy.h"
 #include "QuestZero/Policies/TakePolicy.h"
 #include "QuestZero/Policies/TargetPolicy.h"
@@ -23,13 +23,14 @@ template<
 	typename Time_,
 	typename State_,
 	typename Score_,
-	template<typename,typename,typename,class,class,class> class Algorithm,
+	template<typename,typename,typename,class,class,class,class> class Algorithm,
 	template<typename> class SinglePicker = InitialStatesPolicy::RandomPicker,
 	template<typename,typename> class Take = TakePolicy::TakeMean,
-	template<typename,typename,typename> class Tracer = NoTrackingTracer
+	template<typename,typename> class NotifySamples = TracePolicy::Samples::None,
+	template<typename,typename,typename> class NotifySolution = TracePolicy::Solution::None
 >
 struct Tracking
-: public Algorithm<Time_, State_, Score_, InitialStatesPolicy::ManyPicker<State_, SinglePicker>, Take<State_,Score_>, Tracer<Time_, State_, Score_> >
+: public Algorithm<Time_, State_, Score_, InitialStatesPolicy::ManyPicker<State_, SinglePicker>, Take<State_,Score_>, NotifySamples<State_, Score_>, NotifySolution<Time_, State_, Score_> >
 {
 	typedef Time_ Time;
 

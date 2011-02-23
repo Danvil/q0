@@ -53,6 +53,12 @@ struct SampleDataStorage
 		}
 	}
 
+	void AddManyStates(const std::vector<State>& states) {
+		BOOST_FOREACH(const State& s, states) {
+			add(s);
+		}
+	}
+
 	const Sample& operator[](size_t i) const {
 		return _samples[i];
 	}
@@ -357,30 +363,36 @@ public:
 	}
 
 	template<class CMP>
-	const Sample& best() const {
+	Score FindBestScore() const {
+		return FindBestSample<CMP>().score();
+	}
+
+	template<class CMP>
+	const Sample& FindBestSample() const {
 		CMP cmp;
 		if(this->count() == 0) {
 			throw std::runtime_error("Can not get best sample of empty sample set!");
 		}
-		const Sample* best_sample = &(this->sample(0));
-		for(size_t i=0; i<this->count(); ++i) {
-			const Sample* current = &(this->sample(i));
-			if(current->isScoreKnown()
-				&& (best_sample->isScoreUnknown() || cmp(current->score(), best_sample->score()))
+		typename std::vector<Sample>::const_iterator it=this->samples().begin();
+		typename std::vector<Sample>::const_iterator it_best=it;
+		typename std::vector<Sample>::const_iterator it_end=this->samples().end();
+		for(; it!=it_end; ++it) {
+			if(it->isScoreKnown()
+				&& (it_best->isScoreUnknown() || cmp(it->score(), it_best->score()))
 			) {
-				best_sample = current;
+				it_best = it;
 			}
 		}
-		if(best_sample->isScoreUnknown()) {
+		if(it_best->isScoreUnknown()) {
 			throw std::runtime_error("Can not get best sample if all samples are unevaluated!");
 		}
-		return *best_sample;
+		return *it_best;
 	}
 
 	template<class CMP>
-	std::vector<Sample> best(size_t n) const {
+	std::vector<Sample> FindBestSamples(size_t n) const {
 		std::vector<Sample> temp = this->samples();
-		std::sort(temp.begin(), temp.end(), CMP());
+		std::sort(temp.begin(), temp.end(), CMP()); // FIXME this uses operator= on states! Better build an array with indices and copy later.
 		return std::vector<Sample>(temp.begin(), temp.begin() + n);
 	}
 
@@ -391,8 +403,8 @@ public:
 
 	template<class ScoreMapper>
 	void mapScores(const ScoreMapper& mapper) {
-		for(size_t i=0; i<this->count(); i++) {
-			this->setScore(i, mapper(this->score(i)));
+		BOOST_FOREACH(Sample& s, this->samples()) {
+			s.setScore(mapper(s.score()));
 		}
 	}
 

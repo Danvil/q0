@@ -74,7 +74,9 @@ namespace Functions
 	template<typename State, typename ReturnType=DefaultReturnType>
 	struct BoostFunctionSingleWrapper
 	: public AddParallel<State, Private::BoostFunctionSingleWrapperHelper<State, ReturnType>, ReturnType>
-	{};
+	{
+		typedef ReturnType Score;
+	};
 
 	namespace Private
 	{
@@ -100,7 +102,9 @@ namespace Functions
 	template<typename State, typename ReturnType=DefaultReturnType>
 	struct BoostFunctionParallelWrapper
 	: public AddSingle<State, Private::BoostFunctionParallelWrapperHelper<State, ReturnType>, ReturnType>
-	{};
+	{
+		typedef ReturnType Score;
+	};
 
 
 }

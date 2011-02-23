@@ -25,7 +25,7 @@ namespace TakePolicy {
 	{
 		template<class Space, class CMP>
 		const TSample<State,Score>& take(const Space&, const TSampleSet<State,Score>& many) {
-			return many.template best<CMP>();
+			return many.template FindBestSample<CMP>();
 		}
 
 	protected:
@@ -36,7 +36,7 @@ namespace TakePolicy {
 
 	// this will yield a compiler error if this policy is used with something else than BetterMeansBigger
 	template<class State, typename Score, class CMP> struct CmpChecker;
-	template<class State, typename Score> struct CmpChecker<State, Score, BetterMeansBigger<State,Score> > {};
+	template<class State, typename Score> struct CmpChecker<State, Score, BetterMeansBigger<Score> > {};
 
 	/** Returns a weighted mean of all sample states in the set weighted by sample score
 	 * Works only with BetterMeansBigger SampleSets!

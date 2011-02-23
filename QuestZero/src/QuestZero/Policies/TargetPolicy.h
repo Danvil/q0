@@ -8,69 +8,85 @@
 #ifndef POLICIES_TARGETPOLICY_H_
 #define POLICIES_TARGETPOLICY_H_
 //---------------------------------------------------------------------------
+#include <iostream>
+#include <cfloat>
+//---------------------------------------------------------------------------
 namespace Q0 {
 //---------------------------------------------------------------------------
 
 namespace TargetPolicy
 {
-	template<typename ScoreType=double, typename CounterType=unsigned long>
+	/** Breaks after a given number of iterations */
+	template<typename ScoreType=double, bool Console=true>
 	struct FixedChecks
 	{
-		FixedChecks(const CounterType& max=10)
-		: _current(0),
-		  _max(max)
+		FixedChecks(size_t max=10)
+		: current_(0),
+		  max_(max)
 		{}
 
-		void setMaxCount(const CounterType& max) {
-			_max = max;
-		}
+		void SetMaximumIterationCount(size_t max) { max_ = max; }
 
-		const CounterType& maxCount() const { return _max; }
+		size_t GetMaximumIterationCount() const { return max_; }
 
-		const CounterType& currentCount() const { return _current; }
+		size_t GetCurrentIterationCount() const { return current_; }
 
-		bool reached(const ScoreType&) {
-			_current ++;
-			return _current >= _max;
+		bool IsTargetReached(ScoreType) {
+			++current_;
+			if(Console) {
+				std::cout << "Iteration " << current_ << "/" << max_ << std::endl;
+			}
+			return current_ >= max_;
 		}
 
 	private:
-		CounterType _current;
-		CounterType _max;
+		size_t current_;
+		size_t max_;
 	};
 
-	/** Attention: This may result in an infinite loop. Better use ScoreTargetWithMaxChecks! */
-	template<typename ScoreType=double>
+	/** Breaks when the score is smaller than a given value
+	 * Attention: This may result in an infinite loop. Better use ScoreTargetWithMaxChecks!
+	 */
+	template<typename ScoreType=double, bool Console=true>
 	struct ScoreTarget
 	{
-		ScoreTarget(const ScoreType& t=1e-3)
-		: _target(t)
+		ScoreTarget(ScoreType t=1e-3)
+		: current_(FLT_MAX), goal_(t)
 		{}
 
-		void setTargetScore(const ScoreType& t) {
-			_target = t;
-		}
+		void SetTargetScore(ScoreType t) { goal_ = t; }
 
-		const ScoreType& targetScore() const {
-			return _target;
-		}
+		ScoreType GetTargetScore() const { return goal_; }
 
-		bool reached(const ScoreType& score) const {
-			return score <= _target;
+		ScoreType GetCurrentScore() const { return current_; }
+
+		bool IsTargetReached(ScoreType score) {
+			current_ = score;
+			if(Console) {
+				std::cout << "Current Score=" << score << " (Target=" << goal_ << ")" << std::endl;
+			}
+			return current_ <= goal_;
 		}
 
 	private:
-		ScoreType _target;
+		ScoreType current_;
+		ScoreType goal_;
 	};
 
-	template<typename ScoreType=double, typename CounterType=unsigned long>
+	/** Breaks if a score goal has been reached or after a maximum number of iterations */
+	template<typename ScoreType=double, bool Console=true>
 	struct ScoreTargetWithMaxChecks
-	: public FixedChecks<ScoreType,CounterType>,
-	  public ScoreTarget<ScoreType>
+	: public FixedChecks<ScoreType,false>,
+	  public ScoreTarget<ScoreType,false>
 	{
-		bool reached(const ScoreType& score) {
-			return FixedChecks<ScoreType,CounterType>::reached(score) // must be first, so it gets evaluated every time!
-				|| ScoreTarget<ScoreType>::reached(score);
+		bool IsTargetReached(const ScoreType& score) {
+			bool check_iters = ((FixedChecks<ScoreType,false>*)this)->IsTargetReached(score); // must be first, so it gets evaluated every time!
+			bool check_score = ((ScoreTarget<ScoreType,false>*)this)->IsTargetReached(score);
+			if(Console) {
+				std::cout << "Iteration " << this->GetCurrentIterationCount() << "/" << this->GetMaximumIterationCount() << ": "
+						<< "Current Score=" << this->GetCurrentScore() << " (Target=" << this->GetTargetScore() << ")" << std::endl;
+			}
+			return check_iters || check_score;
 		}
 
 	};

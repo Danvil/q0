@@ -19,6 +19,19 @@ namespace Q0 {
 namespace Spaces {
 //---------------------------------------------------------------------------
 
+/*namespace Part {
+	struct _0 {};
+	struct _1 {};
+	struct _2 {};
+	struct _3 {};
+	struct _4 {};
+	struct _5 {};
+	struct _6 {};
+	struct _7 {};
+	struct _8 {};
+	struct _9 {};
+}*/
+
 template<class Typelist>
 struct TypelistState
 : public Loki::Tuple<Typelist>,
@@ -41,9 +54,48 @@ struct TypelistState
 	}
 
 	template<int i>
-	void setPart(const typename Loki::TL::TypeAt<Typelist, i>::Result& part) {
-		Loki::Field<i>(*this) = part;
+	void set_part(const typename Loki::TL::TypeAt<Typelist, i>::Result& x) {
+		Loki::Field<i>(*this) = x;
 	}
+
+/*#define Q0_GET_PART(i) \
+	const typename Loki::TL::TypeAt<Typelist, i>::Result& part(Part::_##i) const { \
+		return part<i>();\
+	}\
+	typename Loki::TL::TypeAt<Typelist, i>::Result& part(Part::_##i) { \
+		return part<i>();\
+	}
+
+	Q0_GET_PART(0)
+	Q0_GET_PART(1)
+	Q0_GET_PART(2)
+	Q0_GET_PART(3)
+	Q0_GET_PART(4)
+	Q0_GET_PART(5)
+	Q0_GET_PART(6)
+	Q0_GET_PART(7)
+	Q0_GET_PART(8)
+	Q0_GET_PART(9)
+
+#undef Q0_GET_PART
+
+#define Q0_SET_PART(i) \
+	void set_part(Part::_##i, const typename Loki::TL::TypeAt<Typelist, i>::Result& x) {\
+		set_part<i>(x);\
+	}
+
+	Q0_SET_PART(0)
+	Q0_SET_PART(1)
+	Q0_SET_PART(2)
+	Q0_SET_PART(3)
+	Q0_SET_PART(4)
+	Q0_SET_PART(5)
+	Q0_SET_PART(6)
+	Q0_SET_PART(7)
+	Q0_SET_PART(8)
+	Q0_SET_PART(9)
+
+#undef Q0_SET_PART*/
 
 	unsigned int dimension() const {
 		unsigned int sum = 0;
@@ -208,7 +260,7 @@ private:
 
 	template<int i>
 	void inverseImpl(Loki::Int2Type<i>, State& s, const State& a) const {
-		s.template setPart<i>(space<i>().inverse(a.template part<i>()));
+		s.template set_part<i>(space<i>().inverse(a.template part<i>()));
 		inverseImpl(Loki::Int2Type<i+1>(), s, a);
 	}
 
@@ -216,7 +268,7 @@ private:
 
 	template<int i>
 	void composeImpl(Loki::Int2Type<i>, State& s, const State& a, const State& b) const {
-		s.template setPart<i>(space<i>().compose(a.template part<i>(), b.template part<i>()));
+		s.template set_part<i>(space<i>().compose(a.template part<i>(), b.template part<i>()));
 		composeImpl(Loki::Int2Type<i+1>(), s, a, b);
 	}
 
@@ -224,7 +276,7 @@ private:
 
 	template<typename K, int i>
 	void weightedSumImpl(Loki::Int2Type<i>, State& s, K f1, const State& s1, K f2, const State& s2) const {
-		s.template setPart<i>(space<i>().weightedSum(f1, s1.template part<i>(), f2, s2.template part<i>()));
+		s.template set_part<i>(space<i>().weightedSum(f1, s1.template part<i>(), f2, s2.template part<i>()));
 		weightedSumImpl(Loki::Int2Type<i+1>(), s, f1, s1, f2, s2);
 	}
 
@@ -233,7 +285,7 @@ private:
 
 	template<typename K, int i>
 	void weightedSumImpl(Loki::Int2Type<i>, State& s, K f1, const State& s1, K f2, const State& s2, K f3, const State& s3) const {
-		s.template setPart<i>(space<i>().weightedSum(f1, s1.template part<i>(), f2, s2.template part<i>(), f3, s3.template part<i>()));
+		s.template set_part<i>(space<i>().weightedSum(f1, s1.template part<i>(), f2, s2.template part<i>(), f3, s3.template part<i>()));
 		weightedSumImpl(Loki::Int2Type<i+1>(), s, f1, s1, f2, s2, f3, s3);
 	}
 
@@ -248,7 +300,7 @@ private:
 		for(size_t j=0; j<states.size(); ++j) {
 			parts[j] = states[j].template part<i>();
 		}
-		s.template setPart<i>(space<i>().weightedSum(scalars, parts));
+		s.template set_part<i>(space<i>().weightedSum(scalars, parts));
 		weightedSumImpl(Loki::Int2Type<i+1>(), s, scalars, states);
 	}
 
@@ -257,7 +309,7 @@ private:
 
 	template<int i>
 	void randomImpl(Loki::Int2Type<i>, State& s) const {
-		s.template setPart<i>(space<i>().random());
+		s.template set_part<i>(space<i>().random());
 		randomImpl(Loki::Int2Type<i+1>(), s);
 	}
 
@@ -268,7 +320,7 @@ private:
 		unsigned int len = space<i>().dimension();
 		unsigned int end = start + len;
 		INVALID_SIZE_EXCEPTION(end > noise.size())
-		s.template setPart<i>(space<i>().random(center.template part<i>(), std::vector<K>(noise.begin() + start, noise.begin() + end)));
+		s.template set_part<i>(space<i>().random(center.template part<i>(), std::vector<K>(noise.begin() + start, noise.begin() + end)));
 		randomImpl(Loki::Int2Type<i+1>(), s, end, center, noise);
 	}
 
@@ -277,7 +329,7 @@ private:
 
 	template<int i>
 	void projectImpl(Loki::Int2Type<i>, State& s, const State& a) const {
-		s.template setPart<i>(space<i>().project(a.template part<i>()));
+		s.template set_part<i>(space<i>().project(a.template part<i>()));
 		projectImpl(Loki::Int2Type<i+1>(), s, a);
 	}
 
