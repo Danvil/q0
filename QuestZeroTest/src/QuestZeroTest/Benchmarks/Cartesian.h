@@ -134,10 +134,12 @@ struct Cartesian
 	/// <param name="v"></param>
 	/// <returns></returns>
 	static K Rastrigin(const V& v) {
+		const K cA = (K)10;
+		const K cTwoPi = Danvil::TwoPi<K>();
 		K sum = 0;
 		for(unsigned int i = 0; i < v.dimension(); i++) {
 			K x = v[i];
-			sum += x * x + K(10) * (K(1) - K(2) * std::cos(Danvil::Pi<K>() * x));
+			sum += x * x + cA * (1 - std::cos(cTwoPi * x));
 		}
 		return sum;
 	}
