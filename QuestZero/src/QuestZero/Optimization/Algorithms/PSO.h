@@ -66,7 +66,7 @@ struct PSO
 
 	template<class Space, class Function>
 	Sample Optimize(const Space& space, const Function& function) {
-		typedef BetterMeansSmaller<Score> CMP;
+		typedef BetterMeansSmaller<Score> CMP; // FIXME hardcoded!
 		globals.set(settings);
 		// generate start samples
 		std::vector<State> initial_states = this->pickMany(space, settings.particleCount);
@@ -77,15 +77,19 @@ struct PSO
 		// iterate
 		while(true) {
 			// construct sample set
+			LOG_DEBUG << "PSO: construct sample set";
 			SampleSet samples = currentSamples();
 			// evaluate samples
+			LOG_DEBUG << "PSO: evaluate samples";
 			samples.evaluateUnknown(function);
 			// update global best
+			LOG_DEBUG << "PSO: update global best";
 			const Sample& best = samples.template FindBestSample<CMP>();
 			if(!globals.isSet() || CMP::compare(best.score(), globals.best_score())) {
 				globals.set(best);
 			}
 			// update personal best and particle
+			LOG_DEBUG << "PSO: update personal best and particle";
 			for(size_t i = 0; i < particles.size(); i++) {
 				const Sample& s = samples[i];
 				ParticleData& p = particles[i];
@@ -95,13 +99,16 @@ struct PSO
 				}
 				p.Update(space, globals);
 			}
-			// trace
+			// notify about new samples
+			LOG_DEBUG << "PSO: notify about new samples";
 			this->NotifySamples(bestSamples());
 			// check if break condition is satisfied
+			LOG_DEBUG << "PSO: check break condition";
 			if(this->IsTargetReached(globals.best_score())) {
 				break;
 			}
 		}
+		LOG_DEBUG << "PSO: picking result";
 		return this->template take<Space, CMP>(space, bestSamples());
 	}
 
