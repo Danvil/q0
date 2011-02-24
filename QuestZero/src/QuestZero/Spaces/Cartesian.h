@@ -255,17 +255,17 @@ namespace Cartesian {
 
 	template<typename State>
 	struct InfiniteCartesianSpace
-	: public BaseSpace<State, Operations::Linear<State>, Domains::Infinite<State>, OperationFinalPolicy::Unprojected<State> >
+	: public CartesianSpace<State, Domains::Infinite<State>, Operations::Linear<State>, OperationFinalPolicy::Unprojected<State> >
 	{ };
 
 	template<typename State>
 	struct FiniteCartesianSpace
-	: public BaseSpace<State, Operations::Linear<State>, Domains::Box<State>, OperationFinalPolicy::Projected<State> >
+	: public CartesianSpace<State, Domains::Box<State> >
 	{ };
 
 	template<typename K>
 	struct IntervalSpace
-	: public BaseSpace<K, Operations::Linear<K>, Domains::Interval<K>, OperationFinalPolicy::Projected<K> >
+	: public CartesianSpace<K, Domains::Interval<K> >
 	{ };
 
 }

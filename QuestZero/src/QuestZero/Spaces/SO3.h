@@ -174,12 +174,17 @@ namespace SO3 {
 
 	template<
 		typename K,
-		class Operator = Operations::SO3Ops<K>,
 		class Domain = Domains::Full<K>,
+		class Operator = Operations::SO3Ops<K>,
 		class OperationFinal = OperationFinalPolicy::Unprojected<Danvil::SO3::Quaternion<K> >
 	>
 	struct SO3Space
 	: public BaseSpace<Danvil::SO3::Quaternion<K>, Operator, Domain, OperationFinal>
+	{ };
+
+	template<typename K>
+	struct FullSO3Space
+	: public SO3Space<K>
 	{ };
 }
 

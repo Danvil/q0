@@ -23,8 +23,8 @@ template<
 >
 struct BaseSpace
 : public Operator,
-  public OperationFinal,
-  public Domain
+  public Domain,
+  public OperationFinal
 {
 	typedef State_ State;
 

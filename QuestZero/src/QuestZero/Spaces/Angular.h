@@ -202,12 +202,23 @@ namespace Angular {
 
 	template<
 		typename State,
-		class Operator = Operations::AngularOps<State>,
-		class Domain = Domains::Full<State>
+		class Domain = Domains::Full<State>,
+		class Operator = Operations::AngularOps<State>
 	>
 	struct AngularSpace
 	: public BaseSpace<State, Operator, Domain>
 	{ };
+
+	template<typename State>
+	struct FullAngularSpace
+	: public AngularSpace<State, Domains::Full<State> >
+	{ };
+
+	template<typename State>
+	struct IntervalAngularSpace
+	: public AngularSpace<State, Domains::Interval<State> >
+	{ };
+
 }
 
 //---------------------------------------------------------------------------
