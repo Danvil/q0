@@ -10,6 +10,7 @@
 //---------------------------------------------------------------------------
 #include "QuestZero/Common/SampleSet.h"
 #include "QuestZero/Optimization/Deterministic/BisectionSearch.h"
+#include <Danvil/Tools/Log.h>
 #include <vector>
 #include <cassert>
 #include <cmath>
@@ -67,7 +68,7 @@ struct ParticleAnnealing
 		// prepare noise
 		std::vector<double> noise = settings_.noise_;
 		// iterate through layers
-		for(int m = settings_.layers_; m >= 0; --m) {
+		for(int m = settings_.layers_; m > 0; --m) {
 			double alpha = settings_.alpha_;
 			// apply noise scaling
 			for(size_t i=0; i<noise.size(); ++i) {
@@ -78,19 +79,19 @@ struct ParticleAnnealing
 			current.evaluateUnknown(function);
 			// find best beta with respect to current scores
 			double beta = BetaOptimizationProblem<Score>::Optimize_Bisect(alpha, current.scores(), 1e-2);
+			LOG_DEBUG << "Annealing " << (settings_.layers_ - m + 1) << "/" << settings_.layers_ << ": Beta=" << beta;
 			if(beta > BetaOptimizationProblem<Score>::cMaxBeta() * 0.99) {
 				// we can not distinguish the scores anymore, so we assume that we have enough accuracy and quit
 				// FIXME is this test good? this imposes some kind of scale on the score!
 				break;
 			}
-			// map scores
-			exponentiation_score_mapper_.beta = beta;
-			current.mapScores(exponentiation_score_mapper_);
+			// map scores accordingly to found beta value
+			current.MapScores(ExpScoreMapper(beta));
 			// create new sample set using weighted random drawing
-			current = current.drawByScore(current.count());
+			current = current.DrawByScore(current.count());
 			// notify about samples
 			this->NotifySamples(current);
-			// FIXME do we have to break early? whats wrong here?
+			// FIXME do we have to break early? what's wrong here?
 			if(m == 0) {
 				break;
 			}
@@ -99,15 +100,16 @@ struct ParticleAnnealing
 		return current;
 	}
 
+	/** x |-> x^beta */
 	struct ExpScoreMapper
 	{
-		double beta;
+		ExpScoreMapper(double beta) : beta_(beta) {}
 		double operator()(double x) const {
-			return std::pow(x, beta);
+			return std::pow(x, beta_);
 		}
+	private:
+		double beta_;
 	};
-
-	ExpScoreMapper exponentiation_score_mapper_;
 
 private:
 	template<typename T>
