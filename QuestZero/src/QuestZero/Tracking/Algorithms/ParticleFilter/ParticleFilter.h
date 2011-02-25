@@ -57,8 +57,9 @@ struct ParticleFilter
 				open_samples.evaluateAll(pinned);
 				// create new sample set using weighted random drawing
 				try{
-					open_samples = open_samples.drawByScore(particle_count_);
+					open_samples = open_samples.DrawByScore(particle_count_);
 				} catch(typename SampleSet::CanNotNormalizeZeroListException&) {
+					LOG_WARNING << "All samples have a score of zero. This means the tracker lost the object!";
 					// tracker lost the object
 					return sol;
 				}
