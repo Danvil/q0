@@ -79,14 +79,22 @@ namespace Cartesian {
 
 	namespace Domains
 	{
-		// TODO: allow states with variable dimension?
+		/** Infinite Cartesian space
+		 * Unconstrained random sampling uses a normal distribution around 0 with given sigma
+		 */
 		template<typename State>
 		struct Infinite
 		{
 			typedef typename State::ScalarType S;
 
-			Infinite() {}
+			Infinite() : random_sigma_(1) {}
 
+			/** Sets the normal distribution sigma used in unconstrained random sampling */
+			void SetRandomSigma(S sigma) {
+				random_sigma_ = sigma;
+			}
+
+			// TODO: allow states with variable dimension?
 			size_t dimension() const {
 				return State::Dimension;
 			}
@@ -96,10 +104,9 @@ namespace Cartesian {
 			}
 
 			State random() const {
-				// FIXME this functions does not make sense ...
 				State v;
 				for(size_t i=0; i<dimension(); i++) {
-					v[i] = RandomNumbers::Normal<S>();
+					v[i] = RandomNumbers::Normal<S>(random_sigma_);
 				}
 				return v;
 			}
@@ -117,11 +124,14 @@ namespace Cartesian {
 				return v;
 			}
 
+		private:
+			S random_sigma_;
+
 		protected:
 			~Infinite() {}
 		};
 
-		// TODO: allow states with variable dimension?
+		/** Finite box shaped part of Cartesian space */
 		template<typename State>
 		struct Box
 		{
@@ -146,6 +156,7 @@ namespace Cartesian {
 				max_ = max;
 			}
 
+			// TODO: allow states with variable dimension?
 			size_t dimension() const {
 				return State::Dimension;
 			}
@@ -189,7 +200,7 @@ namespace Cartesian {
 			~Box() {}
 		};
 
-		// TODO: allow states with variable dimension?
+		/** Finite interval in 1D Cartesian space */
 		template<typename State>
 		struct Interval
 		{
