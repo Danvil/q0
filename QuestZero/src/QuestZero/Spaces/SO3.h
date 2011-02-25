@@ -119,7 +119,8 @@ namespace SO3 {
 				assert(noise.size() == dimension());
 				// FIXME correct noise for SO3
 				K d = K(std::sqrt(noise[0]*noise[0] + noise[1]*noise[1] + noise[2]*noise[2]));
-				return center * Danvil::SO3::RotationTools::UniformRandom<K>(d, &RandomNumbers::Uniform<K>);
+				State delta = Danvil::SO3::RotationTools::UniformRandom<K>(d, &RandomNumbers::Uniform<K>);
+				return center * delta;
 			}
 
 		protected:
