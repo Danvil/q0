@@ -10,6 +10,7 @@
 //---------------------------------------------------------------------------
 #include "BaseSpace.h"
 #include "QuestZero/Common/RandomNumbers.h"
+#include "QuestZero/Common/Exceptions.h"
 #include <Danvil/Tools/MoreMath.h>
 #include <Danvil/Tools/Field.h>
 #include <Danvil/Print.h>
@@ -56,28 +57,32 @@ namespace Angular {
 
 			template<typename S>
 			K weightedSum(S f1, K s1, S f2, K s2) const {
-				// FIXME this is incorrect!
-				return Wrap((K)f1 * Wrap(s1) + (K)f2 * Wrap(s2));
+				std::vector<S> factors;
+				factors.push_back(f1);
+				factors.push_back(f2);
+				std::vector<State> states;
+				states.push_back(s1);
+				states.push_back(s2);
+				return weightedSum(factors, states);
 			}
 
 			template<typename S>
 			K weightedSum(S f1, K s1, S f2, K s2, S f3, K s3) const {
-				// FIXME this is incorrect!
-				return Wrap((K)f1 * Wrap(s1) + (K)f2 * Wrap(s2) + (K)f3 * Wrap(s3));
+				std::vector<S> factors;
+				factors.push_back(f1);
+				factors.push_back(f2);
+				factors.push_back(f3);
+				std::vector<State> states;
+				states.push_back(s1);
+				states.push_back(s2);
+				states.push_back(s3);
+				return weightedSum(factors, states);
 			}
 
 			template<typename S>
 			K weightedSum(const std::vector<S>& factors, const std::vector<K>& states) const {
-				if(factors.size() != states.size()) {
-					// Number of factors and states must be equal!
-					throw WeightedSumException();
-				}
-				// FIXME this is incorrect!
-				K ws = (K)0;
-				for(size_t i=0; i<states.size(); ++i) {
-					ws += (K)factors[i] * Wrap(states[i]);
-				}
-				return Wrap(ws);
+				INVALID_SIZE_EXCEPTION(factors.size() != states.size()) // Number of factors and states must be equal!
+				return Danvil::SO3::RotationTools::WeightedMean(states, factors, (K)1e-3);
 			}
 
 			/** Restrict the angle to [0,2Pi] */
