@@ -283,58 +283,61 @@ struct TSampleSet
 
 private:
 	/** Computes the density of the probability distribution got by normalizing the samples scores */
-	std::vector<Score> scoreDensity() const {
+	std::vector<double> ComputeScoreDensity() const {
 		if(this->count() == 0) {
 			throw CanNotNormalizeZeroListException();
 		}
 		// we first build the density using the unnormalized scores
-		std::vector<Score> d;
-		d.reserve(this->count());
-		Score last = 0;
-		for(size_t i=0; i<this->count(); ++i) {
-			last += (*this)[i].score();
-			d.push_back(last);
+		std::vector<double> density;
+		density.reserve(this->count());
+		double last = 0;
+		BOOST_FOREACH(const Sample& s, this->samples()) {
+			last += (double)s.score();
+			density.push_back(last);
 		}
 		// last is now the total sum of all scores
 		// using this we perform the normalization
 		if(last == 0) {
 			throw CanNotNormalizeZeroListException();
 		}
-		Score scl = Score(1) / last;
-		for(size_t i=0; i<d.size(); ++i) {
-			d[i] *= scl;
+		double scl = 1.0 / last;
+		BOOST_FOREACH(double& x, density) {
+			x *= scl;
 		}
-		return d;
+		return density;
 	}
 
-	/** Finds the index of the smallest value larger than the given value */
-	static size_t FindSmallestLargerThan(const std::vector<Score>& list, Score val) {
-		// FIXME use bisection search here!
-		for(size_t i=0; i<list.size(); ++i) {
-			if(val <= list[i]) {
-				return i;
+	/** Finds the index of the first value larger than the given value */
+	static size_t FindIndexOfFirstLargerThan(const std::vector<double>& list, double val) {
+		// FIXME use bisection search here if list is sorted!
+		size_t index = 0;
+		BOOST_FOREACH(double x, list) {
+			if(x >= val) {
+				return index;
 			}
+			index++;
 		}
 		throw InvalidDistributionException(); // TODO throw a different exception here!
 	}
 
 	/** Randomly picks a value from a discreet probability distribution */
-	static size_t RandomPickFromDensity(const std::vector<Score>& density) {
-		Score r = RandomNumbers::Uniform<Score>();
-		return FindSmallestLargerThan(density, r);
+	static size_t RandomPickFromDensity(const std::vector<double>& density) {
+		double r = RandomNumbers::Uniform<double>();
+		return FindIndexOfFirstLargerThan(density, r);
 		// TODO catch possible exceptions and transfer to InvalidDistributionException
 	}
 
 public:
-	/** Randomly picks samples using a probability which is proportional to the sample score */
-	TSampleSet drawByScore(unsigned int n) const {
-		std::vector<Score> density = scoreDensity();
-		TSampleSet picked;
+	/** Randomly picks n samples using a probability which is proportional to the sample score */
+	TSampleSet DrawByScore(unsigned int n) const {
+		std::vector<double> density = ComputeScoreDensity();
+		std::vector<Sample> picked;
+		picked.reserve(n);
 		for(unsigned int i=0; i<n; ++i) {
 			size_t p = RandomPickFromDensity(density);
-			picked.add((*this)[p]);
+			picked.push_back((*this)[p]);
 		}
-		return picked;
+		return TSampleSet(picked);
 	}
 
 	/** Adds noise to all states invalidating the scores */
@@ -398,11 +401,11 @@ public:
 
 	template<class CMP>
 	TSampleSet bestAsSet(size_t n) const {
-		return TSampleSet(this->template best<CMP>(n));
+		return TSampleSet(this->template FindBestSamples<CMP>(n));
 	}
 
 	template<class ScoreMapper>
-	void mapScores(const ScoreMapper& mapper) {
+	void MapScores(const ScoreMapper& mapper) {
 		BOOST_FOREACH(Sample& s, this->samples()) {
 			s.setScore(mapper(s.score()));
 		}
