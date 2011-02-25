@@ -39,7 +39,7 @@ struct BetterMeansBigger
 	}
 	template<typename U>
 	bool operator()(const TSample<U,Score>& a, const TSample<U,Score>& b) {
-		return compare(a, b);
+		return compare(a.score(), b.score());
 	}
 };
 
