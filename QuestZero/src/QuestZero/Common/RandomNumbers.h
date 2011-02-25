@@ -33,10 +33,16 @@ namespace RandomNumbers
 		return die();
 	}
 
-	/** Random real in [0,1] */
+	/** Normal distributed random number with given standard deviation */
 	template<typename K>
-	K Normal() {
-		return Generate(boost::normal_distribution<K>(0, 1));
+	K Normal(K sigma=1) {
+		return Generate(boost::normal_distribution<K>(0, sigma));
+	}
+
+	/** Normal distributed random number with given standard deviation */
+	template<typename K>
+	K Normal(K mean, K sigma) {
+		return Generate(boost::normal_distribution<K>(mean, sigma));
 	}
 
 	/** Random real in [0,1] */
