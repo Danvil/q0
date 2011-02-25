@@ -27,6 +27,18 @@ struct TSolution
 
 	struct UnkownScoreException {};
 
+	struct Item
+	{
+		Item()
+		: isEvaluated(false)
+		{}
+
+		Time time;
+		State state;
+		Score score;
+		bool isEvaluated;
+	};
+
 	TSolution() {}
 
 	TSolution(const TimeRange& range)
@@ -35,6 +47,10 @@ struct TSolution
 		for(size_t i=0; i<items_.size(); ++i) {
 			items_[i].time = range.indexToTime(i);
 		}
+	}
+
+	const std::vector<Item>& items() const {
+		return items_;
 	}
 
 	bool IsEmpty() const {
@@ -145,18 +161,6 @@ struct TSolution
 	}
 
 private:
-	struct Item
-	{
-		Item()
-		: isEvaluated(false)
-		{}
-
-		Time time;
-		State state;
-		Score score;
-		bool isEvaluated;
-	};
-
 	const Item& itemByTime(const Time& t) const {
 		return items_[range_.timeToIndex(t)];
 	}
