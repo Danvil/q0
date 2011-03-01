@@ -17,6 +17,15 @@
 namespace Q0 {
 //---------------------------------------------------------------------------
 
+template<typename State, typename Score, typename X>
+struct NotifySamplesForward
+{
+	void NotifySamples(const TSampleSet<State,Score>& samples) {
+		notify_samples_forward_->NotifySamples(samples);
+	}
+	X* notify_samples_forward_;
+};
+
 template<typename Time, typename State, typename Score, class StartingStates, class Take, class NotifySamples, class NotifySolution, bool UseAnnealing>
 struct ParticleFilter
 : public StartingStates,
@@ -47,7 +56,8 @@ struct ParticleFilter
 			pinned.setTime(t);
 			if(UseAnnealing) {
 				// use annealing to refine the sample set
-				ParticleAnnealing<State, Score, NotifySamples> pa;
+				ParticleAnnealing<State, Score, NotifySamplesForward<State,Score,NotifySamples> > pa;
+				pa.notify_samples_forward_ = this;
 				pa.settings_.noise_ = noise_;
 				open_samples = pa.optimize(open_samples, space, pinned);
 			} else {

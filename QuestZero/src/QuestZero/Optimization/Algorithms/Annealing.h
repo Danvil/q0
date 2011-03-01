@@ -85,17 +85,12 @@ struct ParticleAnnealing
 				// FIXME is this test good? this imposes some kind of scale on the score!
 				break;
 			}
+			// notify about samples (before mapping and drawing to get real scores and samples!)
+			this->NotifySamples(current);
 			// map scores accordingly to found beta value
 			current.MapScores(ExpScoreMapper(beta));
 			// create new sample set using weighted random drawing
 			current = current.DrawByScore(current.count());
-			// notify about samples
-			this->NotifySamples(current);
-			// FIXME do we have to break early? what's wrong here?
-			if(m == 0) {
-				break;
-			}
-			// FIXME (old position of noise) is it good to move this to the front of the loop?
 		}
 		return current;
 	}
