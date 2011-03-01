@@ -38,13 +38,15 @@ namespace MultiplierSizePolicies
 	};
 }
 
-template<typename BaseState, class SizePolicy_>
+template<typename BaseState_, class SizePolicy_>
 struct MultiplierState
 : public Danvil::Print::IPrintable
 {
-	typedef typename Private::GetScalarType<BaseState>::ScalarType ScalarType;
-
 	typedef SizePolicy_ SizePolicy;
+
+	typedef BaseState_ BaseState;
+
+	typedef typename Private::GetScalarType<BaseState>::ScalarType ScalarType;
 
 	MultiplierState() {
 		// size_policy_ has default value
@@ -123,6 +125,8 @@ struct MultiplierSpace
 {
 	typedef State_ State;
 
+	typedef typename State::BaseState BaseState;
+
 	typedef typename State::SizePolicy SizePolicy;
 
 	MultiplierSpace(SizePolicy sp=SizePolicy())
@@ -200,12 +204,12 @@ struct MultiplierSpace
 		INVALID_SIZE_EXCEPTION(states.size() == 0) // Must have at least one element for WeightedSum!
 		State s(size_policy_);
 		for(size_t i=0; i<count(); ++i) {
-			std::vector<State> parts;
+			std::vector<BaseState> parts;
 			parts.reserve(states.size());
 			for(size_t k=0; k<states.size(); k++) {
-				parts[k] = states[k][i];
+				parts.push_back(states[k][i]);
 			}
-			s[i] = weightedSum(factors, states);
+			s[i] = spaces_[i].weightedSum(factors, parts);
 		}
 		return s;
 	}

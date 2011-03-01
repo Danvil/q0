@@ -32,11 +32,13 @@ namespace Spaces {
 	struct _9 {};
 }*/
 
-template<class Typelist>
+template<class Typelist_>
 struct TypelistState
-: public Loki::Tuple<Typelist>,
-  Danvil::Print::IPrintable
+: public Loki::Tuple<Typelist_>,
+  public Danvil::Print::IPrintable
 {
+	typedef Typelist_ Typelist;
+
 	typedef typename Private::GetScalarType<typename Loki::TL::TypeAt<Typelist, 0>::Result>::ScalarType ScalarType;
 
 	static const int N = Loki::TL::Length<Typelist>::value;
@@ -132,11 +134,15 @@ private:
 
 };
 
-template<class Typelist, class State_>
+template<class Typelist_, class State_>
 struct TypelistSpace
-: public Loki::Tuple<Typelist>
+: public Loki::Tuple<Typelist_>
 {
 	typedef State_ State;
+	typedef Typelist_ Typelist;
+
+	typedef Typelist SpaceTypelist;
+	typedef typename State::Typelist StateTypelist;
 
 	static const int N = Loki::TL::Length<Typelist>::value;
 
@@ -294,11 +300,11 @@ private:
 
 	template<typename K, int i>
 	void weightedSumImpl(Loki::Int2Type<i>, State& s, const std::vector<K>& scalars, const std::vector<State>& states) const {
-		typedef typename Loki::TL::TypeAt<Typelist, i - 1>::Result CurrentType;
+		typedef typename Loki::TL::TypeAt<StateTypelist, i>::Result CurrentType;
 		std::vector<CurrentType> parts;
 		parts.reserve(states.size());
 		for(size_t j=0; j<states.size(); ++j) {
-			parts[j] = states[j].template part<i>();
+			parts.push_back(states[j].template part<i>());
 		}
 		s.template set_part<i>(space<i>().weightedSum(scalars, parts));
 		weightedSumImpl(Loki::Int2Type<i+1>(), s, scalars, states);

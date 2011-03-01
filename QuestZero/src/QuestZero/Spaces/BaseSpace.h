@@ -51,16 +51,19 @@ struct BaseSpace
 	}
 
 	/** Weighted sum of two states */
+	template<typename K>
 	State weightedSum(K f1, const State& s1, K f2, const State& s2) const {
 		return opFinal(*this, Operator::weightedSum(f1, s1, f2, s2));
 	}
 
 	/** Weighted sum of three states */
+	template<typename K>
 	State weightedSum(K f1, const State& s1, K f2, const State& s2, K f3, const State& s3) const {
 		return opFinal(*this, Operator::weightedSum(f1, s1, f2, s2, f3, s3));
 	}
 
 	/** Weighted sum of arbitrary many states */
+	template<typename K>
 	State weightedSum(const std::vector<K>& factors, const std::vector<State>& states) const {
 		return opFinal(*this, Operator::weightedSum(factors, states));
 	}

@@ -400,7 +400,7 @@ public:
 	}
 
 	template<class CMP>
-	TSampleSet bestAsSet(size_t n) const {
+	TSampleSet FindBestSamplesAsSet(size_t n) const {
 		return TSampleSet(this->template FindBestSamples<CMP>(n));
 	}
 
