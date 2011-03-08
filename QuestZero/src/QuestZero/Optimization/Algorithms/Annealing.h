@@ -60,9 +60,7 @@ struct ParticleAnnealing
 	std::string name() const { return "Annealing"; }
 
 	template<class Space, class Function>
-	SampleSet optimize(const SampleSet& start, const Space& space, const Function& function) {
-		// prepare sample set
-		SampleSet current = start;
+	void OptimizeInplace(SampleSet& current, const Space& space, const Function& function) {
 		// FIXME what is the particle count?
 //		assert(current.size() == settings_.particle_count_);
 		// prepare noise
@@ -92,6 +90,12 @@ struct ParticleAnnealing
 			// create new sample set using weighted random drawing
 			current = current.DrawByScore(current.count());
 		}
+	}
+
+	template<class Space, class Function>
+	SampleSet Optimize(const SampleSet& start, const Space& space, const Function& function) {
+		SampleSet current = start;
+		OptimizeInplace(current, space, function);
 		return current;
 	}
 
