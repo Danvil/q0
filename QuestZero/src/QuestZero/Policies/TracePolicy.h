@@ -29,7 +29,7 @@ namespace TracePolicy
 		};
 		/** Forwards the call to a function */
 		template<typename State, typename Score>
-		struct Forward {
+		struct ForwardToFunction {
 			typedef boost::function<void(const TSampleSet<State,Score>&)> Functor;
 			void SetNotifySamplesFunctor(const Functor& f) {
 				samples_functor_ = f;
@@ -42,6 +42,19 @@ namespace TracePolicy
 		private:
 			Functor samples_functor_;
 		};
+		/** Forwards the call to a object */
+		template<typename State, typename Score, typename X>
+		struct ForwardToObject {
+			void SetNotifySamplesObject(X* f) {
+				notify_samples_forward_ = f;
+			}
+			void NotifySamples(const TSampleSet<State,Score>& samples) {
+				notify_samples_forward_->NotifySamples(samples);
+			}
+		private:
+			X* notify_samples_forward_;
+		};
+
 	}
 
 	/** Policies for solution notification */
