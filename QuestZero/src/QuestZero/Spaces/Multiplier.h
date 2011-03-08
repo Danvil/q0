@@ -23,7 +23,15 @@ namespace MultiplierSizePolicies
 {
 	template<int N> struct FixedSize
 	{
+		FixedSize() {}
+		FixedSize(int count) { assert(count==N); }
 		unsigned int count() const { return N; }
+	public:
+		template<typename U>
+		struct StorageTraits {
+			typedef U Storage[N];
+			static void Allocate(Storage&, uint n) { assert(n == N); }
+		};
 	};
 
 	struct DynamicSize
@@ -35,10 +43,18 @@ namespace MultiplierSizePolicies
 		unsigned int count() const { return count_; }
 	private:
 		unsigned int count_;
+	public:
+		template<typename U>
+		struct StorageTraits {
+			typedef boost::shared_array<U> Storage;
+			static void Allocate(Storage& s, uint n) {
+				s = boost::shared_array<U>(new U[n]);
+			}
+		};
 	};
 }
 
-template<typename BaseState_, class SizePolicy_>
+template<typename BaseState_, class SizePolicy_=MultiplierSizePolicies::DynamicSize>
 struct MultiplierState
 : public Danvil::Print::IPrintable
 {
@@ -50,24 +66,24 @@ struct MultiplierState
 
 	MultiplierState() {
 		// size_policy_ has default value
-		sub_ = boost::shared_array<BaseState>(new BaseState[count()]);
+		allocate();
 	}
 
 	MultiplierState(SizePolicy sp)
 	: size_policy_(sp) {
-		sub_ = boost::shared_array<BaseState>(new BaseState[count()]);
+		allocate();
 	}
 
 	MultiplierState(const MultiplierState& rhs)
 	: size_policy_(rhs.size_policy_) {
-		sub_ = boost::shared_array<BaseState>(new BaseState[count()]);
+		allocate();
 		copy_from(rhs.sub_);
 	}
 
 	MultiplierState& operator=(const MultiplierState& rhs) {
 		if(&rhs != this) {
 			size_policy_ = rhs.size_policy_;
-			sub_ = boost::shared_array<BaseState>(new BaseState[count()]);
+			allocate();
 			copy_from(rhs.sub_);
 		}
 		return *this;
@@ -108,14 +124,20 @@ struct MultiplierState
 	}
 
 private:
-	void copy_from(const boost::shared_array<BaseState>& data) {
+	void allocate() {
+		SizePolicy::template StorageTraits<BaseState>::Allocate(sub_, count());
+		// sub_ = boost::shared_array<BaseState>(new BaseState[count()]);
+	}
+
+	void copy_from(const typename SizePolicy::template StorageTraits<BaseState>::Storage& data) {
 		for(size_t i=0; i<count(); i++) {
 			sub_[i] = data[i];
 		}
 	}
 
 private:
-	boost::shared_array<BaseState> sub_;
+	typename SizePolicy::template StorageTraits<BaseState>::Storage sub_;
+	//boost::shared_array<BaseState> sub_;
 	SizePolicy size_policy_;
 
 };
@@ -134,26 +156,47 @@ struct MultiplierSpace
 		spaces_ = boost::shared_array<BaseSpace>(new BaseSpace[count()]);
 	}
 
+	/** Number of parts */
 	unsigned int count() const {
 		return size_policy_.count();
 	}
 
 	BaseSpace& operator[](size_t i) {
-		DEBUG_ASSERT_MESSAGE(i < count(), "Index out of bound");
+		DEBUG_ASSERT_MESSAGE(i < count(), "Part index out of bound!");
 		return spaces_[i];
 	}
 
 	const BaseSpace& operator[](size_t i) const {
-		DEBUG_ASSERT_MESSAGE(i < count(), "Index out of bound");
+		DEBUG_ASSERT_MESSAGE(i < count(), "Part index out of bound!");
 		return spaces_[i];
 	}
 
+	/** Dimension of this space which is the sum of all part dimensions
+	 * Same as GetSummedDimension(count())
+	 */
 	unsigned int dimension() const {
 		unsigned int n = 0;
 		for(size_t i=0; i<count(); i++) {
-			n += spaces_[i].dimension();
+			n += GetPartDimension(i);
 		}
 		return n;
+	}
+
+	/** Gets the dimension of a part */
+	size_t GetPartDimension(size_t part) const {
+		return (*this)[part].dimension();
+	}
+
+	/** Sum of dimensions over all prior parts
+	 * This is necessary as the part dimensions must not be equal.
+	 */
+	size_t GetSummedDimension(size_t part) const {
+		DEBUG_ASSERT_MESSAGE(part < count(), "Part index out of bound!");
+		size_t p = 0;
+		for(size_t i=0; i<part; i++) {
+			p += GetPartDimension(i);
+		}
+		return p;
 	}
 
 	double distance(const State& a, const State& b) const {
