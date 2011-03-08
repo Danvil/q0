@@ -120,7 +120,7 @@ namespace InitialStatesPolicy {
 		}
 
 		template<class Space>
-		State pick(const Space& space) const{
+		State pick(const Space& space) const {
 			return space.random(mean_, noise_);
 		}
 
