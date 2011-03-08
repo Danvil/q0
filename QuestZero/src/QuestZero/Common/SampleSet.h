@@ -92,20 +92,6 @@ struct SampleDataStorage
 		return r;
 	}
 
-	std::vector<State> statesWithUnknownScore(std::vector<size_t>& indices) const {
-		indices.clear();
-		std::vector<State> unknown_states;
-		indices.reserve(count());
-		unknown_states.reserve(count());
-		for(size_t i=0; i<count(); i++) {
-			if(_samples[i].isScoreUnknown()) {
-				indices.push_back(i);
-				unknown_states.push_back(_samples[i].state());
-			}
-		}
-		return unknown_states;
-	}
-
 	std::vector<Score> scores() const {
 		std::vector<Score> r;
 		r.reserve(_samples.size());
@@ -120,10 +106,18 @@ struct SampleDataStorage
 		_samples[i].setScore(score);
 	}
 
+	void setScoresAll(Score score) {
+		for(typename std::vector<Sample>::iterator it=_samples.begin(); it!=_samples.end(); ++it) {
+			it->setScore(score);
+		}
+	}
+
 	void setScores(const std::vector<Score>& scores) {
 		assert(scores.size() == _samples.size());
-		for(size_t i=0; i<_samples.size(); i++) {
-			setScore(i, scores[i]);
+		typename std::vector<Score>::const_iterator it_scores;
+		typename std::vector<Sample>::iterator it_samples;
+		for(it_scores=scores.begin(), it_samples=_samples.begin(); it_scores!=scores.end(); ++it_scores, ++it_samples) {
+			it_samples->setScore(*it_scores);
 		}
 	}
 
@@ -134,124 +128,158 @@ struct SampleDataStorage
 		}
 	}
 
+	std::vector<State> GetStatesWithUnknownScore(std::vector<size_t>& indices) const {
+		indices.clear();
+		std::vector<State> unknown_states;
+		indices.reserve(count());
+		unknown_states.reserve(count());
+		size_t i = 0;
+		for(typename std::vector<Sample>::const_iterator it=_samples.begin(); it!=_samples.end(); ++it, i++) {
+			if(it->isScoreUnknown()) {
+				indices.push_back(i);
+				unknown_states.push_back(it->state());
+			}
+		}
+		return unknown_states;
+	}
+
+	bool AreAllStatesUnevaluated() const {
+		for(typename std::vector<Sample>::const_iterator it=_samples.begin(); it!=_samples.end(); ++it) {
+			if(it->isScoreKnown()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 private:
 	std::vector<Sample> _samples;
 };
 
 //---------------------------------------------------------------------------
 
-template<typename State,typename Score>
-struct CachedSamplesDataStorage
-{
-	typedef TSample<State,Score> Sample;
-
-	CachedSamplesDataStorage() {}
-
-	CachedSamplesDataStorage(const std::vector<Sample>& samples) {
-		add(samples);
-	}
-
-	~CachedSamplesDataStorage() {}
-
-	size_t count() const {
-		return _samples.size();
-	}
-
-	void add(const Sample& sample) {
-		_samples.push_back(sample);
-		_states.push_back(sample.state());
-		if(sample.isScoreKnown()) {
-			_scores.push_back(sample.score());
-		} else {
-			_scores.push_back(C_UNKNOWN_SCORE);
-		}
-	}
-
-	void add(const std::vector<Sample>& samples) {
-		BOOST_FOREACH(const Sample& s, samples) {
-			add(s);
-		}
-	}
-
-	void add(const State& state) {
-		_samples.push_back(Sample(state));
-		_states.push_back(state);
-		_scores.push_back(C_UNKNOWN_SCORE);
-	}
-
-	void add(const std::vector<State>& states) {
-		BOOST_FOREACH(const State& s, states) {
-			add(s);
-		}
-	}
-
-	const Sample& operator[](size_t i) const {
-		return _samples[i];
-	}
-
-	Sample& operator[](size_t i) {
-		return _samples[i];
-	}
-
-	const Sample& sample(size_t i) const {
-		return _samples[i];
-	}
-
-	Score score(size_t i) const {
-		return _scores[i];
-	}
-
-	const State& state(size_t i) const {
-		return _states[i];
-	}
-
-	const std::vector<Sample>& samples() const { return _samples; }
-
-	std::vector<Sample>& samples() { return _samples; }
-
-	const std::vector<State>& states() const { return _states; }
-
-	const std::vector<Score>& scores() const { return _scores; }
-
-	std::vector<State> statesWithUnknownScore(std::vector<size_t>& indices) const {
-		indices.clear();
-		std::vector<State> unknown_states;
-		indices.reserve(count());
-		unknown_states.reserve(count());
-		for(size_t i=0; i<count(); i++) {
-			if(_samples[i].isScoreUnknown()) {
-				indices.push_back(i);
-				unknown_states.push_back(_samples[i].state());
-			}
-		}
-		return unknown_states;
-	}
-
-	void setScore(size_t i, Score score) {
-		assert(i < _samples.size());
-		_samples[i].setScore(score);
-		_scores[i] = score;
-	}
-
-	void setScores(const std::vector<Score>& scores) {
-		assert(scores.size() == _samples.size());
-		for(size_t i=0; i<_samples.size(); i++) {
-			setScore(i, scores[i]);
-		}
-	}
-
-	void setScores(const std::vector<Score>& scores, const std::vector<size_t>& indices) {
-		assert(scores.size() == indices.size());
-		for(size_t i=0; i<count(); i++) {
-			setScore(indices[i], scores[i]);
-		}
-	}
-
-private:
-	std::vector<State> _states;
-	std::vector<Score> _scores;
-	std::vector<Sample> _samples;
-};
+//template<typename State,typename Score>
+//struct CachedSamplesDataStorage
+//{
+//	typedef TSample<State,Score> Sample;
+//
+//	CachedSamplesDataStorage() {}
+//
+//	CachedSamplesDataStorage(const std::vector<Sample>& samples) {
+//		add(samples);
+//	}
+//
+//	~CachedSamplesDataStorage() {}
+//
+//	size_t count() const {
+//		return _samples.size();
+//	}
+//
+//	void add(const Sample& sample) {
+//		_samples.push_back(sample);
+//		_states.push_back(sample.state());
+//		if(sample.isScoreKnown()) {
+//			_scores.push_back(sample.score());
+//		} else {
+//			_scores.push_back(C_UNKNOWN_SCORE);
+//		}
+//	}
+//
+//	void add(const std::vector<Sample>& samples) {
+//		BOOST_FOREACH(const Sample& s, samples) {
+//			add(s);
+//		}
+//	}
+//
+//	void add(const State& state) {
+//		_samples.push_back(Sample(state));
+//		_states.push_back(state);
+//		_scores.push_back(C_UNKNOWN_SCORE);
+//	}
+//
+//	void add(const std::vector<State>& states) {
+//		BOOST_FOREACH(const State& s, states) {
+//			add(s);
+//		}
+//	}
+//
+//	const Sample& operator[](size_t i) const {
+//		return _samples[i];
+//	}
+//
+//	Sample& operator[](size_t i) {
+//		return _samples[i];
+//	}
+//
+//	const Sample& sample(size_t i) const {
+//		return _samples[i];
+//	}
+//
+//	Score score(size_t i) const {
+//		return _scores[i];
+//	}
+//
+//	const State& state(size_t i) const {
+//		return _states[i];
+//	}
+//
+//	const std::vector<Sample>& samples() const { return _samples; }
+//
+//	std::vector<Sample>& samples() { return _samples; }
+//
+//	const std::vector<State>& states() const { return _states; }
+//
+//	const std::vector<Score>& scores() const { return _scores; }
+//
+//	void setScore(size_t i, Score score) {
+//		assert(i < _samples.size());
+//		_samples[i].setScore(score);
+//		_scores[i] = score;
+//	}
+//
+//	void setScores(const std::vector<Score>& scores) {
+//		assert(scores.size() == _samples.size());
+//		for(size_t i=0; i<_samples.size(); i++) {
+//			setScore(i, scores[i]);
+//		}
+//	}
+//
+//	void setScores(const std::vector<Score>& scores, const std::vector<size_t>& indices) {
+//		assert(scores.size() == indices.size());
+//		for(size_t i=0; i<count(); i++) {
+//			setScore(indices[i], scores[i]);
+//		}
+//	}
+//
+//	std::vector<State> GetStatesWithUnknownScore(std::vector<size_t>& indices) const {
+//		indices.clear();
+//		std::vector<State> unknown_states;
+//		indices.reserve(count());
+//		unknown_states.reserve(count());
+//		size_t i = 0;
+//		for(typename std::vector<Sample>::const_iterator it=_samples.begin(); it!=_samples.end(); ++it, i++) {
+//			if(it->isScoreUnknown()) {
+//				indices.push_back(i);
+//				unknown_states.push_back(it->state());
+//			}
+//		}
+//		return unknown_states;
+//	}
+//
+//	bool AreAllStatesUnevaluated() const {
+//		for(typename std::vector<Sample>::const_iterator it=_samples.begin(); it!=_samples.end(); ++it) {
+//			if(it->isScoreKnown()) {
+//				return false;
+//			}
+//		}
+//		return true;
+//	}
+//
+//private:
+//	std::vector<State> _states;
+//	std::vector<Score> _scores;
+//	std::vector<Sample> _samples;
+//};
 
 //---------------------------------------------------------------------------
 
@@ -352,10 +380,17 @@ public:
 	/** Evaluates only unknown samples */
 	template<class Function>
 	void evaluateUnknown(const Function& f) {
-		std::vector<size_t> unknown_ids;
-		std::vector<State> unknown_states = this->statesWithUnknownScore(unknown_ids);
-		std::vector<Score> scores = f(unknown_states);
-		this->setScores(scores, unknown_ids);
+
+		if(this->AreAllStatesUnevaluated()) {
+			std::vector<State> unknown_states = this->states();
+			std::vector<Score> scores = f(unknown_states);
+			this->setScores(scores);
+		} else {
+			std::vector<size_t> unknown_ids;
+			std::vector<State> unknown_states = this->GetStatesWithUnknownScore(unknown_ids);
+			std::vector<Score> scores = f(unknown_states);
+			this->setScores(scores, unknown_ids);
+		}
 	}
 
 	/** Evaluates all samples (also if the sample score is already known) */
