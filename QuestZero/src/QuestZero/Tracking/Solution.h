@@ -57,12 +57,16 @@ struct TSolution
 		return items_.size() == 0;
 	}
 
-	void set(const Time& t, const TSample<State, Score>& sample) {
+	void set(const Time& t, const State& state, const Score& score) {
 		unsigned int index = range_.timeToIndex(t);
 		Item& i = items_[index];
-		i.state = sample.state();
-		i.score = sample.score();
+		i.state = state;
+		i.score = score;
 		i.isEvaluated = true;
+	}
+
+	void set(const Time& t, const TSample<State, Score>& sample) {
+		set(t, sample.state(), sample.score());
 	}
 
 	const State& state(const Time& t) const {
@@ -71,6 +75,10 @@ struct TSolution
 
 	const Score& score(const Time& t) const {
 		return itemByTime(t).score;
+	}
+
+	bool IsEvaluated(const Time& t) const {
+		return itemByTime(t).isEvaluated;
 	}
 
 	bool AreAllEvaluated() const {
