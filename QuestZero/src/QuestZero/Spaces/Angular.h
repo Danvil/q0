@@ -146,6 +146,15 @@ namespace Angular {
 
 			size_t dimension() const { return 1; }
 
+			bool contains(K x) const {
+				x = Danvil::MoreMath::Wrap(x, (K)Danvil::C_2_PI);
+				if(lower_ < upper_) {
+					return Danvil::MoreMath::InInterval(x, lower_, upper_);
+				} else {
+					return !Danvil::MoreMath::InInterval(x, upper_, lower_);
+				}
+			}
+
 			K project(K x) const {
 				x = Danvil::MoreMath::Wrap(x, (K)Danvil::C_2_PI);
 				// project to nearest border
@@ -158,24 +167,23 @@ namespace Angular {
 						// be careful to map to the right bound
 						K d1 = lower_;
 						K d2 = (K)Danvil::C_2_PI - upper_;
+						K mean = (d1 + d2) / 2;
 						if(d1 < d2) {
 							// the mid point of the excluded area lies in the right interval
-							K mu = upper_ + (d2 - d1) / 2;
-							return Danvil::MoreMath::InInterval(x, upper_, mu) ? upper_ : lower_;
+							return Danvil::MoreMath::InInterval(x, upper_, upper_ + mean) ? upper_ : lower_;
 						} else {
 							// the mid point of the excluded area lies in the left interval
-							K mu = (d1 - d2) / 2;
-							return Danvil::MoreMath::InInterval(x, mu, lower_) ? lower_ : upper_;
+							return Danvil::MoreMath::InInterval(x, lower_ - mean, lower_) ? lower_ : upper_;
 						}
 					}
 				} else {
 					// two-interval case: allowed is [0|upper] and [lower|2Pi]
-					if(Danvil::MoreMath::InInterval(x, upper_, lower_)) {
+					if(!Danvil::MoreMath::InInterval(x, upper_, lower_)) {
 						// already in interval
 						return x;
 					} else {
 						// mid point of excluded interval which is [upper|lower]
-						K mu = (lower_ - upper_) / 2;
+						K mu = (lower_ + upper_) / 2;
 						return Danvil::MoreMath::InInterval(x, upper_, mu) ? upper_ : lower_;
 					}
 				}
@@ -191,10 +199,32 @@ namespace Angular {
 			}
 
 			template<typename NT>
+			K random(K center, NT noise) const {
+				const size_t cMaxTrials = 100;
+				// FIXME remove the loop by exactly computing the interval
+				size_t trials = 0;
+				while(trials < cMaxTrials) {
+					K r = center + RandomNumbers::UniformMP(noise);
+					if(contains(r)) {
+						return r;
+					}
+					trials++;
+				}
+				//assert(false); // intervals possibly do not overlap
+				return project(center);
+//				if(lower_ < upper_) {
+//					//  -[0,a[-  +[a,b]+  -]b,2pi[-
+//					K r = center + RandomNumbers::UniformMP(noise);
+//					return project(r);
+//				} else {
+//
+//				}
+			}
+
+			template<typename NT>
 			K random(K center, const std::vector<NT>& noise) const {
 				assert(noise.size() == dimension());
-				K r = center + RandomNumbers::UniformMP(noise[0]);
-				return project(r);
+				return random(center, noise[0]);
 			}
 
 			DEFINE_FIELD(lower, K)
