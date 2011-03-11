@@ -53,6 +53,13 @@ struct TSolution
 		return items_;
 	}
 
+	const Item& itemByTime(const Time& t) const {
+		size_t index = range_.timeToIndex(t);
+		return items_[index];
+	}
+
+	const TimeRange& GetTimeRange() const { return range_; }
+
 	bool IsEmpty() const {
 		return items_.size() == 0;
 	}
@@ -169,10 +176,6 @@ struct TSolution
 	}
 
 private:
-	const Item& itemByTime(const Time& t) const {
-		return items_[range_.timeToIndex(t)];
-	}
-
 	TimeRange range_;
 
 	std::vector<Item> items_;
