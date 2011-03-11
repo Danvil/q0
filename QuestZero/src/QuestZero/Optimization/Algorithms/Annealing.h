@@ -66,7 +66,7 @@ struct ParticleAnnealing
 		// prepare noise
 		std::vector<double> noise = settings_.noise_;
 		// iterate through layers
-		for(int m = settings_.layers_; m > 0; --m) {
+		for(int m = settings_.layers_; ; --m) {
 			double alpha = settings_.alpha_;
 			// apply noise scaling
 			for(size_t i=0; i<noise.size(); ++i) {
@@ -75,6 +75,9 @@ struct ParticleAnnealing
 			current.addNoise(space, noise);
 			// find particle scores
 			current.evaluateUnknown(function);
+			if(m == 0) {
+				break;
+			}
 			// find best beta with respect to current scores
 			double beta = BetaOptimizationProblem<Score>::Optimize_Bisect(alpha, current.scores(), 1e-2);
 			LOG_DEBUG << "Annealing " << (settings_.layers_ - m + 1) << "/" << settings_.layers_ << ": Beta=" << beta;
