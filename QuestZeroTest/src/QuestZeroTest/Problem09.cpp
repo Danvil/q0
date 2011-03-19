@@ -113,12 +113,11 @@ namespace Problem09
 			std::ofstream ofs(fn_ss.str().c_str());
 			Danvil::Print::VectorToStream vts;
 			vts.setPlainTabStyle();
-			typedef TSample<state,score> sample;
-			BOOST_FOREACH(const sample& x, samples.samples()) {
-				ofs << x.score();
+			for(size_t i=0; i<samples.Size(); i++) {
+				ofs << samples.score(i);
 				if(!only_scores_) {
 					ofs << "\t";
-					vts.print(ofs, x.state());
+					vts.print(ofs, samples.state(i));
 				}
 				ofs << endl;
 			}

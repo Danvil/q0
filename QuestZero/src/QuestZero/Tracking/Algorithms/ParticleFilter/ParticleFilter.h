@@ -33,8 +33,8 @@ struct ParticleFilter
 
 	std::vector<double> noise_;
 
-	template<class Space, class VarFunction>
-	Solution Track(const TimeRange& range, const Space& space, const VarFunction& function) {
+	template<class Space, class VarFunction/*, class MotionModel*/>
+	Solution Track(const TimeRange& range, const Space& space, const VarFunction& function/*, const MotionModel& motion*/) {
 		typedef BetterMeansBigger<Score> CMP;
 		// prepare the solution
 		Solution sol(range);
@@ -54,9 +54,10 @@ struct ParticleFilter
 				pa.OptimizeInplace(open_samples, space, pinned);
 			} else {
 				// apply motion model which is simply white noise
-				open_samples.addNoise(space, noise_);
+				open_samples.RandomizeStates(space, noise_);
+//				open_samples.ApplyToStates(motion);
 				// evaluate samples
-				open_samples.evaluateAll(pinned);
+				open_samples.EvaluateAll(pinned);
 				// create new sample set using weighted random drawing
 				try{
 					open_samples = open_samples.DrawByScore(particle_count_);

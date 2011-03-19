@@ -77,11 +77,11 @@ struct PSO
 		// iterate
 		while(true) {
 			// construct sample set
-			LOG_DEBUG << "PSO: construct sample set";
+			LOG_DEBUG << "PSO: getting current states";
 			SampleSet samples = currentSamples();
 			// evaluate samples
-			LOG_DEBUG << "PSO: evaluate samples";
-			samples.evaluateUnknown(function);
+			LOG_DEBUG << "PSO: evaluate states";
+			samples.EvaluateAll(function);
 			// update global best
 			LOG_DEBUG << "PSO: update global best";
 			const Sample& best = samples.template FindBestSample<CMP>();
@@ -91,11 +91,11 @@ struct PSO
 			// update personal best and particle
 			LOG_DEBUG << "PSO: update personal best and particle";
 			for(size_t i = 0; i < particles.size(); i++) {
-				const Sample& s = samples[i];
+				Score s = samples.score(i);
 				ParticleData& p = particles[i];
-				if(CMP::compare(s.score(), p.best_score_)) {
-					p.best_state_ = s.state();
-					p.best_score_ = s.score();
+				if(CMP::compare(s, p.best_score_)) {
+					p.best_state_ = samples.state(i);
+					p.best_score_ = s;
 				}
 				p.Update(space, globals);
 			}
@@ -201,20 +201,25 @@ private:
 
 	GlobalData globals;
 
-	SampleSet currentSamples() const {
+	std::vector<State> currentStates() const {
 		std::vector<State> states;
 		BOOST_FOREACH(const ParticleData& p, particles) {
 			states.push_back(p.current);
 		}
-		return SampleSet(states);
+		return states;
+	}
+
+	SampleSet currentSamples() const {
+		return SampleSet(currentStates());
 	}
 
 	SampleSet bestSamples() const {
-		std::vector<Sample> samples;
+		SampleSet samples;
+		samples.Reserve(particles.size());
 		BOOST_FOREACH(const ParticleData& p, particles) {
-			samples.push_back(Sample(p.best_state_, p.best_score_));
+			samples.Add(p.best_state_, p.best_score_);
 		}
-		return SampleSet(samples);
+		return samples;
 	}
 
 };

@@ -52,22 +52,25 @@ struct RND
 	Sample Optimize(const Space& space, const Function& function) {
 		typedef BetterMeansSmaller<Score> CMP;
 		SampleSet open(this->template pickMany(space, particleCount));
+		// evaluate initial samples
+		open.EvaluateAll(function);
+		// update progress bar
+		this->NotifySamples(open);
 		// in every iteration add new particles and delete the worst particles
-		while(true) {
+		while(!this->IsTargetReached(open.template FindBestScore<CMP>())) {
 			// add new samples by randomly selecting points
-			int target_add = Danvil::MoreMath::Max((size_t)0, 2 * particleCount - open.count());
-			open.AddManyStates(space.template randomMany(target_add));
+			int target_add = Danvil::MoreMath::Max((size_t)0, 2 * particleCount - open.Size());
+			// generate new chunk of states
+			SampleSet new_samples(space.template randomMany(target_add));
 			// evaluate the chunk
-			open.evaluateUnknown(function);
+			new_samples.EvaluateAll(function);
+			// add to open samples
+			open.Add(new_samples);
 			// pick the best
 			// check if the best in this chunk is better than the best so far
 			open = open.template FindBestSamples<CMP>(particleCount);
 			// update progress bar
 			this->NotifySamples(open);
-			// check if break condition is satisfied
-			if(this->IsTargetReached(open.template FindBestScore<CMP>())) {
-				break;
-			}
 		}
 		// return last best samples
 		return this->template take<Space, CMP>(space, open);

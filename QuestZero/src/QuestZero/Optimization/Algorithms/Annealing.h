@@ -51,7 +51,6 @@ struct ParticleAnnealing
 		/** Particle survival rate which is a good measure for the rate of annealing */
 		double alpha_;
 
-		/** Noise vector */
 		std::vector<double> noise_;
 	};
 
@@ -59,8 +58,8 @@ struct ParticleAnnealing
 
 	std::string name() const { return "Annealing"; }
 
-	template<class Space, class Function>
-	void OptimizeInplace(SampleSet& current, const Space& space, const Function& function) {
+	template<class Space, class Function/*, class MotionModel*/>
+	void OptimizeInplace(SampleSet& current, const Space& space, const Function& function/*, const MotionModel& motion*/) {
 		// FIXME what is the particle count?
 //		assert(current.size() == settings_.particle_count_);
 		// prepare noise
@@ -72,9 +71,9 @@ struct ParticleAnnealing
 			for(size_t i=0; i<noise.size(); ++i) {
 				noise[i] *= alpha;
 			}
-			current.addNoise(space, noise);
+			current.RandomizeStates(space, noise);
 			// find particle scores
-			current.evaluateUnknown(function);
+			current.EvaluateAll(function);
 			if(m == 0) {
 				break;
 			}
@@ -89,9 +88,9 @@ struct ParticleAnnealing
 			// notify about samples (before mapping and drawing to get real scores and samples!)
 			this->NotifySamples(current);
 			// map scores accordingly to found beta value
-			current.MapScores(ExpScoreMapper(beta));
+			current.TransformScores(ExpScoreMapper(beta));
 			// create new sample set using weighted random drawing
-			current = current.DrawByScore(current.count());
+			current = current.DrawByScore(current.Size());
 		}
 	}
 

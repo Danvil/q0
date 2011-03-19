@@ -129,9 +129,9 @@ struct AlternatingParticleFilter
 						pa.OptimizeInplace(open_samples, space, pinned);
 					} else {
 						// apply motion model which is simply white noise
-						open_samples.addNoise(space, part_noise);
+						open_samples.RandomizeStates(space, part_noise);
 						// evaluate samples
-						open_samples.evaluateAll(pinned);
+						open_samples.EvaluateAll(pinned);
 						// create new sample set using weighted random drawing
 						try{
 							open_samples = open_samples.DrawByScore(params_.particle_count_);

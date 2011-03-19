@@ -25,7 +25,7 @@ namespace TakePolicy {
 	struct TakeBest
 	{
 		template<class Space, class CMP>
-		const TSample<State,Score>& take(const Space&, const TSampleSet<State,Score>& many) {
+		TSample<State,Score> take(const Space&, const TSampleSet<State,Score>& many) {
 			return many.template FindBestSample<CMP>();
 		}
 
