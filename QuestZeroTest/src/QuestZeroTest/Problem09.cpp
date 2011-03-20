@@ -163,10 +163,8 @@ namespace Problem09
 		solver.setDefaultState(f.start_state);
 		// step noise
 		double step_noise = 2 * std::sqrt(0.1);
-		for(unsigned int i=0; i<state::Dimension; i++) {
-			solver.noise_.push_back(step_noise);
-		}
-		TSolution<time, state, score> sol = solver.Track(r, s, f);
+		std::vector<double> noise(state::Dimension, step_noise);
+		TSolution<time, state, score> sol = solver.TrackWhiteNoise(r, s, f, noise);
 		cout << sol << endl;
 		cout << "Solution mean score: " << sol.ComputeMeanScore() << endl;
 	}
