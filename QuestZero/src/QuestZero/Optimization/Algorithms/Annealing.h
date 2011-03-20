@@ -37,41 +37,32 @@ struct ParticleAnnealing
 	struct Settings
 	{
 		Settings() {
-//			particleCount = 100;
 			layers_ = 10;
 			alpha_ = 0.5;
 		}
-
-//		/** Number of particles used */
-//		unsigned int particle_count_;
 
 		/** The number of annealing layers */
 		unsigned int layers_;
 
 		/** Particle survival rate which is a good measure for the rate of annealing */
 		double alpha_;
-
-		std::vector<double> noise_;
 	};
 
 	Settings settings_;
 
 	std::string name() const { return "Annealing"; }
 
-	template<class Space, class Function/*, class MotionModel*/>
-	void OptimizeInplace(SampleSet& current, const Space& space, const Function& function/*, const MotionModel& motion*/) {
-		// FIXME what is the particle count?
-//		assert(current.size() == settings_.particle_count_);
-		// prepare noise
-		std::vector<double> noise = settings_.noise_;
+	template<class Space, class Function, class MotionModel>
+	void OptimizeInplace(SampleSet& current, const Space& space, const Function& function, MotionModel motion) {
+		double alpha = 1.0;
 		// iterate through layers
 		for(int m = settings_.layers_; ; --m) {
-			double alpha = settings_.alpha_;
+			// compute alpha value for the current layer
+			alpha *= settings_.alpha_;
 			// apply noise scaling
-			for(size_t i=0; i<noise.size(); ++i) {
-				noise[i] *= alpha;
-			}
-			current.RandomizeStates(space, noise);
+			motion.SetNoiseAmount(alpha);
+			// apply motion model to states
+			current.TransformStates(motion);
 			// find particle scores
 			current.EvaluateAll(function);
 			if(m == 0) {
@@ -94,8 +85,8 @@ struct ParticleAnnealing
 		}
 	}
 
-	template<class Space, class Function>
-	SampleSet Optimize(const SampleSet& start, const Space& space, const Function& function) {
+	template<class Space, class Function, class MotionModel>
+	SampleSet Optimize(const SampleSet& start, const Space& space, const Function& function, MotionModel motion) {
 		SampleSet current = start;
 		OptimizeInplace(current, space, function);
 		return current;

@@ -124,9 +124,9 @@ struct AlternatingParticleFilter
 						// use annealing to refine the sample set
 						ParticleAnnealing<State, Score, TracePolicy::Samples::ForwardToObject<State,Score,NotifySamples> > pa;
 						pa.SetNotifySamplesObject(this);
-						pa.settings_.noise_ = part_noise;
 						pa.settings_.layers_ = params_.annealing_layers_;
-						pa.OptimizeInplace(open_samples, space, pinned);
+						MotionModels::SpaceRandomMotionModel<Space> motion(space, part_noise);
+						pa.OptimizeInplace(open_samples, space, pinned, motion);
 					} else {
 						// apply motion model which is simply white noise
 						open_samples.RandomizeStates(space, part_noise);
