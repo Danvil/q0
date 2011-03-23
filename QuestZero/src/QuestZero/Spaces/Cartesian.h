@@ -87,11 +87,12 @@ namespace Cartesian {
 		{
 			typedef typename State::ScalarType S;
 
-			Infinite() : random_sigma_(1) {}
+			Infinite() : noise_scale_(S(1)), noise_sigma_(S(1)) {}
 
 			/** Sets the normal distribution sigma used in unconstrained random sampling */
-			void SetRandomSigma(S sigma) {
-				random_sigma_ = sigma;
+			void SetNoiseVariables(S scale, S sigma=S(1)) {
+				noise_scale_ = scale;
+				noise_sigma_ = sigma;
 			}
 
 			// TODO: allow states with variable dimension?
@@ -106,7 +107,7 @@ namespace Cartesian {
 			State random() const {
 				State v;
 				for(size_t i=0; i<dimension(); i++) {
-					v[i] = RandomNumbers::Normal<S>(random_sigma_);
+					v[i] = noise_scale_ * RandomNumbers::Normal<S>(noise_sigma_);
 				}
 				return v;
 			}
@@ -125,7 +126,8 @@ namespace Cartesian {
 			}
 
 		private:
-			S random_sigma_;
+			S noise_scale_;
+			S noise_sigma_;
 
 		protected:
 			~Infinite() {}
