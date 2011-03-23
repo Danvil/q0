@@ -39,6 +39,7 @@ struct ParticleAnnealing
 		Settings() {
 			layers_ = 10;
 			alpha_ = 0.5;
+			particle_count_ = 0;
 		}
 
 		/** The number of annealing layers */
@@ -46,6 +47,8 @@ struct ParticleAnnealing
 
 		/** Particle survival rate which is a good measure for the rate of annealing */
 		double alpha_;
+
+		unsigned int particle_count_;
 	};
 
 	Settings settings_;
@@ -55,8 +58,13 @@ struct ParticleAnnealing
 	template<class Space, class Function, class MotionModel>
 	void OptimizeInplace(SampleSet& current, const Space& space, const Function& function, MotionModel motion) {
 		double alpha = 1.0;
+		double beta = 1.0;
 		// iterate through layers
 		for(int m = settings_.layers_; ; --m) {
+			// map scores accordingly to found beta value
+			current.TransformScores(ExpScoreMapper(beta));
+			// create new sample set using weighted random drawing
+			current = current.DrawByScore(settings_.particle_count_);
 			// compute alpha value for the current layer
 			alpha *= settings_.alpha_;
 			// apply noise scaling
@@ -69,7 +77,7 @@ struct ParticleAnnealing
 				break;
 			}
 			// find best beta with respect to current scores
-			double beta = BetaOptimizationProblem<Score>::Optimize_Bisect(alpha, current.scores(), 1e-2);
+			beta = BetaOptimizationProblem<Score>::Optimize_Bisect(alpha, current.scores(), 1e-2);
 			LOG_DEBUG << "Annealing " << (settings_.layers_ - m + 1) << "/" << settings_.layers_ << ": Beta=" << beta;
 			if(beta > BetaOptimizationProblem<Score>::cMaxBeta() * 0.99) {
 				// we can not distinguish the scores anymore, so we assume that we have enough accuracy and quit
@@ -78,10 +86,6 @@ struct ParticleAnnealing
 			}
 			// notify about samples (before mapping and drawing to get real scores and samples!)
 			this->NotifySamples(current);
-			// map scores accordingly to found beta value
-			current.TransformScores(ExpScoreMapper(beta));
-			// create new sample set using weighted random drawing
-			current = current.DrawByScore(current.Size());
 		}
 	}
 
