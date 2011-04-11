@@ -15,6 +15,7 @@
 #include "QuestZero/Tracking/Solution.h"
 #include "QuestZero/Policies/TracePolicy.h"
 #include "QuestZero/Optimization/Algorithms/Annealing.h"
+#include "QuestZero/Tracking/MotionModel.h"
 #include <vector>
 //---------------------------------------------------------------------------
 namespace Q0 {
