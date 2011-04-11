@@ -21,7 +21,7 @@ template<
 	typename State_,
 	typename Score_,
 	template<class,class,class,class,class,class> class Algorithm,
-	class Target = TargetPolicy::ScoreTargetWithMaxChecks<double>,
+	class Target = TargetPolicy::ScoreTargetWithMaxChecks<Score_>,
 	template<class> class SinglePicker = InitialStatesPolicy::RandomPicker,
 	template<class,class> class Take = TakePolicy::TakeBest,
 	template<class,class> class NotifySamples = TracePolicy::Samples::BestToConsole
