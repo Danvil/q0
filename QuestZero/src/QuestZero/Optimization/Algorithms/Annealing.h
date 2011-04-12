@@ -197,6 +197,31 @@ private:
 };
 
 //---------------------------------------------------------------------------
+
+template<
+	class State,
+	class Score,
+	class StartingStates,
+	class Take,
+	class NotifySamples
+>
+struct Annealing
+: public ParticleAnnealing<State, Score, NotifySamples>,
+  public StartingStates,
+  public Take
+{
+	template<class Space, class Function, class MotionModel>
+	TSample<State, Score> Optimize(const Space& space, const Function& function, MotionModel motion) {
+		typedef BetterMeansSmaller<Score> CMP; // FIXME hardcoded!
+		TSampleSet<State, Score> open(this->pickMany(space, this->settings_.particle_count_));
+		open.EvaluateAll(function);
+		this->OptimizeInplace(open, space, function, motion);
+		return this->template take<Space, CMP>(space, open);
+	}
+
+};
+
+//---------------------------------------------------------------------------
 }
 //---------------------------------------------------------------------------
 #endif
