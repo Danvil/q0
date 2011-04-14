@@ -10,6 +10,7 @@
 //---------------------------------------------------------------------------
 #include "QuestZero/Common/SampleSet.h"
 #include "QuestZero/Optimization/Deterministic/BisectionSearch.h"
+#include "QuestZero/Common/ScoreComparer.h"
 #include <Danvil/Tools/Log.h>
 #include <vector>
 #include <cassert>
@@ -21,11 +22,14 @@ namespace Q0 {
 /**
  * This is after "Articulated Body Motion Capture by Annealed Particle Filtering" by Deutscher, Blake and Reid
  * Mainly used in the annealed particle filter tracker.
+ * Warning: When DoHistogramImprove is disabled, scores must be in the range [0,1]!!
  */
 template<
 	typename State,
 	typename Score,
-	class NotifySamples
+	class NotifySamples,
+	int DoMinimize=false,
+	int DoHistogramImprove=true
 >
 struct ParticleAnnealing
 : public NotifySamples
@@ -55,37 +59,58 @@ struct ParticleAnnealing
 
 	std::string name() const { return "Annealing"; }
 
+	void PreprocessScores(SampleSet& current) {
+		// map scores accordingly to found beta value
+		Score best, worst;
+		if(DoMinimize) {
+			current.template FindBestAndWorstScore<BetterMeansSmaller<Score> >(best, worst);
+		}
+		else {
+			current.template FindBestAndWorstScore<BetterMeansBigger<Score> >(best, worst);
+		}
+		current.TransformScores(RescaleMapper(best, worst));
+	}
+
 	template<class Space, class Function, class MotionModel>
 	void OptimizeInplace(SampleSet& current, const Space& space, const Function& function, MotionModel motion) {
 		double alpha = 1.0;
-		double beta = 1.0;
 		// iterate through layers
 		for(int m = settings_.layers_; ; --m) {
-			// map scores accordingly to found beta value
+			if(m > 0) { // only re-sample if we will try another layer
+				// apply noise scaling
+				motion.SetNoiseAmount(alpha);
+				// apply motion model to states
+				current.TransformStates(motion);
+			}
+			// find particle scores
+			current.EvaluateAll(function);
+			// notify about samples (before mapping and drawing to get real scores and samples!)
+			this->NotifySamples(current);
+			// break if may number of layers is exceeded
+			if(m == 0) {
+				break;
+			}
+			// process scores such that best score is 1 and worst score is 0
+			std::vector<Score> scores_raw = current.scores(); // save raw scores
+			if(DoHistogramImprove) {
+				PreprocessScores(current);
+			}
+			// find best beta with respect to current scores
+			double beta = BetaOptimizationProblem<Score>::Optimize_Bisect(alpha, current.scores(), 1e-2);
+			LOG_DEBUG << "Annealing " << (settings_.layers_ - m + 1) << "/" << settings_.layers_ << ": Beta=" << beta;
+			if(beta > BetaOptimizationProblem<Score>::cMaxBeta() * 0.99) {
+				// we can not distinguish the scores anymore, so we assume that we have enough accuracy and quit
+				// before we quit we have to restore raw scores
+				current.SetAllScores(scores_raw);
+				break;
+				// FIXME is this test good? this imposes some kind of scale on the score!
+			}
+			// apply beta
 			current.TransformScores(ExpScoreMapper(beta));
 			// create new sample set using weighted random drawing
 			current = current.DrawByScore(settings_.particle_count_);
 			// compute alpha value for the current layer
 			alpha *= settings_.alpha_;
-			// apply noise scaling
-			motion.SetNoiseAmount(alpha);
-			// apply motion model to states
-			current.TransformStates(motion);
-			// find particle scores
-			current.EvaluateAll(function);
-			if(m == 0) {
-				break;
-			}
-			// find best beta with respect to current scores
-			beta = BetaOptimizationProblem<Score>::Optimize_Bisect(alpha, current.scores(), 1e-2);
-			LOG_DEBUG << "Annealing " << (settings_.layers_ - m + 1) << "/" << settings_.layers_ << ": Beta=" << beta;
-			if(beta > BetaOptimizationProblem<Score>::cMaxBeta() * 0.99) {
-				// we can not distinguish the scores anymore, so we assume that we have enough accuracy and quit
-				// FIXME is this test good? this imposes some kind of scale on the score!
-				break;
-			}
-			// notify about samples (before mapping and drawing to get real scores and samples!)
-			this->NotifySamples(current);
 		}
 	}
 
@@ -96,15 +121,34 @@ struct ParticleAnnealing
 		return current;
 	}
 
-	/** x |-> x^beta */
-	struct ExpScoreMapper
+	/** x |-> (x - worst) / (best - worst) */
+	struct RescaleMapper
 	{
-		ExpScoreMapper(double beta) : beta_(beta) {}
-		double operator()(double x) const {
-			return std::pow(x, beta_);
+		RescaleMapper(Score best, Score worst) : best_(best), worst_(worst) {
+			scl_ = Score(1) / (best - worst);
+		}
+		Score operator()(Score x) const {
+			return (x - worst_) * scl_;
 		}
 	private:
-		double beta_;
+		Score best_, worst_;
+		Score scl_;
+	};
+
+	/** x |-> x^beta or (1-x)^beta */
+	struct ExpScoreMapper
+	{
+		ExpScoreMapper(double beta) : beta_(Score(beta)) {}
+		Score operator()(Score x) const {
+			if(DoMinimize) {
+				return (Score)std::pow(Score(1) - x, beta_);
+			}
+			else {
+				return (Score)std::pow(x, beta_);
+			}
+		}
+	private:
+		Score beta_;
 	};
 
 private:
