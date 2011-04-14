@@ -239,7 +239,7 @@ namespace Cartesian {
 
 			template<typename K>
 			State random(const State& center, const std::vector<K>& noise) const {
-				INVALID_SIZE_EXCEPTION(noise.size() == dimension())
+				INVALID_SIZE_EXCEPTION(noise.size() != dimension())
 				State n = State(noise[0]);
 				State c_min = std::max(min_, center - n);
 				State c_max = std::min(max_, center + n);
