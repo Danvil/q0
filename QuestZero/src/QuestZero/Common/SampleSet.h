@@ -273,6 +273,25 @@ public:
 		scores_ = f(states());
 	}
 
+	template<class CMP>
+	void FindBestAndWorstScore(Score& best, Score& worst) const {
+		if(Size() == 0) {
+			throw std::runtime_error("Can not get score of best sample for an empty sample set!");
+		}
+		best = scores_[0];
+		worst = best;
+		CMP c;
+		for(typename std::vector<Score>::const_iterator it=scores_.begin(); it!=scores_.end(); ++it) {
+			Score current = *it;
+			if(c(current, best)) {
+				best = current;
+			}
+			if(c(worst, current)) {
+				worst = current;
+			}
+		}
+	}
+
 	/** Finds the best score */
 	template<class CMP>
 	Score FindBestScore() const {
