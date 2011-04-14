@@ -19,6 +19,7 @@ struct BetterMeansSmaller
 	static bool compare(Score a, Score b) {
 		return a < b;
 	}
+	/** Returns true if a is 'better' than b (in this case a < b) */
 	bool operator()(Score a, Score b) {
 		return compare(a, b);
 	}
@@ -34,6 +35,7 @@ struct BetterMeansBigger
 	static bool compare(Score a, Score b) {
 		return a > b;
 	}
+	/** Returns true if a is 'better' than b (in this case a > b) */
 	bool operator()(Score a, Score b) {
 		return compare(a, b);
 	}
