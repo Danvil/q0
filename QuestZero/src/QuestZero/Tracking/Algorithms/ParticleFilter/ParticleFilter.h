@@ -27,24 +27,24 @@ struct ParticleFilter
   public NotifySolution
 {
 	typedef TSolution<Time, State, Score> Solution;
-	typedef TTimeRange<Time> TimeRange;
 	typedef TSampleSet<State, Score> SampleSet;
 
 	unsigned long particle_count_;
 
 	template<class Space, class VarFunction, class MotionModel>
-	Solution Track(const TimeRange& range, const Space& space, const VarFunction& function, MotionModel motion) {
+	Solution Track(const Solution& solution, const Space& space, const VarFunction& function, MotionModel motion) {
 		typedef BetterMeansBigger<Score> CMP;
 		// prepare the solution
-		Solution sol(range);
+		Solution sol = solution;
 		// pin down varying function
-		PinnedFunction<Time, State, Score, VarFunction> pinned(function, range.begin());
+		PinnedFunction<Time, State, Score, VarFunction> pinned(function);
 		// initialize sample set with random samples
 		SampleSet open_samples(this->pickMany(space, particle_count_));
 		// tracking loop
-		for(Time t = range.begin(); t != range.end(); ++t) {
+		typename Solution::ConstIt tt_start = sol.GetFirstUnknown();
+		for(typename Solution::ConstIt tt=tt_start; tt!=sol.GetEnd(); ++tt) {
 			// set pin down time
-			pinned.setTime(t);
+			pinned.setTime(tt->time);
 			if(UseAnnealing) {
 				// use annealing to refine the sample set
 				ParticleAnnealing<State, Score, TracePolicy::Samples::ForwardToObject<State,Score,NotifySamples> > pa;
@@ -66,7 +66,7 @@ struct ParticleFilter
 				}
 			}
 			// save best sample
-			sol.set(t, this->template take<Space, CMP>(space, open_samples));
+			sol.Set(tt->index, this->template take<Space, CMP>(space, open_samples));
 			// tracing
 			this->NotifySamples(open_samples);
 			this->NotifySolution(sol);
@@ -75,9 +75,9 @@ struct ParticleFilter
 	}
 
 	template<class Space, class VarFunction>
-	Solution TrackWhiteNoise(const TimeRange& range, const Space& space, const VarFunction& function, const std::vector<double>& noise) {
+	Solution TrackWhiteNoise(const Solution& sol, const Space& space, const VarFunction& function, const std::vector<double>& noise) {
 		MotionModels::SpaceRandomMotionModel<Space> motion(space, noise);
-		return Track(range, space, function, motion);
+		return Track(sol, space, function, motion);
 	}
 
 };

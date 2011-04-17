@@ -74,18 +74,17 @@ struct AlternatingParticleFilter
   public NotifySolution
 {
 	typedef TSolution<Time, State, Score> Solution;
-	typedef TTimeRange<Time> TimeRange;
 	typedef TSampleSet<State, Score> SampleSet;
 
 	AlternatingParticleFilterParameters params_;
 
 	template<class Space, class VarFunction>
-	Solution Track(const TimeRange& range, const Space& space, const VarFunction& function) {
+	Solution Track(const Solution& solution, const Space& space, const VarFunction& function) {
 		typedef BetterMeansBigger<Score> CMP;
 		// prepare the solution
-		Solution sol(range);
+		Solution sol = solution;
 		// pin down varying function
-		PinnedFunction<Time, State, Score, VarFunction> pinned(function, range.begin());
+		PinnedFunction<Time, State, Score, VarFunction> pinned(function);
 		// prepare object noise
 		// Remark: The trick is to adapt the noise vector such that only the current
 		//         object is changed. We provide the option to not set the noise
@@ -110,9 +109,10 @@ struct AlternatingParticleFilter
 		//         Perhaps it is even better ...
 		SampleSet open_samples(this->pickMany(space, params_.particle_count_));
 		// tracking loop
-		for(Time t = range.begin(); t != range.end(); ++t) {
+		typename Solution::ConstIt tt_start = sol.GetFirstUnknown();
+		for(typename Solution::ConstIt tt=tt_start; tt!=sol.GetEnd(); ++tt) {
 			// set pin down time
-			pinned.setTime(t);
+			pinned.setTime(tt->time);
 			// several iterations
 			for(unsigned int repetition=0; repetition<params_.repetition_count_; repetition++) {
 				// one part after the other
@@ -146,7 +146,7 @@ struct AlternatingParticleFilter
 				}
 			}
 			// save best sample
-			sol.set(t, this->template take<Space, CMP>(space, open_samples));
+			sol.Set(tt->index, this->template take<Space, CMP>(space, open_samples));
 			// tracing
 			this->NotifySamples(open_samples);
 			this->NotifySolution(sol);

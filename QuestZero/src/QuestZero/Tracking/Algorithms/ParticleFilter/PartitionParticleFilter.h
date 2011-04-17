@@ -56,7 +56,6 @@ struct PartitionParticleFilter
   public NotifySolution
 {
 	typedef TSolution<Time, State, Score> Solution;
-	typedef TTimeRange<Time> TimeRange;
 	typedef TSampleSet<State, Score> SampleSet;
 
 	PartitionParticleFilterParameters params_;
@@ -64,12 +63,11 @@ struct PartitionParticleFilter
 	static const unsigned int cInitialCount_ = 1000;
 
 	template<class Space, class VarFunction, class MotionModel>
-	Solution Track(const TimeRange& range, const Space& space, const VarFunction& function, MotionModel motion) {
+	Solution Track(const Solution& solution, const Space& space, const VarFunction& function, MotionModel motion) {
 		typedef BetterMeansBigger<Score> CMP;
-		// prepare the solution
-		Solution sol(range);
+		Solution sol = solution;
 		// pin down varying function
-		PinnedFunction<Time, State, Score, VarFunction> pinned(function, range.begin());
+		PinnedFunction<Time, State, Score, VarFunction> pinned(function);
 		// initialize sample set with random samples
 		// Remark: We use one sample and the same sample set for all individual optimizations
 		//         This way the optimizations are not completely independent, but as the noise
@@ -77,11 +75,12 @@ struct PartitionParticleFilter
 		//         Perhaps it is even better ...
 		SampleSet open_samples(this->pickMany(space, cInitialCount_));
 		// tracking loop
-		for(Time t = range.begin(); t != range.end(); ++t) {
+		typename Solution::It tt_start = sol.GetFirstUnknown();
+		for(typename Solution::It tt=tt_start; tt!=sol.GetEnd(); ++tt) {
 			// set pin down time
-			pinned.setTime(t);
+			pinned.setTime(tt->time);
 			// evaluate the initially picked samples
-			if(t == range.begin()) {
+			if(tt == tt_start) {
 				open_samples.EvaluateAll(pinned);
 			}
 			// several iterations
@@ -117,7 +116,7 @@ struct PartitionParticleFilter
 				}
 			}
 			// save best sample
-			sol.set(t, this->template take<Space, CMP>(space, open_samples));
+			sol.Set(tt->index, this->template take<Space, CMP>(space, open_samples));
 			// tracing
 			this->NotifySamples(open_samples);
 			this->NotifySolution(sol);
@@ -125,11 +124,22 @@ struct PartitionParticleFilter
 		return sol;
 	}
 
+//	template<class Space, class VarFunction, class MotionModel>
+//	Solution Track(const TimeRange& range, const Space& space, const VarFunction& function, MotionModel motion) {
+//		return Track(Solution(range), space, function, motion);
+//	}
+
 	template<class Space, class VarFunction>
-	Solution TrackWhiteNoise(const TimeRange& range, const Space& space, const VarFunction& function, const std::vector<double>& noise) {
+	Solution TrackWhiteNoise(const Solution& sol, const Space& space, const VarFunction& function, const std::vector<double>& noise) {
 		MotionModels::SpaceRandomMotionModel<Space> motion(space, noise);
-		return Track(range, space, function, motion);
+		return Track(sol, space, function, motion);
 	}
+
+//	template<class Space, class VarFunction>
+//	Solution TrackWhiteNoise(const TimeRange& range, const Space& space, const VarFunction& function, const std::vector<double>& noise) {
+//		MotionModels::SpaceRandomMotionModel<Space> motion(space, noise);
+//		return Track(range, space, function, motion);
+//	}
 
 };
 
