@@ -73,9 +73,15 @@ struct ParticleAnnealing
 
 	template<class Space, class Function, class MotionModel>
 	void OptimizeInplace(SampleSet& current, const Space& space, const Function& function, MotionModel motion) {
-		double alpha = 1.0;
+		const double cMaximalPossibleNoiseFactor = 1.5;
+		double alpha = cMaximalPossibleNoiseFactor * (1.0 - settings_.alpha_); // starting value follows from geometric sum
+		double beta = 1.0; // for the first run we do not map scores
 		// iterate through layers
 		for(int m = settings_.layers_; ; --m) {
+			// apply beta
+			current.TransformScores(ExpScoreMapper(beta));
+			// create new sample set using weighted random drawing
+			current = current.DrawByScore(settings_.particle_count_);
 			if(m > 0) { // only re-sample if we will try another layer
 				// apply noise scaling
 				motion.SetNoiseAmount(alpha);
@@ -96,7 +102,7 @@ struct ParticleAnnealing
 				PreprocessScores(current);
 			}
 			// find best beta with respect to current scores
-			double beta = BetaOptimizationProblem<Score>::Optimize_Bisect(alpha, current.scores(), 1e-2);
+			beta = BetaOptimizationProblem<Score>::Optimize_Bisect(alpha, current.scores(), 1e-2);
 			LOG_DEBUG << "Annealing " << (settings_.layers_ - m + 1) << "/" << settings_.layers_ << ": Beta=" << beta;
 			if(beta > BetaOptimizationProblem<Score>::cMaxBeta() * 0.99) {
 				// we can not distinguish the scores anymore, so we assume that we have enough accuracy and quit
@@ -105,10 +111,6 @@ struct ParticleAnnealing
 				break;
 				// FIXME is this test good? this imposes some kind of scale on the score!
 			}
-			// apply beta
-			current.TransformScores(ExpScoreMapper(beta));
-			// create new sample set using weighted random drawing
-			current = current.DrawByScore(settings_.particle_count_);
 			// compute alpha value for the current layer
 			alpha *= settings_.alpha_;
 		}
