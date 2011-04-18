@@ -26,6 +26,7 @@ struct Partition
 	std::vector<size_t> state_ids_;
 	unsigned long particle_count_;
 	unsigned long annealing_layers_;
+	std::string name_;
 };
 
 struct PartitionParticleFilterParameters
@@ -87,6 +88,7 @@ struct PartitionParticleFilter
 			for(unsigned int repetition=0; repetition<params_.repetition_count_; repetition++) {
 				// one part after the other
 				for(std::vector<Partition>::const_iterator it=params_.partitions_.begin(); it!=params_.partitions_.end(); ++it) {
+					std::cout << "Partition " << (it - params_.partitions_.begin()) << " '" << it->name_ << "'" << std::endl;
 					// restrict noise to partition
 					motion.SetPartition(it->state_ids_, params_.noise_suppression_factor_);
 					// run optimization
