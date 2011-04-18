@@ -29,7 +29,7 @@ namespace MotionModels
 			if(is_partitioned_) {
 				// first suppress all
 				for(size_t i=0; i<noise_.size(); ++i) {
-					current_noise_[i] = suppression_ * noise_[i];
+					current_noise_[i] = alpha * suppression_ * noise_[i];
 				}
 				// now set correct noise for partition
 				for(size_t i=0; i<partition_.size(); i++) {
@@ -42,6 +42,7 @@ namespace MotionModels
 					current_noise_[i] = alpha * noise_[i];
 				}
 			}
+			//std::cout << "Noise vector: " << current_noise_ << std::endl;
 		}
 
 		void DisablePartition() {
