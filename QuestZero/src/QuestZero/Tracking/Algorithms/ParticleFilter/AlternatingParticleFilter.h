@@ -134,7 +134,7 @@ struct AlternatingParticleFilter
 						open_samples.EvaluateAll(pinned);
 						// create new sample set using weighted random drawing
 						try{
-							open_samples = open_samples.DrawByScore(params_.particle_count_);
+							open_samples.Resample(params_.particle_count_);
 						} catch(typename SampleSet::CanNotNormalizeZeroListException&) {
 							LOG_WARNING << "All samples have a score of zero. This means the tracker lost the object!";
 							// tracker lost the object

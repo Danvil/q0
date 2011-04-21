@@ -1,12 +1,13 @@
 /*
- * ParticleFilter.h
+ * condensation.h
  *
  *  Created on: Sep 12, 2010
+ *  Changed on: April 20, 2011
  *      Author: david
  */
 
-#ifndef PARTICLEFILTER_H_
-#define PARTICLEFILTER_H_
+#ifndef Q0_TRACKING_ALGORITHMS_CONDENSATION_H_
+#define Q0_TRACKING_ALGORITHMS_CONDENSATION_H_
 //---------------------------------------------------------------------------
 #include "QuestZero/Tracking/Functions.h"
 #include "QuestZero/Common/ScoreComparer.h"
@@ -19,8 +20,12 @@
 namespace Q0 {
 //---------------------------------------------------------------------------
 
-template<typename Time, typename State, typename Score, class StartingStates, class Take, class NotifySamples, class NotifySolution, bool UseAnnealing>
-struct ParticleFilter
+/** Condensation algorithm after Isard and Black
+ * This algorithms tries to maximize the function values.
+ * The number of function evaluations per time step is exactly equal to the number of particles.
+ */
+template<typename Time, typename State, typename Score, class StartingStates, class Take, class NotifySamples, class NotifySolution>
+struct Condensation
 : public StartingStates,
   public Take,
   public NotifySamples,
@@ -45,25 +50,17 @@ struct ParticleFilter
 		for(typename Solution::ConstIt tt=tt_start; tt!=sol.GetEnd(); ++tt) {
 			// set pin down time
 			pinned.setTime(tt->time);
-			if(UseAnnealing) {
-				// use annealing to refine the sample set
-				ParticleAnnealing<State, Score, TracePolicy::Samples::ForwardToObject<State,Score,NotifySamples> > pa;
-				pa.SetNotifySamplesObject(this);
-				pa.OptimizeInplace(open_samples, space, pinned, motion);
-			} else {
-				// apply motion model which is simply white noise
-//				open_samples.RandomizeStates(space, noise_);
-				open_samples.TransformStates(motion);
-				// evaluate samples
-				open_samples.EvaluateAll(pinned);
-				// create new sample set using weighted random drawing
-				try{
-					open_samples = open_samples.DrawByScore(particle_count_);
-				} catch(typename SampleSet::CanNotNormalizeZeroListException&) {
-					LOG_WARNING << "All samples have a score of zero. This means the tracker lost the object!";
-					// tracker lost the object
-					return sol;
-				}
+			// apply motion model which is simply white noise
+			open_samples.TransformStates(motion);
+			// evaluate samples
+			open_samples.EvaluateAll(pinned);
+			// resample using weighted random drawing
+			try{
+				open_samples.Resample(particle_count_);
+			} catch(typename SampleSet::CanNotNormalizeZeroListException&) {
+				LOG_WARNING << "All samples have a score of zero. This means the tracker lost the object!";
+				// tracker lost the object
+				return sol;
 			}
 			// save best sample
 			sol.Set(tt->index, this->template take<Space, CMP>(space, open_samples));
@@ -81,11 +78,6 @@ struct ParticleFilter
 	}
 
 };
-
-template<typename Time, typename State, typename Score, class StartingStates, class Take, class NotifySamples, class NotifySolution>
-struct ParticleFilterWithAnnealing
-: public ParticleFilter<Time, State, Score, StartingStates, Take, NotifySamples, NotifySolution, true>
-{};
 
 //---------------------------------------------------------------------------
 }

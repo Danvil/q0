@@ -58,10 +58,10 @@ struct BisectionRootFinder
 					return midpoint;
 				}
 				if(0 < f_left && f_left < f_right) {
-					return f_left;
+					return left;
 				}
 				if(0 < f_right && f_right < f_left) {
-					return f_right;
+					return right;
 				}
 				// now only the case f_left == f_right remains!
 				throw NoSlopeException();

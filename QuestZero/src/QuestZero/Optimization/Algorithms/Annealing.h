@@ -29,7 +29,7 @@ template<
 	typename Score,
 	class NotifySamples,
 	int DoMinimize=false,
-	int DoHistogramImprove=true
+	int DoHistogramImprove=false
 >
 struct ParticleAnnealing
 : public NotifySamples
@@ -43,7 +43,7 @@ struct ParticleAnnealing
 		Settings() {
 			layers_ = 10;
 			alpha_ = 0.5;
-			particle_count_ = 0;
+			particle_count_ = 1000;
 		}
 
 		/** The number of annealing layers */
@@ -73,46 +73,38 @@ struct ParticleAnnealing
 
 	template<class Space, class Function, class MotionModel>
 	void OptimizeInplace(SampleSet& current, const Space& space, const Function& function, MotionModel motion) {
-		const double cMaximalPossibleNoiseFactor = 1.5;
+		const double cMaximalPossibleNoiseFactor = 1.0;
 		double alpha = cMaximalPossibleNoiseFactor * (1.0 - settings_.alpha_); // starting value follows from geometric sum
-		double beta = 1.0; // for the first run we do not map scores
 		// iterate through layers
-		for(int m = settings_.layers_; ; --m) {
-			// apply beta
-			current.TransformScores(ExpScoreMapper(beta));
-			// create new sample set using weighted random drawing
-			current = current.DrawByScore(settings_.particle_count_);
-			if(m > 0) { // only re-sample if we will try another layer
-				// apply noise scaling
-				motion.SetNoiseAmount(alpha);
-				// apply motion model to states
-				current.TransformStates(motion);
-			}
+		for(int m=settings_.layers_; m>0 ; m--) {
 			// find particle scores
 			current.EvaluateAll(function);
+//			// process scores such that best score is 1 and worst score is 0
+//			std::vector<Score> scores_raw = current.scores(); // save raw scores
+//			if(DoHistogramImprove) {
+//				PreprocessScores(current);
+//			}
 			// notify about samples (before mapping and drawing to get real scores and samples!)
 			this->NotifySamples(current);
-			// break if may number of layers is exceeded
-			if(m == 0) {
-				break;
-			}
-			// process scores such that best score is 1 and worst score is 0
-			std::vector<Score> scores_raw = current.scores(); // save raw scores
-			if(DoHistogramImprove) {
-				PreprocessScores(current);
-			}
 			// find best beta with respect to current scores
-			beta = BetaOptimizationProblem<Score>::Optimize_Bisect(alpha, current.scores(), 1e-2);
+			double beta = BetaOptimizationProblem<Score>::Optimize_Bisect(settings_.alpha_, current.scores(), 1e-2);
 			LOG_DEBUG << "Annealing " << (settings_.layers_ - m + 1) << "/" << settings_.layers_ << ": Beta=" << beta;
-			if(beta > BetaOptimizationProblem<Score>::cMaxBeta() * 0.99) {
+			if(beta >= 1.0) {
 				// we can not distinguish the scores anymore, so we assume that we have enough accuracy and quit
-				// before we quit we have to restore raw scores
-				current.SetAllScores(scores_raw);
+//				// before we quit we have to restore raw scores
+//				current.SetAllScores(scores_raw);
 				break;
 				// FIXME is this test good? this imposes some kind of scale on the score!
 			}
-			// compute alpha value for the current layer
+			// apply beta
+			current.TransformScores(ExpScoreMapper(beta));
+			// create new sample set using weighted random drawing
+			current.Resample(settings_.particle_count_);
+			// apply noise scaling
+			motion.SetNoiseAmount(alpha);
 			alpha *= settings_.alpha_;
+			// apply motion model to states
+			current.TransformStates(motion);
 		}
 	}
 
@@ -164,8 +156,8 @@ private:
 		  scores_(scores)
 		{}
 
-		static T cMaxBetaExp() { return 1; }
-		static T cMaxBeta() { return 10; } // = 10^cMaxBetaExp
+//		static T cMaxBetaExp() { return 1; }
+//		static T cMaxBeta() { return 10; } // = 10^cMaxBetaExp
 
 		/** Returns alpha_target - D(beta) / N (suitable for root finding) */
 		T operator()(T u) const {
@@ -210,6 +202,9 @@ private:
 			// compute current alpha
 			T D = 1 / D_sum;
 			T alpha = D / (T)scores_.size();
+
+//			std::cout << u << "\t" << beta << "\t" << alpha << std::endl;
+
 			// deviation from desired alpha
 			return alpha_target_ - alpha;
 		}
@@ -221,11 +216,12 @@ private:
 		static T Optimize_Bisect(T alphaTarget, const std::vector<T>& scores, T epsilon) {
 			try {
 				BetaOptimizationProblem bop(alphaTarget, scores);
-				double u_best = BisectionRootFinder::Solve(bop, -cMaxBetaExp(), +cMaxBetaExp(), epsilon);
+				double u_best = BisectionRootFinder::Solve(bop, -5, 0, epsilon);
 				// FIXME why is this not working? linker error?
 				return StateToBeta(u_best);
 			} catch(BisectionRootFinder::NoSlopeException&) {
-				return cMaxBeta();
+				//return cMaxBeta();
+				return T(1);
 			}
 		}
 

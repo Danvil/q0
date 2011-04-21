@@ -26,6 +26,7 @@ struct Partition
 	std::vector<size_t> state_ids_;
 	unsigned long particle_count_;
 	unsigned long annealing_layers_;
+	float alpha_;
 	std::string name_;
 };
 
@@ -91,6 +92,9 @@ struct PartitionParticleFilter
 					std::cout << "Partition " << (it - params_.partitions_.begin()) << " '" << it->name_ << "'" << std::endl;
 					// restrict noise to partition
 					motion.SetPartition(it->state_ids_, params_.noise_suppression_factor_);
+					motion.SetNoiseAmount(1.0f);
+					// apply motion model which is simply white noise
+					open_samples.TransformStates(motion);
 					// run optimization
 					if(UseAnnealing) {
 						// use annealing to refine the sample set
@@ -98,23 +102,22 @@ struct PartitionParticleFilter
 						pa.SetNotifySamplesObject(this);
 						pa.settings_.layers_ = it->annealing_layers_;
 						pa.settings_.particle_count_ = it->particle_count_;
+						pa.settings_.alpha_ = it->alpha_;
 						pa.OptimizeInplace(open_samples, space, pinned, motion);
 					} else {
-						// apply motion model which is simply white noise
-						open_samples.TransformStates(motion);
 						// evaluate samples
 						open_samples.EvaluateAll(pinned);
+						// notify samples
+						this->NotifySamples(open_samples);
 						// create new sample set using weighted random drawing
 						try{
-							open_samples = open_samples.DrawByScore(it->particle_count_);
+							open_samples.Resample(it->particle_count_);
 						} catch(typename SampleSet::CanNotNormalizeZeroListException&) {
 							LOG_WARNING << "All samples have a score of zero. This means the tracker lost the object!";
 							// tracker lost the object
 							return sol;
 						}
 					}
-					// notify samples
-					this->NotifySamples(open_samples);
 				}
 			}
 			// save best sample
