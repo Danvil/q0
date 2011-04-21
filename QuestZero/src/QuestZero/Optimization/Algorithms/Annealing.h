@@ -177,17 +177,17 @@ private:
 			// due to numerical instabilities, we must normalize first!
 			std::vector<T> mapped = scores_;
 			T mapped_sum = 0;
-			T scores_sum = 0;
+//			T scores_sum = 0;
 			for(typename std::vector<T>::iterator it=mapped.begin(); it!=mapped.end(); ++it) {
-				const T& x = *it;
-				scores_sum += x;
+				T x = *it;
+//				scores_sum += x;
 				T y = std::pow(x, beta);
 				mapped_sum += y;
 				*it = y;
 			}
-			if(scores_sum == 0) {
-				throw AllScoresAreZeroException();
-			}
+//			if(scores_sum == 0) {
+//				throw AllScoresAreZeroException();
+//			}
 			if(mapped_sum == 0) {
 				// note that we excluded the case, that the sum of the original scores is 0
 				// this comes from an extremely high beta. which should result in an alpha of 0
@@ -196,7 +196,8 @@ private:
 			T mapped_sum_inv = 1 / mapped_sum;
 			T D_sum = 0;
 			for(typename std::vector<T>::const_iterator it=mapped.begin(); it!=mapped.end(); ++it) {
-				T w = mapped_sum_inv * (*it);
+				T x = *it;
+				T w = mapped_sum_inv * x;
 				D_sum += w * w;
 			}
 			// compute current alpha
