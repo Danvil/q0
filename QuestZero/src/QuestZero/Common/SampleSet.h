@@ -210,6 +210,20 @@ public:
 		return picked;
 	}
 
+	/** Randomly picks n samples using a probability which is proportional to the sample score */
+	void Resample(unsigned int n) {
+		std::vector<double> density = ComputeScoreDensity();
+		std::vector<State> old_states = states_;
+		std::vector<Score> old_scores = scores_;
+		states_.resize(n);
+		scores_.resize(n);
+		for(unsigned int i=0; i<n; ++i) {
+			size_t p = RandomPickFromDensity(density);
+			states_[i] = old_states[p];
+			scores_[i] = old_scores[p];
+		}
+	}
+
 private:
 	template<class Space, typename K>
 	struct FunctionRandomizeState
