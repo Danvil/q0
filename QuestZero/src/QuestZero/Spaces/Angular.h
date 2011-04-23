@@ -12,6 +12,7 @@
 #include "QuestZero/Common/RandomNumbers.h"
 #include "QuestZero/Common/Exceptions.h"
 #include <Danvil/Tools/MoreMath.h>
+#include <Danvil/Tools/Constants.h>
 #include <Danvil/Tools/Field.h>
 #include <Danvil/Print.h>
 #include <vector>
@@ -137,77 +138,134 @@ namespace Angular {
 		struct Interval
 		{
 			// FIXME enforce float or double for K
-			Interval()
-			{}
 
-			Interval(K lower, K upper)
-			: lower_(lower),
-			  upper_(upper) {}
+		private:
+			/** The used computation range is [0,R] (R could 2*pi or 1) */
+			// FIXME why can't we use Danvil::C_2_PI??
+			static const K cRange = K(2.0 * 3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230664709384460955058223172535940812848111);
 
-			size_t dimension() const { return 1; }
+			/** Wraps the angle to the used computation range */
+			static K wrap(K x) {
+				// TODO improve performance?
+				return Danvil::MoreMath::Wrap(x, cRange);
+			}
 
+		public:
+			/** Creates a space which allows all values */
+			Interval() {
+				set_lower(K(0));
+				set_upper(cRange);
+			}
+
+			/** Creates a space which allows only values in the given interval
+			 * See set_lower and set_upper for more information
+			 */
+			Interval(K lower, K upper)  {
+				set_lower(lower);
+				set_upper(upper);
+			}
+
+			/** Angular space has a dimension of 1 */
+			size_t dimension() const {
+				return 1;
+			}
+
+			/** Returns true if the value is in the allowed interval */
 			bool contains(K x) const {
-				x = Danvil::MoreMath::Wrap(x, (K)Danvil::C_2_PI);
+				// wrap to range before testing
+				x = wrap(x);
 				if(lower_ < upper_) {
+					// test if in interval
 					return Danvil::MoreMath::InInterval(x, lower_, upper_);
 				} else {
+					// test if not in not allowed interval
 					return !Danvil::MoreMath::InInterval(x, upper_, lower_);
 				}
 			}
 
+			/** Projects a value to the allowed interval
+			 * If the value is outside of the allowed interval, the nearest
+			 * interval border is returned.
+			 */
 			K project(K x) const {
-				x = Danvil::MoreMath::Wrap(x, (K)Danvil::C_2_PI);
+				// wrap to range before projecting
+				x = wrap(x);
 				// project to nearest border
 				if(lower_ < upper_) {
 					// normal case: allowed is [lower|upper]
 					if(Danvil::MoreMath::InInterval(x, lower_, upper_)) {
 						// already in interval
 						return x;
-					} else {
+					}
+					else {
 						// be careful to map to the right bound
-						K d1 = lower_;
-						K d2 = (K)Danvil::C_2_PI - upper_;
-						K mean = (d1 + d2) / 2;
+						K d1 = lower_; // length of forbidden interval to the left
+						K d2 = cRange - upper_; // length of forbidden interval to the right
+						K mean = (d1 + d2) / 2; // mean length of forbidden interval
 						if(d1 < d2) {
 							// the mid point of the excluded area lies in the right interval
+							// 0 --> lower +++++++ upper <---- mu -- R
 							return Danvil::MoreMath::InInterval(x, upper_, upper_ + mean) ? upper_ : lower_;
-						} else {
+						}
+						else {
 							// the mid point of the excluded area lies in the left interval
+							// 0 -- mu ----> lower +++++++ upper <-- R
 							return Danvil::MoreMath::InInterval(x, lower_ - mean, lower_) ? lower_ : upper_;
 						}
 					}
-				} else {
-					// two-interval case: allowed is [0|upper] and [lower|2Pi]
+				}
+				else {
+					// two-interval case: allowed is [0|upper] and [lower|R]
 					if(!Danvil::MoreMath::InInterval(x, upper_, lower_)) {
 						// already in interval
 						return x;
-					} else {
-						// mid point of excluded interval which is [upper|lower]
+					}
+					else {
+						// 0 ++++ upper <-- mu --> lower +++ R
+						// compute mid point of excluded interval which is [upper|lower]
 						K mu = (lower_ + upper_) / 2;
+						// map to the nearer bound
 						return Danvil::MoreMath::InInterval(x, upper_, mu) ? upper_ : lower_;
 					}
 				}
 			}
 
+			/** Draws a random uniformly distributed value out of the allowed interval */
 			K random() const {
 				if(lower_ < upper_) {
+					// sample in allowed interval
+					// 0 ------- lower xxxxxxx upper --- R
 					return RandomNumbers::Uniform<K>(lower_, upper_);
-				} else {
-					K r = RandomNumbers::Uniform<K>(lower_, upper_ + (K)Danvil::C_2_PI);
-					return Danvil::MoreMath::Wrap(r, (K)Danvil::C_2_PI);
+				}
+				else {
+					// sample outside of range to have a continuous interval
+					// 0 ++++ upper ------ lower xxxxx R xxxx R+upper ----...
+					K r = RandomNumbers::Uniform<K>(lower_, cRange + upper_);
+					// wrap back
+					//return wrap(r);
+					if(r >= cRange) {
+						r -= cRange;
+					}
+					return r;
 				}
 			}
 
+			/** Draws a random uniformly distributed value centered around the given value out of the allowed interval */
 			template<typename NT>
 			K random(K center, NT noise) const {
 				const size_t cMaxTrials = 100;
-				// FIXME remove the loop by exactly computing the interval
+				// FIXME remove the loop by exactly computing the allowed interval
 				size_t trials = 0;
 				while(trials < cMaxTrials) {
-					K r = center + RandomNumbers::UniformMP(noise);
-					if(contains(r)) {
-						return r;
+					// add a random uniformly distributed offset in the given noise range
+					K x = center + RandomNumbers::UniformMP(noise);
+					// wrap to the [0,2pi] interval
+					x = wrap(x);
+					// if it is in the interval we are ready
+					if(contains(x)) {
+						return x;
 					}
+					// else try again
 					trials++;
 				}
 				//assert(false); // intervals possibly do not overlap
@@ -227,8 +285,33 @@ namespace Angular {
 				return random(center, noise[0]);
 			}
 
-			DEFINE_FIELD(lower, K)
-			DEFINE_FIELD(upper, K)
+			K lower() const {
+				return lower_;
+			}
+
+			K upper() const {
+				return upper_;
+			}
+
+			/** Sets lower value of allowed range
+			 * If lower < upper the allowed range is:
+			 *    0 ---- lower ++++++++ upper -- R
+			 * If upper < lower the allowed range is:
+			 *    0 +++ upper ------ lower +++++ R
+			 */
+			void set_lower(K lower) {
+				lower_ = wrap(lower);
+			}
+
+			/** Sets upper value of allowed range
+			 * See set_lower for more information
+			 */
+			void set_upper(K upper) {
+				upper_ = wrap(upper);
+			}
+
+		private:
+			K lower_, upper_;
 		};
 
 	}
