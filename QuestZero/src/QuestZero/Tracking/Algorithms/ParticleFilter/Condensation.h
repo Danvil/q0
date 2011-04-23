@@ -54,6 +54,8 @@ struct Condensation
 			open_samples.TransformStates(motion);
 			// evaluate samples
 			open_samples.EvaluateAll(pinned);
+			// notify samples
+			this->NotifySamples(open_samples);
 			// resample using weighted random drawing
 			try{
 				open_samples.Resample(particle_count_);
@@ -65,7 +67,6 @@ struct Condensation
 			// save best sample
 			sol.Set(tt->index, this->template take<Space, CMP>(space, open_samples));
 			// tracing
-			this->NotifySamples(open_samples);
 			this->NotifySolution(sol);
 		}
 		return sol;
