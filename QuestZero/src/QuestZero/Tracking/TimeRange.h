@@ -39,6 +39,32 @@ private:
 	K start_;
 };
 
+template<typename K=int, typename IndexType=size_t>
+struct IndexedInterleavedTimeSampling
+{
+	typedef K Time;
+
+	IndexedInterleavedTimeSampling(K start, K strive)
+	: start_(start), strive_(strive) {
+	}
+
+	Time operator()(IndexType i) const {
+		return IndexToTime(i);
+	}
+
+	Time IndexToTime(IndexType i) const {
+		return start_ + strive_ * K(i);
+	}
+
+	IndexType TimeToIndex(Time t) const {
+		assert(t >= start_);
+		return IndexType((t - start_) / strive_);
+	}
+private:
+	K start_;
+	K strive_;
+};
+
 template<typename K, typename IndexType=size_t>
 struct FramerateTimeSampling
 {
