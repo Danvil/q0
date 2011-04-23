@@ -123,7 +123,7 @@ struct PartitionParticleFilter
 			// save best sample
 			sol.Set(tt->index, this->template take<Space, CMP>(space, open_samples));
 			// tracing
-			this->NotifySamples(open_samples);
+//			this->NotifySamples(open_samples);
 			this->NotifySolution(sol);
 		}
 		return sol;
