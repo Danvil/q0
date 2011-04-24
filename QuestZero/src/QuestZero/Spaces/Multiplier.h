@@ -142,7 +142,7 @@ private:
 
 };
 
-template<typename BaseSpace, typename State_>
+template<typename BaseSpace, typename State_, typename BT=typename State_::BaseState>
 struct MultiplierSpace
 {
 	typedef State_ State;
@@ -247,7 +247,7 @@ struct MultiplierSpace
 		INVALID_SIZE_EXCEPTION(states.size() == 0) // Must have at least one element for WeightedSum!
 		State s(size_policy_);
 		for(size_t i=0; i<count(); ++i) {
-			std::vector<BaseState> parts;
+			std::vector<BT> parts;
 			parts.reserve(states.size());
 			for(size_t k=0; k<states.size(); k++) {
 				parts.push_back(states[k][i]);
