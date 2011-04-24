@@ -119,7 +119,7 @@ struct TSolution
 		return items_.end();
 	}
 
-	void Set(size_t index, const State& state, const Score& score) {
+	void Set(size_t index, const State& state, Score score) {
 		Item& a = GetItemByIndex(index);
 		a.state = state;
 		a.score = score;
@@ -131,10 +131,10 @@ struct TSolution
 	}
 
 	const State& GetState(size_t i) const {
-		return GetItemByIndex(i).score;
+		return GetItemByIndex(i).state;
 	}
 
-	const State& GetScore(size_t i) const {
+	Score GetScore(size_t i) const {
 		return GetItemByIndex(i).score;
 	}
 
