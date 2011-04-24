@@ -35,6 +35,11 @@ namespace InitialStatesPolicy {
 		~ManyPicker() {}
 	};
 
+	template<template <typename> class SP>
+	struct Fuser {
+		template<typename State> struct Result : public ManyPicker<State, SP> {};
+	};
+
 	//---------------------------------------------------------------------------
 
 	/** Picks a random state each time using the random function of the space */
@@ -122,6 +127,20 @@ namespace InitialStatesPolicy {
 		template<class Space>
 		State pick(const Space& space) const {
 			return space.random(mean_, noise_);
+		}
+
+		template<class Space>
+		std::vector<State> pickMany(const Space& space, size_t n) {
+			std::vector<State> states;
+			states.reserve(n);
+			if(n == 0) {
+				return states;
+			}
+			states.push_back(mean_);
+			for(size_t i=0; i<n - 1; i++) {
+				states.push_back(this->pick(space));
+			}
+			return states;
 		}
 
 	private:

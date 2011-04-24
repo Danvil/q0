@@ -8,6 +8,7 @@
 #ifndef POLICIES_TARGETPOLICY_H_
 #define POLICIES_TARGETPOLICY_H_
 //---------------------------------------------------------------------------
+#include <QuestZero/Common/ScoreComparer.h>
 #include <iostream>
 #include <cfloat>
 //---------------------------------------------------------------------------
@@ -47,7 +48,7 @@ namespace TargetPolicy
 	/** Breaks when the score is smaller than a given value
 	 * Attention: This may result in an infinite loop. Better use ScoreTargetWithMaxChecks!
 	 */
-	template<typename ScoreType=double, bool Console=true>
+	template<typename CMP, typename ScoreType=double, bool Console=true>
 	struct ScoreTarget
 	{
 		ScoreTarget(ScoreType t=1e-3)
@@ -65,7 +66,7 @@ namespace TargetPolicy
 			if(Console) {
 				std::cout << "Current Score=" << score << " (Target=" << goal_ << ")" << std::endl;
 			}
-			return current_ <= goal_;
+			return CMP::compare(current_, goal_);
 		}
 
 	private:
@@ -74,14 +75,14 @@ namespace TargetPolicy
 	};
 
 	/** Breaks if a score goal has been reached or after a maximum number of iterations */
-	template<typename ScoreType=double, bool Console=true>
+	template<typename CMP=BetterMeansSmaller<double>, typename ScoreType=double, bool Console=true>
 	struct ScoreTargetWithMaxChecks
 	: public FixedChecks<ScoreType,false>,
-	  public ScoreTarget<ScoreType,false>
+	  public ScoreTarget<CMP, ScoreType,false>
 	{
 		bool IsTargetReached(const ScoreType& score) {
 			bool check_iters = ((FixedChecks<ScoreType,false>*)this)->IsTargetReached(score); // must be first, so it gets evaluated every time!
-			bool check_score = ((ScoreTarget<ScoreType,false>*)this)->IsTargetReached(score);
+			bool check_score = ((ScoreTarget<CMP, ScoreType,false>*)this)->IsTargetReached(score);
 			if(Console) {
 				std::cout << "Iteration " << this->GetCurrentIterationCount() << "/" << this->GetMaximumIterationCount() << ": "
 						<< "Current Score=" << this->GetCurrentScore() << " (Target=" << this->GetTargetScore() << ")" << std::endl;

@@ -12,7 +12,6 @@
 #include "QuestZero/Common/RandomNumbers.h"
 #include "QuestZero/Common/Sample.h"
 #include "QuestZero/Common/SampleSet.h"
-#include <boost/foreach.hpp>
 #include <vector>
 #include <string>
 //---------------------------------------------------------------------------
@@ -45,7 +44,8 @@ template<
 	class Target,
 	class StartingStates,
 	class Take,
-	class NotifySamples
+	class NotifySamples,
+	bool Minimize
 >
 struct PSO
 : public Target,
@@ -64,15 +64,17 @@ struct PSO
 
 	PSOSettings settings;
 
+	typedef typename ComparerSelector<Score,Minimize>::Result CMP;
+
 	template<class Space, class Function>
 	Sample Optimize(const Space& space, const Function& function) {
-		typedef BetterMeansSmaller<Score> CMP; // FIXME hardcoded!
 		globals.set(settings);
 		// generate start samples
 		std::vector<State> initial_states = this->pickMany(space, settings.particleCount);
-		BOOST_FOREACH(const State& s, initial_states) {
-			LOG_DEBUG << "PSO: Picked initial state: " << s;
-			particles.push_back(ParticleData(s));
+		particles.reserve(initial_states.size());
+		for(typename std::vector<State>::const_iterator it=initial_states.begin(); it!=initial_states.end(); ++it) {
+			//LOG_DEBUG << "PSO: Picked initial state: " << *it;
+			particles.push_back(ParticleData(*it));
 		}
 		// iterate
 		while(true) {
@@ -203,8 +205,9 @@ private:
 
 	std::vector<State> currentStates() const {
 		std::vector<State> states;
-		BOOST_FOREACH(const ParticleData& p, particles) {
-			states.push_back(p.current);
+		states.reserve(particles.size());
+		for(typename std::vector<ParticleData>::const_iterator it=particles.begin(); it!=particles.end(); ++it) {
+			states.push_back(it->current);
 		}
 		return states;
 	}
@@ -216,13 +219,21 @@ private:
 	SampleSet bestSamples() const {
 		SampleSet samples;
 		samples.Reserve(particles.size());
-		BOOST_FOREACH(const ParticleData& p, particles) {
-			samples.Add(p.best_state_, p.best_score_);
+		for(typename std::vector<ParticleData>::const_iterator it=particles.begin(); it!=particles.end(); ++it) {
+			samples.Add(it->best_state_, it->best_score_);
 		}
 		return samples;
 	}
 
 };
+
+//---------------------------------------------------------------------------
+
+template< class State, class Score, class Target, class StartingStates, class Take, class NotifySamples>
+struct PSO_min : public PSO<State, Score, Target, StartingStates, Take, NotifySamples, true> {};
+
+template< class State, class Score, class Target, class StartingStates, class Take, class NotifySamples>
+struct PSO_max : public PSO<State, Score, Target, StartingStates, Take, NotifySamples, false> {};
 
 //---------------------------------------------------------------------------
 }
