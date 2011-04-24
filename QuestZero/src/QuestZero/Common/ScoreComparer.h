@@ -45,6 +45,16 @@ struct BetterMeansBigger
 	}
 };
 
+template<typename,bool> struct ComparerSelector;
+
+template<typename Score> struct ComparerSelector<Score, true> {
+	typedef BetterMeansSmaller<Score> Result;
+};
+
+template<typename Score> struct ComparerSelector<Score, false> {
+	typedef BetterMeansBigger<Score> Result;
+};
+
 //---------------------------------------------------------------------------
 }
 //---------------------------------------------------------------------------
