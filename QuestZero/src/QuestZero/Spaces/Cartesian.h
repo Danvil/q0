@@ -166,6 +166,7 @@ namespace Cartesian {
 			State project(const State& s) const {
 				State v;
 				for(size_t i=0; i<dimension(); i++) {
+					// clamp value to the allowed interval
 					v[i] = Danvil::MoreMath::Clamp(s[i], min_[i], max_[i]);
 				}
 				return v;
@@ -174,6 +175,7 @@ namespace Cartesian {
 			State random() const {
 				State v;
 				for(size_t i=0; i<dimension(); i++) {
+					// pick uniformly distributed element in the allowed interval
 					v[i] = RandomNumbers::Uniform(min_[i], max_[i]);
 				}
 				return v;
@@ -184,12 +186,16 @@ namespace Cartesian {
 				INVALID_SIZE_EXCEPTION(noise.size() != dimension())
 				State v;
 				for(size_t i=0; i<dimension(); i++) {
+					// build the sample interval [c1,c2]
 					S n = S(noise[i]);
+					assert(n); // noise must be positive!
 					S c1 = center[i] - n;
 					S c2 = center[i] + n;
-					assert(min_[i] < c2 && c1 < max_[i]);
+					assert(min_[i] < c2 && c1 < max_[i]); // hopefully the intervals overlap
+					// compute union of intervals
 					S c_min = std::max(min_[i], c1);
 					S c_max = std::min(max_[i], c2);
+					// pick uniformly distributed element in the interval
 					v[i] = RandomNumbers::Uniform(c_min, c_max);
 				}
 				return v;
