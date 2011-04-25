@@ -74,15 +74,16 @@ struct AlternatingParticleFilter
   public NotifySolution
 {
 	typedef TSolution<Time, State, Score> Solution;
+	typedef TRange<Time, State, Score> Range;
 	typedef TSampleSet<State, Score> SampleSet;
 
 	AlternatingParticleFilterParameters params_;
 
 	template<class Space, class VarFunction>
-	Solution Track(const Solution& solution, const Space& space, const VarFunction& function) {
+	Solution Track(const Range& range, const Space& space, const VarFunction& function) {
 		typedef BetterMeansBigger<Score> CMP;
 		// prepare the solution
-		Solution sol = solution;
+		Solution sol = range.solution_;
 		// pin down varying function
 		PinnedFunction<Time, State, Score, VarFunction> pinned(function);
 		// prepare object noise
@@ -109,10 +110,9 @@ struct AlternatingParticleFilter
 		//         Perhaps it is even better ...
 		SampleSet open_samples(this->pickMany(space, params_.particle_count_));
 		// tracking loop
-		typename Solution::ConstIt tt_start = sol.GetFirstUnknown();
-		for(typename Solution::ConstIt tt=tt_start; tt!=sol.GetEnd(); ++tt) {
+		for(size_t tt=range.begin_; tt<range.end_; tt+=range.strive_) {
 			// set pin down time
-			pinned.setTime(tt->time);
+			pinned.setTime(sol.GetTime(tt));
 			// several iterations
 			for(unsigned int repetition=0; repetition<params_.repetition_count_; repetition++) {
 				// one part after the other
@@ -146,7 +146,7 @@ struct AlternatingParticleFilter
 				}
 			}
 			// save best sample
-			sol.Set(tt->index, this->template take<Space, CMP>(space, open_samples));
+			sol.Set(tt, this->template take<Space, CMP>(space, open_samples));
 			// tracing
 			this->NotifySamples(open_samples);
 			this->NotifySolution(sol);

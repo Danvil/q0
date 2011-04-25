@@ -58,6 +58,7 @@ struct PartitionParticleFilter
   public NotifySolution
 {
 	typedef TSolution<Time, State, Score> Solution;
+	typedef TRange<Time, State, Score> Range;
 	typedef TSampleSet<State, Score> SampleSet;
 
 	PartitionParticleFilterParameters params_;
@@ -65,9 +66,9 @@ struct PartitionParticleFilter
 	static const unsigned int cInitialCount_ = 1000;
 
 	template<class Space, class VarFunction, class MotionModel>
-	Solution Track(const Solution& solution, const Space& space, const VarFunction& function, MotionModel motion) {
+	Solution Track(const Range& range, const Space& space, const VarFunction& function, MotionModel motion) {
 		typedef BetterMeansBigger<Score> CMP;
-		Solution sol = solution;
+		Solution sol = range.solution_;
 		// pin down varying function
 		PinnedFunction<Time, State, Score, VarFunction> pinned(function);
 		// initialize sample set with random samples
@@ -77,12 +78,11 @@ struct PartitionParticleFilter
 		//         Perhaps it is even better ...
 		SampleSet open_samples(this->pickMany(space, cInitialCount_));
 		// tracking loop
-		typename Solution::It tt_start = sol.GetFirstUnknown();
-		for(typename Solution::It tt=tt_start; tt!=sol.GetEnd(); ++tt) {
+		for(size_t tt=range.begin_; tt<range.end_; tt+=range.strive_) {
 			// set pin down time
-			pinned.setTime(tt->time);
+			pinned.setTime(sol.GetTime(tt));
 			// evaluate the initially picked samples
-			if(tt == tt_start) {
+			if(tt == range.begin_) {
 				open_samples.EvaluateAll(pinned);
 			}
 			// several iterations
@@ -121,7 +121,7 @@ struct PartitionParticleFilter
 				}
 			}
 			// save best sample
-			sol.Set(tt->index, this->template take<Space, CMP>(space, open_samples));
+			sol.Set(tt, this->template take<Space, CMP>(space, open_samples));
 			// tracing
 //			this->NotifySamples(open_samples);
 			this->NotifySolution(sol);
@@ -135,9 +135,9 @@ struct PartitionParticleFilter
 //	}
 
 	template<class Space, class VarFunction>
-	Solution TrackWhiteNoise(const Solution& sol, const Space& space, const VarFunction& function, const std::vector<double>& noise) {
+	Solution TrackWhiteNoise(const Range& range, const Space& space, const VarFunction& function, const std::vector<double>& noise) {
 		MotionModels::SpaceRandomMotionModel<Space> motion(space, noise);
-		return Track(sol, space, function, motion);
+		return Track(range, space, function, motion);
 	}
 
 //	template<class Space, class VarFunction>
