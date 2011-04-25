@@ -20,14 +20,15 @@ namespace Q0 {
 template<
 	typename State_,
 	typename Score_,
-	template<class,class,class,class,class,class> class Algorithm,
-	class Target = TargetPolicy::ScoreTargetWithMaxChecks<Score_>,
-	template<class> class SinglePicker = InitialStatesPolicy::RandomPicker,
+	template<class,class,class,class,class,class,bool> class Algorithm,
+	class Target,
+	template<class> class Picker = InitialStatesPolicy::Fuser<InitialStatesPolicy::RandomPicker>::Result,
 	template<class,class> class Take = TakePolicy::TakeBest,
-	template<class,class> class NotifySamples = TracePolicy::Samples::BestToConsole
+	template<class,class> class NotifySamples = TracePolicy::Samples::BestToConsole,
+	bool DoMinimize = true
 >
 struct Optimization
-: public Algorithm<State_, Score_, Target, InitialStatesPolicy::ManyPicker<State_, SinglePicker>, Take<State_,Score_>, NotifySamples<State_,Score_> >
+: public Algorithm<State_, Score_, Target, Picker<State_>, Take<State_,Score_>, NotifySamples<State_,Score_>, DoMinimize>
 {
 	typedef State_ State;
 	typedef Score_ Score;
