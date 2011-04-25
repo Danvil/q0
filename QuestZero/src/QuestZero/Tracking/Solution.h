@@ -20,21 +20,55 @@ template<typename Time, typename State, typename Score>
 struct TSolution
 : public Danvil::Print::IPrintable
 {
-	struct TimeRangeException {};
+	struct EmptySolutionException {};
 
-	struct UnkownScoreException {};
+	struct InvalidTimeException {};
+
+	struct StateNotKnownException {};
+
+	struct AllStatesNotKnownException {};
+
+	struct ScoreNotEvaluatedException {};
 
 	struct Item
 	{
 		Item()
-		: isEvaluated(false)
+		: is_known_(false), is_evaluated_(false)
 		{}
 
-		size_t index;
-		Time time;
-		State state;
-		Score score;
-		bool isEvaluated;
+//		size_t GetIndex() const {
+//			return index_;
+//		}
+//
+//		Time GetTime() const {
+//			return time_;
+//		}
+//
+//		bool IsKnown() const {
+//			return is_known_;
+//		}
+//
+//		const State& GetState() const {
+//			return state_;
+//		}
+//
+//		bool IsEvaluated() const {
+//			return is_evaluated_;
+//		}
+//
+//		Score GetScore() const {
+//			return score_;
+//		}
+
+	private:
+		size_t index_;
+		Time time_;
+		bool is_known_;
+		State state_;
+		bool is_evaluated_;
+		Score score_;
+
+		friend struct TSolution;
 	};
 
 	typedef typename std::vector<Item> ItemContainer;
@@ -53,98 +87,157 @@ struct TSolution
 		this->SetTimes(op);
 	}
 
-	const std::vector<Item>& GetItems() const {
-		return items_;
-	}
-
 	bool IsEmpty() const {
 		return items_.size() == 0;
 	}
 
-	const Item& GetItemByIndex(size_t i) const {
-		if(i >= items_.size()) {
-			throw TimeRangeException();
-		}
-		return items_[i];
+	size_t Count() const {
+		return items_.size();
 	}
 
-	Item& GetItemByIndex(size_t i) {
-		if(i >= items_.size()) {
-			throw TimeRangeException();
-		}
-		return items_[i];
-	}
+//	const std::vector<Item>& GetItems() const {
+//		return items_;
+//	}
 
-	const Item& GetItemByTime(Time t) const {
+//	const Item& GetItemByIndex(size_t i) const {
+//		return items_[i];
+//	}
+//
+//	Item& GetItemByIndex(size_t i) {
+//		return items_[i];
+//	}
+
+	size_t GetIndexByTime(Time t) const {
 		for(ConstIt it=items_.begin(); it!=items_.end(); ++it) {
-			if(it->time == t) {
-				return *it;
+			if(it->time_ == t) {
+				return it->index_;
 			}
 		}
-		throw TimeRangeException();
+		throw InvalidTimeException();
 	}
 
-	It GetFirstUnknown() {
-		for(It it=items_.begin(); it!=items_.end(); ++it) {
-			if(!it->isEvaluated) {
-				return it;
+	/** Gets the index of the next unknown time tick */
+	size_t SearchNextUnknown(size_t start) const {
+		for(ConstIt it=items_.begin()+start; it<items_.end(); ++it) {
+			if(!it->is_known_) {
+				return it->index_;
 			}
 		}
-		throw TimeRangeException();
-
+		return items_.size();
 	}
 
-	ConstIt GetFirstUnknown() const {
-		for(ConstIt it=items_.begin(); it!=items_.end(); ++it) {
-			if(!it->isEvaluated) {
-				return it;
+	/** Gets the index of the next known time tick */
+	size_t SearchNextKnown(size_t start) const {
+		for(ConstIt it=items_.begin()+start; it<items_.end(); ++it) {
+			if(it->is_known_) {
+				return it->index_;
 			}
 		}
-		throw TimeRangeException();
+		return items_.size();
 	}
 
-	It GetBegin() {
-		return items_.begin();
+	/** Gets the index of the previous unknown time tick */
+	size_t SearchPreviousKnown(size_t start) const {
+		for(ConstIt it=items_.begin()+start-1; it>=items_.begin(); --it) {
+			if(!it->is_known_) {
+				return it->index_;
+			}
+		}
+		return items_.size();
 	}
 
-	ConstIt GetBegin() const {
-		return items_.begin();
-	}
+//	It GetBegin() {
+//		return items_.begin();
+//	}
+//
+//	ConstIt GetBegin() const {
+//		return items_.begin();
+//	}
+//
+//	It GetEnd() {
+//		return items_.end();
+//	}
+//
+//	ConstIt GetEnd() const {
+//		return items_.end();
+//	}
 
-	It GetEnd() {
-		return items_.end();
-	}
-
-	ConstIt GetEnd() const {
-		return items_.end();
+	void Set(size_t index, const State& state) {
+		Item& a = items_[index];
+		a.state_ = state;
+		a.is_known_ = true;
+		a.score_ = Score(0);
+		a.is_evaluated_ = false;
 	}
 
 	void Set(size_t index, const State& state, Score score) {
-		Item& a = GetItemByIndex(index);
-		a.state = state;
-		a.score = score;
-		a.isEvaluated = true;
+		Item& a = items_[index];
+		a.state_ = state;
+		a.is_known_ = true;
+		a.score_ = score;
+		a.is_evaluated_ = true;
+	}
+
+	void Set(size_t index, Time time, const State& state) {
+		Item& a = items_[index];
+		a.time_ = time;
+		a.state_ = state;
+		a.is_known_ = true;
+		a.score_ = Score(0);
+		a.is_evaluated_ = false;
+	}
+
+	void Set(size_t index, Time time, const State& state, Score score) {
+		Item& a = items_[index];
+		a.time_ = time;
+		a.state_ = state;
+		a.is_known_ = true;
+		a.score_ = score;
+		a.is_evaluated_ = true;
 	}
 
 	void Set(size_t index, const TSample<State, Score>& sample) {
 		Set(index, sample.state(), sample.score());
 	}
 
-	const State& GetState(size_t i) const {
-		return GetItemByIndex(i).state;
+	Time GetTime(size_t i) const {
+		return items_[i].time_;
 	}
 
-	Score GetScore(size_t i) const {
-		return GetItemByIndex(i).score;
+	bool IsKnown(size_t i) const {
+		return items_[i].is_known_;
+	}
+
+	const State& GetState(size_t i) const {
+		if(!items_[i].is_known_) {
+			throw StateNotKnownException();
+		}
+		return items_[i].state_;
 	}
 
 	bool IsEvaluated(size_t i) const {
-		return GetItemByIndex(i).isEvaluated;
+		return items_[i].is_evaluated_;
+	}
+
+	Score GetScore(size_t i) const {
+		if(!items_[i].is_evaluated_) {
+			throw ScoreNotEvaluatedException();
+		}
+		return items_[i].score_;
+	}
+
+	bool AreAllKnown() const {
+		for(ConstIt it=items_.begin(); it!=items_.end(); ++it) {
+			if(!it->IsKnown()) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	bool AreAllEvaluated() const {
 		for(ConstIt it=items_.begin(); it!=items_.end(); ++it) {
-			if(!it->isEvaluated) {
+			if(!it->IsEvaluated()) {
 				return false;
 			}
 		}
@@ -152,21 +245,27 @@ struct TSolution
 	}
 
 	double ComputeTotalScore() const {
+		if(items_.size() == 0) {
+			throw EmptySolutionException();
+		}
 		double sum = 0;
 		for(ConstIt it=items_.begin(); it!=items_.end(); ++it) {
-			if(!it->isEvaluated) {
-				sum += it->score;
+			if(!it->IsEvaluated()) {
+				sum += it->GetScore();
 			}
 		}
 		return sum;
 	}
 
 	double ComputeMeanScore() const {
+		if(items_.size() == 0) {
+			throw EmptySolutionException();
+		}
 		double sum = 0;
 		size_t n = 0;
 		for(ConstIt it=items_.begin(); it!=items_.end(); ++it) {
-			if(!it->isEvaluated) {
-				sum += it->score;
+			if(!it->IsEvaluated()) {
+				sum += it->GetScore();
 				n ++;
 			}
 		}
@@ -175,35 +274,27 @@ struct TSolution
 
 	double GetInitialScore() const {
 		if(items_.size() == 0) {
-			throw TimeRangeException();
+			throw EmptySolutionException();
 		}
-		const Item& i = items_[0];
-		if(!i.isEvaluated) {
-			throw UnkownScoreException();
-		}
-		return i.score;
+		return GetScore(0);
 	}
 
 	double GetFinalScore() const {
 		if(items_.size() == 0) {
-			throw TimeRangeException();
+			throw EmptySolutionException();
 		}
-		const Item& i = items_[items_.size() - 1];
-		if(!i.isEvaluated) {
-			throw UnkownScoreException();
-		}
-		return i.score;
+		return GetScore(items_.size() - 1);
 	}
 
 	std::vector<Score> CreateScoreList(bool throw_if_unknown=true) const {
 		std::vector<Score> scores;
 		scores.reserve(items_.size());
 		for(ConstIt it=items_.begin(); it!=items_.end(); ++it) {
-			if(it->isEvaluated) {
-				scores.push_back(it->score);
+			if(it->IsEvaluated()) {
+				scores.push_back(it->GetScore());
 			} else {
 				if(throw_if_unknown) {
-					throw UnkownScoreException();
+					throw ScoreNotEvaluatedException();
 				}
 			}
 		}
@@ -214,11 +305,11 @@ struct TSolution
 		std::vector<State> states;
 		states.reserve(items_.size());
 		for(ConstIt it=items_.begin(); it!=items_.end(); ++it) {
-			if(it->isEvaluated) {
-				states.push_back(it->state);
+			if(it->is_known_) {
+				states.push_back(it->state_);
 			} else {
 				if(throw_if_unknown) {
-					throw UnkownScoreException();
+					throw StateNotKnownException();
 				}
 			}
 		}
@@ -230,11 +321,14 @@ struct TSolution
 		for(ConstIt it=items_.begin(); it!=items_.end(); ++it) {
 			const Item& i = *it;
 			os << "\n";
-			if(i.isEvaluated) {
-				os << i.index << "\tTime=" << i.time << "\tScore=" << i.score << "\tState=" << i.state;
+			if(i.is_evaluated_) {
+				os << i.index_ << "\tTime=" << i.time_ << "\tScore=" << i.score_ << "\tState=" << i.state_;
+			}
+			else if(i.is_known_) {
+				os << i.index_ << "\tTime=" << i.time_ << "\tScore=unknown\tState=" << i.state_;
 			}
 			else {
-				os << i.index << "\tTime=" << i.time << "\tScore=unknown\tState=---";
+				os << i.index_ << "\tTime=" << i.time_ << "\tScore=unknown\tState=unknown";
 			}
 		}
 		os << "\n]";
@@ -245,20 +339,31 @@ private:
 		items_.resize(count);
 		size_t i = 0;
 		for(It it=items_.begin(); it!=items_.end(); ++it, i++) {
-			it->index = i;
-			it->isEvaluated = false;
+			it->index_ = i;
+			it->is_known_ = false;
+			it->is_evaluated_ = false;
 		}
 	}
 
 	template<typename I2T>
 	void SetTimes(const I2T& op) {
 		for(It it=items_.begin(); it!=items_.end(); ++it) {
-			it->time = op(it->index);
+			it->time_ = op(it->index_);
 		}
 	}
 
 private:
 	std::vector<Item> items_;
+};
+
+//---------------------------------------------------------------------------
+
+template<typename Time, typename State, typename Score>
+struct TRange
+{
+	TSolution<Time, State, Score> solution_;
+	size_t begin_, end_;
+	size_t strive_;
 };
 
 //---------------------------------------------------------------------------
