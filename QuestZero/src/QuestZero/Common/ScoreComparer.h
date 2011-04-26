@@ -55,6 +55,11 @@ template<typename Score> struct ComparerSelector<Score, false> {
 	typedef BetterMeansBigger<Score> Result;
 };
 
+template<typename Score, bool A>
+bool IsBetter(Score a, Score b) {
+	return ComparerSelector<Score,A>::Result::compare(a, b);
+}
+
 //---------------------------------------------------------------------------
 }
 //---------------------------------------------------------------------------
