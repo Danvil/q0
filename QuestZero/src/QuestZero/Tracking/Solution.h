@@ -136,14 +136,40 @@ struct TSolution
 		return items_.size();
 	}
 
-	/** Gets the index of the previous unknown time tick */
+	/** Gets the index of the previous known time tick */
 	size_t SearchPreviousKnown(size_t start) const {
-		for(ConstIt it=items_.begin()+start-1; it>=items_.begin(); --it) {
-			if(!it->is_known_) {
+		for(ConstIt it=items_.begin()+start; it>=items_.begin(); --it) {
+			if(it->is_known_) {
 				return it->index_;
 			}
 		}
-		return items_.size();
+		return static_cast<size_t>(-1);
+	}
+
+	size_t SearchNearestKnown(size_t start) const {
+		assert(start < items_.size());
+		size_t p1 = SearchPreviousKnown(start);
+		bool p1_ok = (p1 != static_cast<size_t>(-1));
+		size_t p2 = SearchNextKnown(start);
+		bool p2_ok = (p2 != items_.size());
+		if(p1_ok && p2_ok) {
+			assert(p1 <= start);
+			assert(start <= p2);
+			if(start - p1 <= p2 - start) {
+				return p1;
+			}
+			else {
+				return p2;
+			}
+		}
+		else if(p1_ok) {
+			return p1;
+		}
+		else if(p2_ok) {
+			return p2;
+		} else {
+			return items_.size(); // can not use any!
+		}
 	}
 
 //	It GetBegin() {
@@ -162,12 +188,27 @@ struct TSolution
 //		return items_.end();
 //	}
 
+	void Set(size_t index, Time time) {
+		Item& a = items_[index];
+		a.time_ = time;
+		//a.state_ = state;
+		a.is_known_ = false;
+		a.score_ = Score(0);
+		a.is_evaluated_ = false;
+	}
+
 	void Set(size_t index, const State& state) {
 		Item& a = items_[index];
 		a.state_ = state;
 		a.is_known_ = true;
 		a.score_ = Score(0);
 		a.is_evaluated_ = false;
+	}
+
+	void SetScore(size_t index, Score score) {
+		Item& a = items_[index];
+		a.score_ = score;
+		a.is_evaluated_ = true;
 	}
 
 	void Set(size_t index, const State& state, Score score) {
@@ -228,7 +269,7 @@ struct TSolution
 
 	bool AreAllKnown() const {
 		for(ConstIt it=items_.begin(); it!=items_.end(); ++it) {
-			if(!it->IsKnown()) {
+			if(!it->is_known_) {
 				return false;
 			}
 		}
@@ -237,7 +278,7 @@ struct TSolution
 
 	bool AreAllEvaluated() const {
 		for(ConstIt it=items_.begin(); it!=items_.end(); ++it) {
-			if(!it->IsEvaluated()) {
+			if(!it->is_evaluated_) {
 				return false;
 			}
 		}
@@ -290,9 +331,13 @@ struct TSolution
 		std::vector<Score> scores;
 		scores.reserve(items_.size());
 		for(ConstIt it=items_.begin(); it!=items_.end(); ++it) {
-			if(it->IsEvaluated()) {
-				scores.push_back(it->GetScore());
-			} else {
+			if(it->is_evaluated_) {
+				scores.push_back(it->score_);
+			}
+			else if(it->is_known_) {
+				scores.push_back(Score(0)); // so that we have the number of elements as CreateStateList!
+			}
+			else {
 				if(throw_if_unknown) {
 					throw ScoreNotEvaluatedException();
 				}
@@ -307,7 +352,8 @@ struct TSolution
 		for(ConstIt it=items_.begin(); it!=items_.end(); ++it) {
 			if(it->is_known_) {
 				states.push_back(it->state_);
-			} else {
+			}
+			else {
 				if(throw_if_unknown) {
 					throw StateNotKnownException();
 				}
@@ -318,17 +364,33 @@ struct TSolution
 
 	void print(std::ostream& os) const {
 		os << "Solution=[";
+		size_t unkown_count = 0;
+		bool write_newline = true;
 		for(ConstIt it=items_.begin(); it!=items_.end(); ++it) {
 			const Item& i = *it;
-			os << "\n";
+			if(write_newline) {
+				os << "\n";
+			}
+			write_newline = true;
 			if(i.is_evaluated_) {
 				os << i.index_ << "\tTime=" << i.time_ << "\tScore=" << i.score_ << "\tState=" << i.state_;
+				unkown_count = 0;
 			}
 			else if(i.is_known_) {
 				os << i.index_ << "\tTime=" << i.time_ << "\tScore=unknown\tState=" << i.state_;
+				unkown_count = 0;
 			}
 			else {
-				os << i.index_ << "\tTime=" << i.time_ << "\tScore=unknown\tState=unknown";
+				if(unkown_count < 3 || it + 1 == items_.end()) {
+					os << i.index_ << "\tTime=" << i.time_ << "\tScore=unknown\tState=unknown";
+				}
+				else if(unkown_count == 3) {
+					os << "\t...";
+				}
+				else {
+					write_newline = false;
+				}
+				unkown_count++;
 			}
 		}
 		os << "\n]";
