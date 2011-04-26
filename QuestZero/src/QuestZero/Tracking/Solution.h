@@ -87,6 +87,11 @@ struct TSolution
 		this->SetTimes(op);
 	}
 
+	TSolution(const std::vector<Time>& times) {
+		this->Initialize(times.size());
+		this->SetTimes(times);
+	}
+
 	bool IsEmpty() const {
 		return items_.size() == 0;
 	}
@@ -106,6 +111,15 @@ struct TSolution
 //	Item& GetItemByIndex(size_t i) {
 //		return items_[i];
 //	}
+
+	std::vector<Time> GetTimes() const {
+		std::vector<Time> vt;
+		vt.reserve(items_.size());
+		for(ConstIt it=items_.begin(); it!=items_.end(); ++it) {
+			vt.push_back(it->time_);
+		}
+		return vt;
+	}
 
 	size_t GetIndexByTime(Time t) const {
 		for(ConstIt it=items_.begin(); it!=items_.end(); ++it) {
@@ -404,6 +418,12 @@ private:
 			it->index_ = i;
 			it->is_known_ = false;
 			it->is_evaluated_ = false;
+		}
+	}
+
+	void SetTimes(const std::vector<Time>& times) {
+		for(It it=items_.begin(); it!=items_.end(); ++it) {
+			it->time_ = times[it->index_];
 		}
 	}
 
