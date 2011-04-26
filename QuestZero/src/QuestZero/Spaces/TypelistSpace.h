@@ -228,6 +228,25 @@ struct TypelistSpace
 		return states;
 	}
 
+	State zero() const {
+		State s;
+		zeroImpl(Loki::Int2Type<0>(), s);
+		return s;
+	}
+
+	State unit(unsigned int k) const {
+		State s;
+		unitImpl(Loki::Int2Type<0>(), s, 0, k);
+		return s;
+	}
+
+	template<typename SCL>
+	State unit(size_t k, SCL s) const {
+		State state;
+		unitSclImpl(Loki::Int2Type<0>(), state, 0, k, s);
+		return state;
+	}
+
 	State random() const {
 		State s;
 		randomImpl(Loki::Int2Type<0>(), s);
@@ -312,6 +331,43 @@ private:
 
 	template<typename K>
 	void weightedSumImpl(Loki::Int2Type<N>, State& s, const std::vector<K>&, const std::vector<State>&) const {}
+
+	template<int i>
+	void zeroImpl(Loki::Int2Type<i>, State& s) const {
+		s.template set_part<i>(space<i>().zero());
+		zeroImpl(Loki::Int2Type<i+1>(), s);
+	}
+
+	void zeroImpl(Loki::Int2Type<N>, State&) const {}
+
+	template<int i>
+	void unitImpl(Loki::Int2Type<i>, State& s, unsigned int start, unsigned int k) const {
+		unsigned int len = space<i>().dimension();
+		if(start <= k && k < start + len) {
+			s.template set_part<i>(space<i>().unit(k - start));
+		}
+		else {
+			s.template set_part<i>(space<i>().zero());
+		}
+		unitImpl(Loki::Int2Type<i+1>(), s, start + len, k);
+	}
+
+	void unitImpl(Loki::Int2Type<N>, State&, unsigned int, unsigned int) const {}
+
+	template<typename SCL, int i>
+	void unitSclImpl(Loki::Int2Type<i>, State& s, unsigned int start, unsigned int k, SCL scl) const {
+		unsigned int len = space<i>().dimension();
+		if(start <= k && k < start + len) {
+			s.template set_part<i>(space<i>().unit(k - start, scl));
+		}
+		else {
+			s.template set_part<i>(space<i>().zero());
+		}
+		unitSclImpl(Loki::Int2Type<i+1>(), s, start + len, k, scl);
+	}
+
+	template<typename SCL>
+	void unitSclImpl(Loki::Int2Type<N>, State&, unsigned int, unsigned int, SCL) const {}
 
 	template<int i>
 	void randomImpl(Loki::Int2Type<i>, State& s) const {

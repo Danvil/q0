@@ -104,6 +104,25 @@ namespace SO3 {
 				return 3;
 			}
 
+			State zero() const {
+				return State::Identity();
+			}
+
+			State unit(unsigned int k) const {
+				return Danvil::SO3::ConvertToQuaternion(
+						Danvil::SO3::AxisAngle<K>(
+								Danvil::ctLinAlg::Vec3<K>::FactorUnit(k),
+								K(1)));
+			}
+
+			template<typename SCL>
+			State unit(unsigned int k, SCL s) const {
+				return Danvil::SO3::ConvertToQuaternion(
+						Danvil::SO3::AxisAngle<K>(
+								Danvil::ctLinAlg::Vec3<K>::FactorUnit(k),
+								K(s)));
+			}
+
 			State project(const State& s) const {
 				State cp = s;
 				cp.normalize();

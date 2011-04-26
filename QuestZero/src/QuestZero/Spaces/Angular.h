@@ -110,6 +110,19 @@ namespace Angular {
 				return 1;
 			}
 
+			State zero() const {
+				return State(0);
+			}
+
+			State unit(size_t) const {
+				return State(1);
+			}
+
+			template<typename SCL>
+			State unit(size_t, SCL s) const {
+				return State(s);
+			}
+
 			State project(const State& s) const {
 				return Operations::AngularOps<K>::Wrap(s);
 			}
@@ -168,6 +181,19 @@ namespace Angular {
 			/** Angular space has a dimension of 1 */
 			size_t dimension() const {
 				return 1;
+			}
+
+			K zero() const {
+				return K(0);
+			}
+
+			K unit(unsigned int) const {
+				return K(1);
+			}
+
+			template<typename SCL>
+			K unit(unsigned int, SCL s) const {
+				return K(s);
 			}
 
 			/** Returns true if the value is in the allowed interval */

@@ -257,6 +257,47 @@ struct MultiplierSpace
 		return s;
 	}
 
+	State zero() const {
+		State v(size_policy_);
+		for(size_t i=0; i<count(); i++) {
+			v[i] = spaces_[i].zero();
+		}
+		return v;
+	}
+
+	State unit(unsigned int k) const {
+		State v(size_policy_);
+		unsigned int p = 0;
+		for(size_t i=0; i<count(); i++) {
+			unsigned int len = spaces_[i].dimension();
+			if(p <= k && k < p + len) {
+				v[i] = spaces_[i].unit(k - p);
+			}
+			else {
+				v[i] = spaces_[i].zero();
+			}
+			p += len;
+		}
+		return v;
+	}
+
+	template<typename SCL>
+	State unit(unsigned int k, SCL s) const {
+		State v(size_policy_);
+		unsigned int p = 0;
+		for(size_t i=0; i<count(); i++) {
+			unsigned int len = spaces_[i].dimension();
+			if(p <= k && k < p + len) {
+				v[i] = spaces_[i].unit(k - p, s);
+			}
+			else {
+				v[i] = spaces_[i].zero();
+			}
+			p += len;
+		}
+		return v;
+	}
+
 	State project(const State& s) const {
 		State v(size_policy_);
 		for(size_t i=0; i<count(); i++) {

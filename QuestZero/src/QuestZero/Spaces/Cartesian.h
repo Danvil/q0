@@ -100,6 +100,31 @@ namespace Cartesian {
 				return State::Dimension;
 			}
 
+			State zero() const {
+				State v;
+				for(size_t i=0; i<dimension(); i++) {
+					v[i] = S(0);
+				}
+				return v;
+			}
+
+			State unit(unsigned int k) const {
+				State v;
+				for(size_t i=0; i<dimension(); i++) {
+					v[i] = (i == size_t(k)) ? S(1) : S(0);
+				}
+				return v;
+			}
+
+			template<typename SCL>
+			State unit(unsigned int k, SCL s) const {
+				State v;
+				for(size_t i=0; i<dimension(); i++) {
+					v[i] = (i == size_t(k)) ? S(s) : S(0);
+				}
+				return v;
+			}
+
 			const State& project(const State& s) const {
 				return s;
 			}
@@ -161,6 +186,31 @@ namespace Cartesian {
 			// TODO: allow states with variable dimension?
 			size_t dimension() const {
 				return State::Dimension;
+			}
+
+			State zero() const {
+				State v;
+				for(size_t i=0; i<dimension(); i++) {
+					v[i] = S(0);
+				}
+				return v;
+			}
+
+			State unit(unsigned int k) const {
+				State v;
+				for(size_t i=0; i<dimension(); i++) {
+					v[i] = (i == size_t(k)) ? S(1) : S(0);
+				}
+				return v;
+			}
+
+			template<typename SCL>
+			State unit(unsigned int k, SCL s) const {
+				State v;
+				for(size_t i=0; i<dimension(); i++) {
+					v[i] = (i == size_t(k)) ? S(s) : S(0);
+				}
+				return v;
 			}
 
 			State project(const State& s) const {
@@ -233,6 +283,19 @@ namespace Cartesian {
 
 			size_t dimension() const {
 				return 1;
+			}
+
+			State zero() const {
+				return State(0);
+			}
+
+			State unit(unsigned int) const {
+				return State(1);
+			}
+
+			template<typename SCL>
+			State unit(unsigned int, SCL s) const {
+				return State(s);
 			}
 
 			State project(const State& s) const {
