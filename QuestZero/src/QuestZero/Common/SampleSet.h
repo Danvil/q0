@@ -52,6 +52,12 @@ struct TSampleSet
 		scores_.reserve(n);
 	}
 
+	/** Resizes samples storage (will contain garbage!) */
+	void Resize(size_t n) {
+		states_.resize(n);
+		scores_.resize(n);
+	}
+
 	/** Adds a sample */
 	void Add(const State& state, Score score=C_UNKNOWN_SCORE) {
 		states_.push_back(state);
@@ -402,11 +408,11 @@ public:
 
 	/** Prints all samples, one line per sample */
 	void printInLines(std::ostream& os) const {
-		os << "[Sample Set = {";
+		os << "[Sample Set = {\n";
 		for(size_t i=0; i<Size(); i++) {
 			os << "\t" << CreateSample(i) << "\n";
 		}
-		os << "}]";
+		os << "}]\n";
 	}
 
 private:
