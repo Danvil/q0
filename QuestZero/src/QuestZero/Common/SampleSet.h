@@ -18,6 +18,8 @@ template<typename State, typename Score>
 struct TSampleSet
 : public Danvil::Print::IPrintable
 {
+	struct EmptySampleSetException {};
+
 	struct CanNotNormalizeZeroListException {};
 
 	struct InvalidDistributionException {};
@@ -296,7 +298,7 @@ public:
 	template<class CMP>
 	void FindBestAndWorstScore(Score& best, Score& worst) const {
 		if(Size() == 0) {
-			throw std::runtime_error("Can not get score of best sample for an empty sample set!");
+			throw EmptySampleSetException();
 		}
 		best = scores_[0];
 		worst = best;
@@ -312,11 +314,52 @@ public:
 		}
 	}
 
+	template<class CMP>
+	size_t SearchWorst() const {
+		if(Size() == 0) {
+			throw EmptySampleSetException();
+		}
+		size_t worst_id = 0;
+		Score worst = scores_[0];
+		CMP c;
+		for(typename std::vector<Score>::const_iterator it=scores_.begin(); it!=scores_.end(); ++it) {
+			if(c(worst, *it)) {
+				worst = *it;
+				worst_id = it - scores_.begin();
+			}
+		}
+	}
+
+	template<class CMP>
+	void SearchBestAndWorst(size_t& best_id, size_t& worst_id) const {
+		if(Size() == 0) {
+			throw EmptySampleSetException();
+		}
+		Score best = scores_[0];
+		best_id = 0;
+		Score worst = best;
+		worst_id = 0;
+		CMP c;
+		typename std::vector<Score>::const_iterator it;
+		size_t i;
+		for(it=scores_.begin(), i=0; it!=scores_.end(); ++it, i++) {
+			Score current = *it;
+			if(c(current, best)) {
+				best_id = i;
+				best = current;
+			}
+			if(c(worst, current)) {
+				worst_id = i;
+				worst = current;
+			}
+		}
+	}
+
 	/** Finds the best score */
 	template<class CMP>
 	Score FindBestScore() const {
 		if(Size() == 0) {
-			throw std::runtime_error("Can not get score of best sample for an empty sample set!");
+			throw EmptySampleSetException();
 		}
 		typename std::vector<Score>::const_iterator it_best = std::min_element(scores_.begin(), scores_.end(), CMP());
 		return *it_best;
@@ -326,7 +369,7 @@ public:
 	template<class CMP>
 	Sample FindBestSample() const {
 		if(Size() == 0) {
-			throw std::runtime_error("Can not get best sample for an empty sample set!");
+			throw EmptySampleSetException();
 		}
 		typename std::vector<Score>::const_iterator it_best = std::min_element(scores_.begin(), scores_.end(), CMP());
 		return CreateSample(it_best - scores_.begin());
