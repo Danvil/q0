@@ -27,7 +27,8 @@ template<
 	class Target,
 	class StartingStates,
 	class Take,
-	class NotifySamples
+	class NotifySamples,
+	bool Minimize
 >
 struct RND
 : public Target,
@@ -37,6 +38,7 @@ struct RND
 {
 	typedef TSample<State,Score> Sample;
 	typedef TSampleSet<State,Score> SampleSet;
+	typedef typename ComparerSelector<Score,Minimize>::Result CMP;
 
 	RND() {
 		particleCount = 100;
@@ -50,7 +52,6 @@ struct RND
 
 	template<class Space, class Function>
 	Sample Optimize(const Space& space, const Function& function) {
-		typedef BetterMeansSmaller<Score> CMP;
 		SampleSet open(this->template pickMany(space, particleCount));
 		// evaluate initial samples
 		open.EvaluateAll(function);
