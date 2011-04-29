@@ -11,6 +11,7 @@
 #include <QuestZero/Policies/TracePolicy.h>
 #include <QuestZero/Optimization/Algorithms/RND.h>
 #include <QuestZero/Optimization/Algorithms/PSO.h>
+#include <QuestZero/Optimization/Algorithms/NelderMead.h>
 #include <QuestZero/Optimization/Optimization.h>
 #include <Danvil/Tools/Timer.h>
 #include <Danvil/Ptr.h>
@@ -31,9 +32,9 @@ void TestAlgo(ALGO algo, const Space& space, const Function& function)
 }
 
 #ifdef DEBUG
-	typedef TargetPolicy::ScoreTargetWithMaxChecks<double,true> TargetChecker;
+	typedef TargetPolicy::ScoreTargetWithMaxChecks<BetterMeansSmaller<double>,double,true> TargetChecker;
 #else
-	typedef TargetPolicy::ScoreTargetWithMaxChecks<double,false> TargetChecker;
+	typedef TargetPolicy::ScoreTargetWithMaxChecks<BetterMeansSmaller<double>,double,false> TargetChecker;
 #endif
 
 const unsigned int cIterationCount = 10;
@@ -44,22 +45,35 @@ template<class Space, class Function>
 void TestProblem(const Space& space, const Function& function)
 {
 	cout << "----- RND -----" << endl;
-	Optimization<
-		typename Space::State,
-		typename Function::Score,
-		RND,
-		TargetChecker,
-		InitialStatesPolicy::RandomPicker,
-		TakePolicy::TakeBest,
-		TracePolicy::Samples::None
-	> algoRnd;
+	Optimization<typename Space::State, typename Function::Score,
+			RND,
+			TargetChecker,
+			InitialStatesPolicy::Fuser<InitialStatesPolicy::RandomPicker>::Result,
+			TakePolicy::TakeBest,
+			TracePolicy::Samples::None> algoRnd;
 	algoRnd.SetMaximumIterationCount(cIterationCount);
 	algoRnd.SetTargetScore(cScoreGoal);
 	algoRnd.particleCount = cParticleCount;
 	TestAlgo(algoRnd, space, function);
 
+	cout << "----- Nelder Mead -----" << endl;
+	NelderMead<typename Space::State, typename Function::Score, TracePolicy::Samples::None<typename Space::State, typename Function::Score>, true> algoNM;
+//	algoRnd.SetMaximumIterationCount(cIterationCount);
+//	algoRnd.SetTargetScore(cScoreGoal);
+//	algoRnd.particleCount = cParticleCount;
+	algoNM.p_simplex_size = 1.0;
+	algoNM.p_alpha = 1.0;
+	algoNM.p_beta = 0.5;
+	algoNM.p_gamma = 3.0;
+	TestAlgo(algoNM, space, function);
+
 	cout << "----- PSO -----" << endl;
-	Optimization<typename Space::State, typename Function::Score, PSO, TargetChecker, InitialStatesPolicy::RandomPicker, TakePolicy::TakeBest, TracePolicy::Samples::None> algoPso;
+	Optimization<typename Space::State, typename Function::Score,
+			PSO,
+			TargetChecker,
+			InitialStatesPolicy::Fuser<InitialStatesPolicy::RandomPicker>::Result,
+			TakePolicy::TakeBest,
+			TracePolicy::Samples::None> algoPso;
 	algoPso.SetMaximumIterationCount(cIterationCount);
 	algoRnd.SetTargetScore(cScoreGoal);
 	algoPso.settings.particleCount = cParticleCount;

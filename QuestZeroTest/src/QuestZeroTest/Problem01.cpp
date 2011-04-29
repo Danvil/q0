@@ -123,51 +123,51 @@ namespace Problem03
 	}
 }
 
-//---------------------------------------------------------------------------
-
-namespace Problem04
-{
-	typedef Danvil::ctLinAlg::Vec3<double> State1;
-	typedef Spaces::Cartesian::FiniteCartesianSpace<State1> Space1;
-
-	typedef Spaces::SO3::SO3Space<double> Space2;
-
-	typedef Spaces::Mixed2State<Space1, 1, Space2> state;
-
-	typedef Spaces::Mixed2Space<Space1, 1, Space2> space;
-
-	space FactorSpace() {
-		Space1 space1;
-		space1.setDomainRange(State1(3,4,5));
-		Space2 space2;
-		space s;
-		s.setSpace1(space1);
-		s.setSpace2(0, space2);
-		return s;
-	}
-
-	struct RegistrationFunction
-	: public Benchmarks::PointCloudRegistration<double>
-	{
-		typedef double Score;
-		double operator()(const state& x) const {
-			return fit(Danvil::SO3::ConvertToMatrix(x.sr[0]), x.sc);
-		}
-	};
-
-	typedef Functions::AddParallel<state, RegistrationFunction> function;
-
-	function FactorFunction() {
-		function f;
-		f.createRandomProblem(100);
-		return f;
-	}
-
-	void run() {
-		cout << "----- Registration w. position (Mixed2State) -----" << endl;
-		TestProblem(FactorSpace(), FactorFunction());
-	}
-}
-
+////---------------------------------------------------------------------------
+//
+//namespace Problem04
+//{
+//	typedef Danvil::ctLinAlg::Vec3<double> State1;
+//	typedef Spaces::Cartesian::FiniteCartesianSpace<State1> Space1;
+//
+//	typedef Spaces::SO3::SO3Space<double> Space2;
+//
+//	typedef Spaces::Mixed2State<Space1, 1, Space2> state;
+//
+//	typedef Spaces::Mixed2Space<Space1, 1, Space2> space;
+//
+//	space FactorSpace() {
+//		Space1 space1;
+//		space1.setDomainRange(State1(3,4,5));
+//		Space2 space2;
+//		space s;
+//		s.setSpace1(space1);
+//		s.setSpace2(0, space2);
+//		return s;
+//	}
+//
+//	struct RegistrationFunction
+//	: public Benchmarks::PointCloudRegistration<double>
+//	{
+//		typedef double Score;
+//		double operator()(const state& x) const {
+//			return fit(Danvil::SO3::ConvertToMatrix(x.sr[0]), x.sc);
+//		}
+//	};
+//
+//	typedef Functions::AddParallel<state, RegistrationFunction> function;
+//
+//	function FactorFunction() {
+//		function f;
+//		f.createRandomProblem(100);
+//		return f;
+//	}
+//
+//	void run() {
+//		cout << "----- Registration w. position (Mixed2State) -----" << endl;
+//		TestProblem(FactorSpace(), FactorFunction());
+//	}
+//}
+//
 
 //---------------------------------------------------------------------------

@@ -59,7 +59,7 @@
 					</folderInfo>
 					<sourceEntries>
 						<entry excluding="src/QuestZeroTest" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src/QuestZeroTest"/>
+						<entry excluding="Problem09.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src/QuestZeroTest"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -635,7 +635,7 @@
 					</folderInfo>
 					<sourceEntries>
 						<entry excluding="src/QuestZeroTest" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src/QuestZeroTest"/>
+						<entry excluding="Problem09.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src/QuestZeroTest"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
