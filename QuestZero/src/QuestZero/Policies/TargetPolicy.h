@@ -69,6 +69,14 @@ namespace TargetPolicy
 			return CMP::compare(current_, goal_);
 		}
 
+		bool IsTargetReached(ScoreType score, ScoreType test) {
+			current_ = score;
+			if(Console) {
+				std::cout << "Current Score=" << score << ", Test=" << test << " (Target=" << goal_ << ")" << std::endl;
+			}
+			return CMP::compare(test, goal_);
+		}
+
 	private:
 		ScoreType current_;
 		ScoreType goal_;
@@ -80,12 +88,22 @@ namespace TargetPolicy
 	: public FixedChecks<ScoreType,false>,
 	  public ScoreTarget<CMP, ScoreType,false>
 	{
-		bool IsTargetReached(const ScoreType& score) {
+		bool IsTargetReached(ScoreType score) {
 			bool check_iters = ((FixedChecks<ScoreType,false>*)this)->IsTargetReached(score); // must be first, so it gets evaluated every time!
 			bool check_score = ((ScoreTarget<CMP, ScoreType,false>*)this)->IsTargetReached(score);
 			if(Console) {
 				std::cout << "Iteration " << this->GetCurrentIterationCount() << "/" << this->GetMaximumIterationCount() << ": "
 						<< "Current Score=" << this->GetCurrentScore() << " (Target=" << this->GetTargetScore() << ")" << std::endl;
+			}
+			return check_iters || check_score;
+		}
+
+		bool IsTargetReached(ScoreType score, ScoreType test) {
+			bool check_iters = ((FixedChecks<ScoreType,false>*)this)->IsTargetReached(score); // must be first, so it gets evaluated every time!
+			bool check_score = ((ScoreTarget<CMP, ScoreType,false>*)this)->IsTargetReached(score, test);
+			if(Console) {
+				std::cout << "Iteration " << this->GetCurrentIterationCount() << "/" << this->GetMaximumIterationCount() << ": "
+						<< "Current Score=" << this->GetCurrentScore() << ", Test=" << test << " (Target=" << this->GetTargetScore() << ")" << std::endl;
 			}
 			return check_iters || check_score;
 		}
