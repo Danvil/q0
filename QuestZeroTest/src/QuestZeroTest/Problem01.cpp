@@ -43,17 +43,22 @@ namespace Problem01
 
 	typedef Functions::BoostFunctionSingleWrapper<State,double> Function;
 
-	Function FactorFunction() {
+	Function FactorFunction(boost::function<double(const State&)> f1) {
 		Function f;
-		boost::function<double(const State&)> f1 = boost::bind(&Benchmarks::Cartesian<State>::Rastrigin, _1);
 		State minima(0,1,2);
 		f.set_functor(boost::bind(&shiftedMinima<State>, f1, minima, _1));
 		return f;
 	}
 
 	void run() {
-		cout << "----- Cartesian Vec3f -----" << endl;
-		TestProblem(FactorSpace(), FactorFunction());
+		cout << "----- Cartesian Vec3f --- DiscreetSphere -----" << endl;
+		TestProblem(FactorSpace(), FactorFunction(boost::bind(&Benchmarks::Cartesian<State>::DiscreetSphere, _1)));
+		cout << "----- Cartesian Vec3f --- Schwefel2_21 -----" << endl;
+		TestProblem(FactorSpace(), FactorFunction(boost::bind(&Benchmarks::Cartesian<State>::Schwefel2_21, _1)));
+		cout << "----- Cartesian Vec3f --- Rosenbrock -----" << endl;
+		TestProblem(FactorSpace(), FactorFunction(boost::bind(&Benchmarks::Cartesian<State>::Rosenbrock, _1)));
+		cout << "----- Cartesian Vec3f --- Rastrigin -----" << endl;
+		TestProblem(FactorSpace(), FactorFunction(boost::bind(&Benchmarks::Cartesian<State>::Rastrigin, _1)));
 	}
 }
 
@@ -75,9 +80,8 @@ namespace Problem02
 
 	typedef Functions::BoostFunctionSingleWrapper<State,double> Function;
 
-	Function FactorFunction() {
+	Function FactorFunction(boost::function<double(const State&)> f1) {
 		Function f;
-		boost::function<double(const State&)> f1 = boost::bind(&Benchmarks::Cartesian<State>::Rastrigin, _1);
 		State minima;
 		for(unsigned int i=0; i<State::Dimension; i++) { minima[i] = 0.1 * (double)i; }
 		f.set_functor(boost::bind(&shiftedMinima<State>, f1, minima, _1));
@@ -85,8 +89,14 @@ namespace Problem02
 	}
 
 	void run() {
-		cout << "----- Cartesian Vec<double,31> -----" << endl;
-		TestProblem(FactorSpace(), FactorFunction());
+		cout << "----- Cartesian Vec<double,31> --- DiscreetSphere -----" << endl;
+		TestProblem(FactorSpace(), FactorFunction(boost::bind(&Benchmarks::Cartesian<State>::DiscreetSphere, _1)));
+		cout << "----- Cartesian Vec<double,31> --- Schwefel2_21 -----" << endl;
+		TestProblem(FactorSpace(), FactorFunction(boost::bind(&Benchmarks::Cartesian<State>::Schwefel2_21, _1)));
+		cout << "----- Cartesian Vec<double,31> --- Rosenbrock -----" << endl;
+		TestProblem(FactorSpace(), FactorFunction(boost::bind(&Benchmarks::Cartesian<State>::Rosenbrock, _1)));
+		cout << "----- Cartesian Vec<double,31> --- Rastrigin -----" << endl;
+		TestProblem(FactorSpace(), FactorFunction(boost::bind(&Benchmarks::Cartesian<State>::Rastrigin, _1)));
 	}
 }
 
