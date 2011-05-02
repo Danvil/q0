@@ -63,9 +63,9 @@ namespace Cartesian {
 				INVALID_SIZE_EXCEPTION(factors.size() != states.size()) // Number of factors and states must be equal!
 				INVALID_SIZE_EXCEPTION(states.size() == 0)  // Must have at least one element for WeightedSum!
 				typedef typename Private::GetScalarType<State>::ScalarType S;
-				State c = (S)(factors[0]) * states[0];
+				State c = S(factors[0]) * states[0];
 				for(size_t i=1; i<states.size(); i++) {
-					c += (S)(factors[i]) * states[i];
+					c += S(factors[i]) * states[i];
 				}
 				return c;
 			}
