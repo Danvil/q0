@@ -57,10 +57,15 @@ void TestProblem(const Space& space, const Function& function)
 	TestAlgo(algoRnd, space, function);
 
 	cout << "----- Nelder Mead -----" << endl;
-	NelderMead<typename Space::State, typename Function::Score, TracePolicy::Samples::None<typename Space::State, typename Function::Score>, true> algoNM;
+	NelderMead<typename Space::State, typename Function::Score,
+			TargetChecker,
+			TracePolicy::Samples::None<typename Space::State, typename Function::Score>,//TracePolicy::Samples::AllToConsole<typename Space::State, typename Function::Score>,
+			true> algoNM;
 //	algoRnd.SetMaximumIterationCount(cIterationCount);
 //	algoRnd.SetTargetScore(cScoreGoal);
 //	algoRnd.particleCount = cParticleCount;
+	algoNM.SetTargetScore(1e-04);
+	algoNM.SetMaximumIterationCount(100);
 	algoNM.p_simplex_size = 1.0;
 	algoNM.p_alpha = 1.0;
 	algoNM.p_beta = 0.5;
