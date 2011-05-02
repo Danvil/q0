@@ -52,7 +52,7 @@ struct Cartesian
 	static K DiscreetSphere(const V& v) {
 		K max = 0;
 		for(unsigned int i = 0; i < v.dimension(); i++) {
-			K x = abs(v[i]);
+			K x = std::abs(v[i]);
 			if(x > max) {
 				max = x;
 			}
@@ -86,7 +86,7 @@ struct Cartesian
 	static K Schwefel2_22(const V& v) {
 		K sum = 0, prod = 1;
 		for(unsigned int i = 0; i < v.dimension(); i++) {
-			K x = abs(v[i]);
+			K x = std::abs(v[i]);
 			sum += x;
 			prod *= x;
 		}
@@ -117,7 +117,7 @@ struct Cartesian
 	/// <returns></returns>
 	static K Rosenbrock(const V& v) {
 		K sum = 0;
-		for(int i = 0; i < v.dimension() - 1; i++) {
+		for(unsigned int i = 0; i < v.dimension() - 1; i++) {
 			K x = v[i];
 			K y = v[i + 1];
 			K a = y - x * x;
