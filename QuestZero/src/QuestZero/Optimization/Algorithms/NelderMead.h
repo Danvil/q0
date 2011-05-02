@@ -21,11 +21,13 @@ namespace Q0 {
 /// Nelder Mead Downhill Simplex Optimization Algorithm
 /// </summary>
 template<typename State_, class Score_,
+	class Take,
 	class NotifySamples,
 	bool Minimize
 >
 struct NelderMead
-:  public NotifySamples
+: public Take,
+  public NotifySamples
 {
 	typedef State_ State;
 	typedef Score_ Score;
@@ -38,7 +40,6 @@ struct NelderMead
 		p_alpha = 1.0;
 		p_beta = 0.5;
 		p_gamma = 3.0;
-		p_goal = 1e-5;
 	}
 
 	virtual ~NelderMead() {}
@@ -49,7 +50,6 @@ struct NelderMead
 	double p_alpha;
 	double p_beta;
 	double p_gamma;
-	double p_goal;
 
 	template<class Space, class Function>
 	Sample Optimize(const Space& space, const Function& function) {
@@ -58,13 +58,16 @@ struct NelderMead
 
 		size_t n = space.dimension();
 
-		double ha1 = (1.0 + p_alpha) / double(n - 1);
+		// the simplex has n+1 points
+		// the worst point has a special scale factor, the other points all have the same
+		// total sum of scale factors should be 1
+		double ha1 = (1.0 + p_alpha) / double(n);
 		double ha2 = - p_alpha;
-		double hb1 = (1.0 + p_alpha) * (1.0 + p_gamma) / double(n - 1);
-		double hb2 = p_gamma - p_alpha*(1.0 + p_gamma);
-		double hc1 = (1.0 - p_beta) / double(n - 1);
+		double hb1 = (1.0 + p_alpha*(1.0 + p_gamma)) / double(n);
+		double hb2 = - p_alpha*(1.0 + p_gamma);
+		double hc1 = (1.0 - p_beta) / double(n);
 		double hc2 = p_beta;
-		double hd1 = (p_beta*(1.0 + p_alpha) + 1.0 - p_beta) / double(n - 1);
+		double hd1 = (1.0 + p_beta*p_alpha) / double(n);
 		double hd2 = - p_alpha * p_beta;
 
 		SampleSet simplex;
@@ -79,14 +82,16 @@ struct NelderMead
 		for(size_t i=0; i<n; i++) {
 			double l = p_simplex_size;
 			// FIXME find l s.t. Pi is in the domain?
-			State Pi = space.compose(initial, space.unit(l));
+			State Pi = space.compose(initial, space.unit(i, l));
 			// FIXME is Pi in the domain?
 			simplex.set_state(i+1, Pi);
 		}
 
+		// evaluate all samples
+		simplex.EvaluateAll(function);
+		this->NotifySamples(simplex);
+
 		while(true) {
-			// evaluate all samples
-			simplex.EvaluateAll(function);
 			// determine best and worst simplex points
 			size_t i_best, i_worst;
 			simplex.template SearchBestAndWorst<CMP>(i_best, i_worst);
@@ -96,34 +101,35 @@ struct NelderMead
 			// form possible new samples
 			// Form P_a = (1+a) P_mean - a P_worst
 			// (top left)
-			for(size_t i=0; i<n; i++) {
+			for(size_t i=0; i<n+1; i++) {
 				weights[i] = (i != i_worst) ? ha1 : ha2;
 			}
 			State P_a = space.weightedSum(weights, simplex.states());
 			extension.set_state(0, P_a);
 			// Form P_b = (1+a)(1+c) P_mean - (a(1+c)-c) P_worst
 			// (lower left)
-			for(size_t i=0; i<n; i++) {
+			for(size_t i=0; i<n+1; i++) {
 				weights[i] = (i != i_worst) ? hb1 : hb2;
 			}
 			State P_b = space.weightedSum(weights, simplex.states());
-			extension.set_state(1, P_a);
+			extension.set_state(1, P_b);
 			// Form P_c = (1-b) P_mean + b P_worst
 			// (top right yes)
-			for(size_t i=0; i<n; i++) {
+			for(size_t i=0; i<n+1; i++) {
 				weights[i] = (i != i_worst) ? hc1 : hc2;
 			}
 			State P_c = space.weightedSum(weights, simplex.states());
-			extension.set_state(2, P_a);
+			extension.set_state(2, P_c);
 			// Form P_d = (b(1+a)+1-b) P_mean - a b P_worst
 			// (top right no)
-			for(size_t i=0; i<n; i++) {
+			for(size_t i=0; i<n+1; i++) {
 				weights[i] = (i != i_worst) ? hd1 : hd2;
 			}
 			State P_d = space.weightedSum(weights, simplex.states());
-			extension.set_state(3, P_a);
+			extension.set_state(3, P_d);
 			// evaluate
 			extension.EvaluateAll(function);
+			this->NotifySamples(extension);
 			Score y_a = extension.score(0);
 			Score y_b = extension.score(1);
 			Score y_c = extension.score(2);
@@ -132,10 +138,12 @@ struct NelderMead
 				if(CMP::compare(y_b, y_l)) {
 					simplex.set_state(i_worst, P_b);
 					simplex.set_score(i_worst, y_b);
+					y_l = y_b;
 				}
 				else {
 					simplex.set_state(i_worst, P_a);
 					simplex.set_score(i_worst, y_a);
+					y_l = y_a;
 				}
 				i_best = i_worst; // we have stored a new best value there
 			}
@@ -166,10 +174,11 @@ struct NelderMead
 					}
 					if(CMP::compare(y_h, yu)) {
 						// reset the simplex
-						for(size_t i=0; i<n; i++) {
+						for(size_t i=0; i<n+1; i++) {
 							simplex.set_state(i, space.weightedSum(0.5, simplex.state(i), 0.5, simplex.state(i_best)));
 						}
 						simplex.EvaluateAll(function);
+						this->NotifySamples(simplex);
 					}
 					else {
 						simplex.set_state(i_worst, *Pu);
@@ -194,8 +203,7 @@ struct NelderMead
 				criterion += x * x;
 			}
 			criterion /= double(n);
-			if(std::sqrt(criterion) < p_goal) {
-				//ready!!
+			if(this->IsTargetReached(y_l, std::sqrt(criterion))) {
 				return simplex.CreateSample(i_best);
 			}
 		}
