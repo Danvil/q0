@@ -175,6 +175,12 @@ struct TypelistSpace
 		return d;
 	}
 
+	State scale(const State& a, double scl) const {
+		State s;
+		scaleImpl(Loki::Int2Type<0>(), s, a, scl);
+		return s;
+	}
+
 	State inverse(const State& a) const {
 		State s;
 		inverseImpl(Loki::Int2Type<0>(), s, a);
@@ -282,6 +288,14 @@ private:
 	}
 
 	void distanceImpl(Loki::Int2Type<N>, double&, const State&, const State&) const {}
+
+	template<int i>
+	void scaleImpl(Loki::Int2Type<i>, State& s, const State& a, double scl) const {
+		s.template set_part<i>(space<i>().scale(a.template part<i>(), scl));
+		scaleImpl(Loki::Int2Type<i+1>(), s, a, scl);
+	}
+
+	void scaleImpl(Loki::Int2Type<N>, State&, const State&, double) const {}
 
 	template<int i>
 	void inverseImpl(Loki::Int2Type<i>, State& s, const State& a) const {

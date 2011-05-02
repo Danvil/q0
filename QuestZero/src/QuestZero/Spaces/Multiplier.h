@@ -207,6 +207,14 @@ struct MultiplierSpace
 		return d;
 	}
 
+	State scale(const State& a, double scl) const {
+		State s(size_policy_);
+		for(size_t i=0; i<count(); ++i) {
+			s[i] = spaces_[i].scale(a[i], scl);
+		}
+		return s;
+	}
+
 	State inverse(const State& a) const {
 		State s(size_policy_);
 		for(size_t i=0; i<count(); ++i) {

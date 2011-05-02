@@ -35,6 +35,11 @@ struct BaseSpace
 		return opFinal(*this, Operator::distance(a, b));
 	}
 
+	/** Scales a state element */
+	State scale(const State& a, double s) const {
+		return opFinal(*this, Operator::scale(a, s));
+	}
+
 	/** Product of two states */
 	State inverse(const State& a) const {
 		return opFinal(*this, Operator::inverse(a));

@@ -38,21 +38,25 @@ namespace Angular {
 
 			struct WeightedSumException {};
 
-			double distance(const K& a, const K& b) const {
+			double distance(K a, K b) const {
 				// compute shortest distance!
 				K w = Wrap(a - b);
 				return (double)Danvil::MoreMath::Min(w, Danvil::C_2_PI - w);
 			}
 
-			K inverse(const K& a) const {
+			K scale(K a, double s) const {
+				return Wrap(K(s) * a);
+			}
+
+			K inverse(K a) const {
 				return Wrap(-a);
 			}
 
-			K compose(const K& a, const K& b) const {
+			K compose(K a, K b) const {
 				return Wrap(a + b);
 			}
 
-			K difference(const K& a, const K& b) const {
+			K difference(K a, K b) const {
 				return Wrap(a - b);
 			}
 

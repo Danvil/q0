@@ -34,6 +34,11 @@ namespace Cartesian {
 				return double(Danvil::ctLinAlg::Distance(a, b));
 			}
 
+			State scale(const State& a, double s) const {
+				typedef typename Private::GetScalarType<State>::ScalarType S;
+				return S(s) * a;
+			}
+
 			State inverse(const State& a) const {
 				return -a;
 			}

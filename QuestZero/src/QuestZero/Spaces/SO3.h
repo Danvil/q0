@@ -41,6 +41,11 @@ namespace SO3 {
 				return (double)State::Distance(a, b);
 			}
 
+			State scale(const State& a, double s) const {
+				return Danvil::SO3::RotationTools::ExpQ(
+						s * Danvil::SO3::RotationTools::Log(a));
+			}
+
 			State inverse(const State& a) const {
 				return a.inverse();
 			}
