@@ -51,45 +51,60 @@ struct NelderMead
 	double p_beta;
 	double p_gamma;
 
+	/** Computes mean of all simplex points except 'i_worst' */
+	template<class Space>
+	State ComputeMean(const Space& space, const SampleSet& simplex, size_t i_worst) {
+		std::vector<double> weights(simplex.Size());
+		double w = 1.0 / double(simplex.Size() - 1);
+		for(size_t i=0; i<weights.size(); i++) {
+			weights[i] = (i == i_worst) ? 0.0 : w;
+		}
+		return space.weightedSum(weights, simplex.states());
+	}
+
+	/** Computes f*(u - pivot) + pivot */
+	template<class Space>
+	State Mirror(const Space& space, const State& pivot, const State& u, double f) {
+		return space.compose(
+				space.scale(
+						space.difference(u, pivot),
+						f
+				),
+				pivot
+		);
+	}
+
 	template<class Space, class Function>
 	Sample Optimize(const Space& space, const Function& function) {
 
+		// FIXME find starting point
 		State initial = space.random();
 
+		// the algorithm maintains a simplex of n+1 points
 		size_t n = space.dimension();
-
-		// the simplex has n+1 points
-		// the worst point has a special scale factor, the other points all have the same
-		// total sum of scale factors should be 1
-		double ha1 = (1.0 + p_alpha) / double(n);
-		double ha2 = - p_alpha;
-		double hb1 = (1.0 + p_alpha*(1.0 + p_gamma)) / double(n);
-		double hb2 = - p_alpha*(1.0 + p_gamma);
-		double hc1 = (1.0 - p_beta) / double(n);
-		double hc2 = p_beta;
-		double hd1 = (1.0 + p_beta*p_alpha) / double(n);
-		double hd2 = - p_alpha * p_beta;
-
 		SampleSet simplex;
 		simplex.Resize(n + 1);
-		std::vector<double> weights;
-		weights.resize(n + 1);
-		SampleSet extension;
-		extension.Resize(4);
 
-		// find initial simplex points
+		// FIXME find initial simplex points
+		// current method:
+		// first point is the random initial point
+		// other n points are taken by going from initial point into unit direction
 		simplex.set_state(0, initial);
 		for(size_t i=0; i<n; i++) {
-			double l = p_simplex_size;
-			// FIXME find l s.t. Pi is in the domain?
-			State Pi = space.compose(initial, space.unit(i, l));
-			// FIXME is Pi in the domain?
-			simplex.set_state(i+1, Pi);
+			State p_i = space.compose(
+					space.unit(i, p_simplex_size),
+					initial);
+			simplex.set_state(i+1, p_i);
 		}
-
-		// evaluate all samples
+		// evaluate score for simplex points
 		simplex.EvaluateAll(function);
 		this->NotifySamples(simplex);
+
+		// the algorithm requires us to compute at most 4 points
+		// from which it selects a new candidate with which the
+		// current worst simplex point is replaced
+		SampleSet extension;
+		extension.Resize(4);
 
 		while(true) {
 			// determine best and worst simplex points
@@ -98,50 +113,70 @@ struct NelderMead
 			Score y_l = simplex.score(i_best);
 			Score y_h = simplex.score(i_worst);
 
-			// form possible new samples
-			// Form P_a = (1+a) P_mean - a P_worst
-			// (top left)
-			for(size_t i=0; i<n+1; i++) {
-				weights[i] = (i != i_worst) ? ha1 : ha2;
-			}
-			State P_a = space.weightedSum(weights, simplex.states());
-			extension.set_state(0, P_a);
-			// Form P_b = (1+a)(1+c) P_mean - (a(1+c)-c) P_worst
-			// (lower left)
-			for(size_t i=0; i<n+1; i++) {
-				weights[i] = (i != i_worst) ? hb1 : hb2;
-			}
-			State P_b = space.weightedSum(weights, simplex.states());
-			extension.set_state(1, P_b);
-			// Form P_c = (1-b) P_mean + b P_worst
-			// (top right yes)
-			for(size_t i=0; i<n+1; i++) {
-				weights[i] = (i != i_worst) ? hc1 : hc2;
-			}
-			State P_c = space.weightedSum(weights, simplex.states());
-			extension.set_state(2, P_c);
-			// Form P_d = (b(1+a)+1-b) P_mean - a b P_worst
-			// (top right no)
-			for(size_t i=0; i<n+1; i++) {
-				weights[i] = (i != i_worst) ? hd1 : hd2;
-			}
-			State P_d = space.weightedSum(weights, simplex.states());
-			extension.set_state(3, P_d);
-			// evaluate
+			const State& p_h = simplex.state(i_worst);
+
+			// for all candidates the mean point of all current
+			// simplex points except the worst point is required
+
+			State p_m = ComputeMean(space, simplex, i_worst);
+
+			// first candidate: p_a = (1 + a)*p_m - a*p_h
+			//                      = p_m + a*(p_m - p_h)
+			State p_a = space.compose(
+					space.scale(
+							space.difference(p_m, p_h),
+							p_alpha),
+					p_m);
+			extension.set_state(0, p_a);
+
+			// second candidate: p_b = c*p_a + (1 - c)*p_m
+			//                       = p_m + c*(p_a - p_m)
+			State p_b = space.compose(
+					space.scale(
+							space.difference(p_a, p_m),
+							p_gamma),
+					p_m);
+			extension.set_state(1, p_b);
+
+			// third candidate: p_c = b*p_h + (1 - b)*p_m
+			//                      = p_m + b*(p_h - p_m)
+			State p_c = space.compose(
+					space.scale(
+							space.difference(p_h, p_m),
+							p_beta),
+					p_m);
+			extension.set_state(2, p_c);
+
+			// fourth candidate: p_d = b*p_a + (1 - b)*p_m
+			//                       = p_m + b*(p_a - p_m)
+			State p_d = space.compose(
+					space.scale(
+							space.difference(p_a, p_m),
+							p_beta),
+					p_m);
+			extension.set_state(3, p_d);
+
+			// compute score of all candidates
 			extension.EvaluateAll(function);
 			this->NotifySamples(extension);
 			Score y_a = extension.score(0);
 			Score y_b = extension.score(1);
 			Score y_c = extension.score(2);
 			Score y_d = extension.score(3);
+
+			// even some candidates will perhaps not be used
+			// in the following computation, we compute all
+			// 4 at once to make use of parallel evaluation
+			// TODO is this really faster ?
+
 			if(CMP::compare(y_a, y_l)) {
 				if(CMP::compare(y_b, y_l)) {
-					simplex.set_state(i_worst, P_b);
+					simplex.set_state(i_worst, p_b);
 					simplex.set_score(i_worst, y_b);
 					y_l = y_b;
 				}
 				else {
-					simplex.set_state(i_worst, P_a);
+					simplex.set_state(i_worst, p_a);
 					simplex.set_score(i_worst, y_a);
 					y_l = y_a;
 				}
@@ -160,16 +195,16 @@ struct NelderMead
 					}
 				}
 				if(new_worst) {
-					State* Pu;
+					State* pu;
 					Score yu;
 					if(CMP::compare(y_h, y_a)) {
 						// yes case
-						Pu = &P_c;
+						pu = &p_c;
 						yu = y_c;
 					}
 					else {
 						// no case
-						Pu = &P_d;
+						pu = &p_d;
 						yu = y_d;
 					}
 					if(CMP::compare(y_h, yu)) {
@@ -181,15 +216,17 @@ struct NelderMead
 						this->NotifySamples(simplex);
 					}
 					else {
-						simplex.set_state(i_worst, *Pu);
+						simplex.set_state(i_worst, *pu);
 						simplex.set_score(i_worst, yu);
 					}
 				}
 				else {
-					simplex.set_state(i_worst, P_a);
+					simplex.set_state(i_worst, p_a);
 					simplex.set_score(i_worst, y_a);
 				}
 			}
+
+			this->NotifySamples(simplex);
 
 			// check break condition
 			double y_mean = 0;
