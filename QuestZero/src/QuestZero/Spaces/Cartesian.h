@@ -13,7 +13,6 @@
 #include "QuestZero/Common/RandomNumbers.h"
 #include "QuestZero/Common/Exceptions.h"
 #include <Danvil/LinAlg.h>
-#include <Danvil/Memops/Copy.h>
 #include <vector>
 #include <cassert>
 //---------------------------------------------------------------------------

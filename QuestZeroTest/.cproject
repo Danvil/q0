@@ -1162,4 +1162,5 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="QuestZeroTest.cdt.managedbuild.target.gnu.exe.177237244" name="Executable" projectType="cdt.managedbuild.target.gnu.exe"/>
 	</storageModule>
+	<storageModule moduleId="refreshScope"/>
 </cproject>

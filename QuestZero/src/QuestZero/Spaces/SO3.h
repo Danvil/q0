@@ -13,7 +13,6 @@
 #include "QuestZero/Common/Exceptions.h"
 #include <Danvil/LinAlg.h>
 #include <Danvil/SO3.h>
-#include <Danvil/Memops/Copy.h>
 #include <Danvil/Tools/MoreMath.h>
 #include <Danvil/Tools/Field.h>
 #include <Danvil/Print.h>
