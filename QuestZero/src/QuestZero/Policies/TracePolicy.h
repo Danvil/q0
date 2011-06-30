@@ -38,8 +38,8 @@ namespace TracePolicy
 		template<typename State, typename Score>
 		struct SmallestToConsole : BestToConsole<State, Score, BetterMeansSmaller> {};
 		/** Forward best particle to functor */
-		template<typename State, typename Score, template<typename> class ScoreCmp=BetterMeansSmaller>
-		struct BestToFunctor {
+		template<typename State, typename Score, template<typename> class ScoreCmp>
+		struct BestToFunctorImpl {
 			typedef boost::function<void(const State&, Score score)> Functor;
 			void SetNotifySamplesFunctor(const Functor& f) {
 				samples_functor_ = f;
@@ -54,8 +54,9 @@ namespace TracePolicy
 			Functor samples_functor_;
 		};
 		/** Forward particle with smallest score to functor */
-		template<typename State, typename Score>
-		struct SmallestToFunctor : BestToFunctor<State, Score, BetterMeansSmaller> {};
+		template<typename State, typename Score, bool DoMinimize> struct BestToFunctor;
+		template<typename State, typename Score> struct BestToFunctor<State,Score,true> : public BestToFunctorImpl<State, Score, BetterMeansSmaller> {};
+		template<typename State, typename Score> struct BestToFunctor<State,Score,false> : public BestToFunctorImpl<State, Score, BetterMeansBigger> {};
 		/** Forwards the call to a function */
 		template<typename State, typename Score>
 		struct ForwardToFunction {

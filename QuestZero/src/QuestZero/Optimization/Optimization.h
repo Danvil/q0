@@ -24,11 +24,12 @@ template<
 	class Target,
 	template<class> class Picker = InitialStatesPolicy::Fuser<InitialStatesPolicy::RandomPicker>::Result,
 	template<class,class> class Take = TakePolicy::TakeBest,
-	template<class,class> class NotifySamples = TracePolicy::Samples::BestToConsole,
+	class NotifySamples = TracePolicy::Samples::BestToConsole<State_,Score_>,
+	//template<class,class> class NotifySamples = TracePolicy::Samples::BestToConsole,
 	bool DoMinimize = true
 >
 struct Optimization
-: public Algorithm<State_, Score_, Target, Picker<State_>, Take<State_,Score_>, NotifySamples<State_,Score_>, DoMinimize>
+: public Algorithm<State_, Score_, Target, Picker<State_>, Take<State_,Score_>, NotifySamples, DoMinimize>
 {
 	typedef State_ State;
 	typedef Score_ Score;

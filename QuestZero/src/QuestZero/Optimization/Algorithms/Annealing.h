@@ -74,7 +74,7 @@ struct ParticleAnnealing
 	template<class Space, class Function, class MotionModel>
 	void OptimizeInplace(SampleSet& current, const Space& space, const Function& function, MotionModel motion) {
 		const double cMaximalPossibleNoiseFactor = 1.0;
-		double alpha = cMaximalPossibleNoiseFactor * (1.0 - settings_.alpha_); // starting value follows from geometric sum
+		double scale = cMaximalPossibleNoiseFactor * (1.0 - settings_.alpha_); // starting value follows from geometric sum
 		// iterate through layers
 		for(int m=settings_.layers_; m>0 ; m--) {
 			// find particle scores
@@ -93,7 +93,7 @@ struct ParticleAnnealing
 				// we can not distinguish the scores anymore, so we assume that we have enough accuracy and quit
 //				// before we quit we have to restore raw scores
 //				current.SetAllScores(scores_raw);
-				break;
+//				break;
 				// FIXME is this test good? this imposes some kind of scale on the score!
 			}
 			// apply beta
@@ -101,8 +101,8 @@ struct ParticleAnnealing
 			// create new sample set using weighted random drawing
 			current.Resample(settings_.particle_count_);
 			// apply noise scaling
-			motion.SetNoiseAmount(alpha);
-			alpha *= settings_.alpha_;
+			motion.SetNoiseAmount(scale);
+			scale *= settings_.alpha_;
 			// apply motion model to states
 			current.TransformStates(motion);
 		}
@@ -113,6 +113,11 @@ struct ParticleAnnealing
 		SampleSet current = start;
 		OptimizeInplace(current, space, function);
 		return current;
+	}
+
+private:
+	static Score map(Score x, Score p) {
+		return std::pow(x, p);
 	}
 
 	/** x |-> (x - worst) / (best - worst) */
@@ -135,10 +140,10 @@ struct ParticleAnnealing
 		ExpScoreMapper(double beta) : beta_(Score(beta)) {}
 		Score operator()(Score x) const {
 			if(DoMinimize) {
-				return (Score)std::pow(Score(1) - x, beta_);
+				return map(Score(1) - x, beta_);
 			}
 			else {
-				return (Score)std::pow(x, beta_);
+				return map(x, beta_);
 			}
 		}
 	private:
@@ -181,7 +186,7 @@ private:
 			for(typename std::vector<T>::iterator it=mapped.begin(); it!=mapped.end(); ++it) {
 				T x = *it;
 //				scores_sum += x;
-				T y = std::pow(x, beta);
+				T y = map(x, beta);
 				mapped_sum += y;
 				*it = y;
 			}
@@ -217,7 +222,7 @@ private:
 		static T Optimize_Bisect(T alphaTarget, const std::vector<T>& scores, T epsilon) {
 			try {
 				BetaOptimizationProblem bop(alphaTarget, scores);
-				double u_best = BisectionRootFinder::Solve(bop, -5, 0, epsilon);
+				double u_best = BisectionRootFinder::Solve(bop, -1.5, +1, epsilon);
 				// FIXME why is this not working? linker error?
 				return StateToBeta(u_best);
 			} catch(BisectionRootFinder::NoSlopeException&) {
@@ -246,10 +251,11 @@ template<
 	class Score,
 	class StartingStates,
 	class Take,
-	class NotifySamples
+	class NotifySamples,
+	bool DoMinimize
 >
 struct Annealing
-: public ParticleAnnealing<State, Score, NotifySamples>,
+: public ParticleAnnealing<State, Score, NotifySamples, DoMinimize>,
   public StartingStates,
   public Take
 {
