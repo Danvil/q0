@@ -57,18 +57,19 @@ struct RND
 		open.EvaluateAll(function);
 		// update progress bar
 		this->NotifySamples(open);
-		// in every iteration add new particles and delete the worst particles
+		// in every iteration add new particles, delete the worst particles
+		// iterate until a given condition is fulfilled
 		while(!this->IsTargetReached(open.template FindBestScore<CMP>())) {
 			// add new samples by randomly selecting points
-			int target_add = Danvil::MoreMath::Max((size_t)0, 2 * particleCount - open.Size());
+			assert(open.Size() == particleCount);
 			// generate new chunk of states
-			SampleSet new_samples(space.template randomMany(target_add));
+			SampleSet new_samples(space.template randomMany(particleCount));
+//			SampleSet new_samples(this->template pickMany(space, particleCount));
 			// evaluate the chunk
 			new_samples.EvaluateAll(function);
 			// add to open samples
 			open.Add(new_samples);
 			// pick the best
-			// check if the best in this chunk is better than the best so far
 			open = open.template FindBestSamples<CMP>(particleCount);
 			// update progress bar
 			this->NotifySamples(open);
