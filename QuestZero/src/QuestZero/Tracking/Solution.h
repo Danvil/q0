@@ -202,6 +202,13 @@ struct TSolution
 //		return items_.end();
 //	}
 
+	void Set(const TSolution& s, size_t pos=0) {
+		assert(pos + s.items_.size() <= items_.size());
+		for(unsigned int i=0; i<s.items_.size(); i++) {
+			items_[pos + i] = s.items_[i];
+		}
+	}
+
 	void Set(size_t index, Time time) {
 		Item& a = items_[index];
 		a.time_ = time;
