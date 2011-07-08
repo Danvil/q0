@@ -159,7 +159,6 @@ struct TSampleSet
 //		return true;
 //	}
 
-private:
 	/** Computes the density of the probability distribution got by normalizing the samples scores */
 	std::vector<double> ComputeScoreDensity() const {
 		if(Size() == 0) {
@@ -434,7 +433,7 @@ public:
 		// create Sample set
 		TSampleSet samples;
 		samples.Reserve(n);
-		for(typename std::vector<IndexAndScore>::const_iterator it=v.begin(); it!=v.end(); ++it) {
+		for(typename std::vector<IndexAndScore>::const_iterator it=v.begin(); it!=v.begin() + n; ++it) {
 			samples.Add(state(it->index_), it->score_);
 		}
 		return samples;
