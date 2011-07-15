@@ -266,6 +266,14 @@ struct TSolution
 		return items_[i].time_;
 	}
 
+	Time GetFirstTime() const {
+		return items_.front().time_;
+	}
+
+	Time GetLastTime() const {
+		return items_.back().time_;
+	}
+
 	bool IsKnown(size_t i) const {
 		return items_[i].is_known_;
 	}
