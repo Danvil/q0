@@ -5,7 +5,6 @@
 #include "RandomNumbers.h"
 #include <Danvil/Print.h>
 #include <Danvil/Ptr.h>
-#include <boost/foreach.hpp>
 #include <vector>
 #include <algorithm>
 #include <ostream>
@@ -178,8 +177,8 @@ struct TSampleSet
 			throw CanNotNormalizeZeroListException();
 		}
 		double scl = 1.0 / last;
-		BOOST_FOREACH(double& x, density) {
-			x *= scl;
+		for(std::vector<double>::iterator it=density.begin(); it!=density.end(); ++it) {
+			*it *= scl;
 		}
 		return density;
 	}
@@ -188,8 +187,8 @@ struct TSampleSet
 	static size_t FindIndexOfFirstLargerThan(const std::vector<double>& list, double val) {
 		// FIXME use bisection search here if list is sorted!
 		size_t index = 0;
-		BOOST_FOREACH(double x, list) {
-			if(x >= val) {
+		for(std::vector<double>::const_iterator it=list.begin(); it!=list.end(); ++it) {
+			if(*it >= val) {
 				return index;
 			}
 			index++;
