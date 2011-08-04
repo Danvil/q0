@@ -21,8 +21,7 @@ namespace Q0 {
 namespace RandomNumbers
 {
 
-	inline
-	boost::mt19937& Generator() {
+	inline boost::mt19937& Generator() {
 		static boost::mt19937 generator;
 		return generator;
 	}
