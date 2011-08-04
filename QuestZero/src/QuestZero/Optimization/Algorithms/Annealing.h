@@ -85,6 +85,7 @@ struct ParticleAnnealing
 //				PreprocessScores(current);
 //			}
 			// notify about samples (before mapping and drawing to get real scores and samples!)
+			current.printScores(std::cout);
 			this->NotifySamples(current);
 			// find best beta with respect to current scores
 			double beta = BetaOptimizationProblem<Score>::Optimize_Bisect(settings_.alpha_, current.scores(), 1e-2);
@@ -98,6 +99,7 @@ struct ParticleAnnealing
 			}
 			// apply beta
 			current.TransformScores(ExpScoreMapper(beta));
+			current.printScores(std::cout);
 			// create new sample set using weighted random drawing
 			current.Resample(settings_.particle_count_);
 			// apply noise scaling
@@ -222,12 +224,12 @@ private:
 		static T Optimize_Bisect(T alphaTarget, const std::vector<T>& scores, T epsilon) {
 			try {
 				BetaOptimizationProblem bop(alphaTarget, scores);
-				double u_best = BisectionRootFinder::Solve(bop, -1.5, +1, epsilon);
+				double u_best = BisectionRootFinder::Solve(bop, -2.0, +1.0, epsilon);
 				// FIXME why is this not working? linker error?
 				return StateToBeta(u_best);
 			} catch(BisectionRootFinder::NoSlopeException&) {
 				//return cMaxBeta();
-				return T(1);
+				return StateToBeta(1.0);
 			}
 		}
 
