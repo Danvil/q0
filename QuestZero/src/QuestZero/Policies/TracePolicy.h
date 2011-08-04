@@ -20,6 +20,7 @@ namespace TracePolicy
 		struct None {
 			void NotifySamples(const TSampleSet<State,Score>&) {}
 		};
+
 		/** Prints the best particle to the console */
 		template<typename State, typename Score, template<typename> class ScoreCmp=BetterMeansSmaller>
 		struct BestToConsole {
@@ -27,6 +28,7 @@ namespace TracePolicy
 				std::cout << "Current best sample: " << samples.template FindBestSample<ScoreCmp<Score> >() << std::endl;
 			}
 		};
+
 		/** Prints all particles to the console */
 		template<typename State, typename Score>
 		struct AllToConsole {
@@ -34,9 +36,12 @@ namespace TracePolicy
 				samples.printInLines(std::cout);
 			}
 		};
+
 		/** Prints particle with smallest score to the console */
 		template<typename State, typename Score>
-		struct SmallestToConsole : BestToConsole<State, Score, BetterMeansSmaller> {};
+		struct SmallestToConsole
+		: public BestToConsole<State, Score, BetterMeansSmaller> {};
+
 		/** Forward best particle to functor */
 		template<typename State, typename Score, template<typename> class ScoreCmp>
 		struct BestToFunctorImpl {
@@ -53,10 +58,19 @@ namespace TracePolicy
 		private:
 			Functor samples_functor_;
 		};
+
 		/** Forward particle with smallest score to functor */
-		template<typename State, typename Score, bool DoMinimize> struct BestToFunctor;
-		template<typename State, typename Score> struct BestToFunctor<State,Score,true> : public BestToFunctorImpl<State, Score, BetterMeansSmaller> {};
-		template<typename State, typename Score> struct BestToFunctor<State,Score,false> : public BestToFunctorImpl<State, Score, BetterMeansBigger> {};
+		template<typename State, typename Score, bool DoMinimize>
+		struct BestToFunctor;
+
+		template<typename State, typename Score>
+		struct BestToFunctor<State,Score,true>
+		: public BestToFunctorImpl<State, Score, BetterMeansSmaller> {};
+
+		template<typename State, typename Score>
+		struct BestToFunctor<State,Score,false>
+		: public BestToFunctorImpl<State, Score, BetterMeansBigger> {};
+
 		/** Forwards the call to a function */
 		template<typename State, typename Score>
 		struct ForwardToFunction {
@@ -72,6 +86,7 @@ namespace TracePolicy
 		private:
 			Functor samples_functor_;
 		};
+
 		/** Forwards the call to a object */
 		template<typename State, typename Score, typename X>
 		struct ForwardToObject {
