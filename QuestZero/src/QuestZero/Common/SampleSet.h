@@ -158,8 +158,7 @@ struct TSampleSet
 //		return true;
 //	}
 
-	/** Computes the density of the probability distribution got by normalizing the samples scores */
-	std::vector<double> ComputeScoreDensity() const {
+	std::vector<double> ComputeScoreDensityUnnormalized(double* sum) const {
 		if(Size() == 0) {
 			throw CanNotNormalizeZeroListException();
 		}
@@ -171,12 +170,22 @@ struct TSampleSet
 			last += (double)score(i);
 			density.push_back(last);
 		}
-		// last is now the total sum of all scores
+		// 'last' is now the total sum of all scores
+		*sum = last;
+		return density;
+	}
+
+	/** Computes the density of the probability distribution got by normalizing the samples scores */
+	std::vector<double> ComputeScoreDensity() const {
+		// we first build the density using the unnormalized scores
+		double sum;
+		std::vector<double> density = ComputeScoreDensityUnnormalized(&sum);
+		// 'sum' is now the total sum of all scores
 		// using this we perform the normalization
-		if(last == 0) {
+		if(sum == 0) {
 			throw CanNotNormalizeZeroListException();
 		}
-		double scl = 1.0 / last;
+		double scl = 1.0 / sum;
 		for(std::vector<double>::iterator it=density.begin(); it!=density.end(); ++it) {
 			*it *= scl;
 		}
@@ -185,20 +194,18 @@ struct TSampleSet
 
 	/** Finds the index of the first value larger than the given value */
 	static size_t FindIndexOfFirstLargerThan(const std::vector<double>& list, double val) {
-		// FIXME use bisection search here if list is sorted!
-		size_t index = 0;
+		// TODO use bisection search here if list is sorted!
 		for(std::vector<double>::const_iterator it=list.begin(); it!=list.end(); ++it) {
 			if(*it >= val) {
-				return index;
+				return it - list.begin();
 			}
-			index++;
 		}
 		throw InvalidDistributionException(); // TODO throw a different exception here!
 	}
 
 	/** Randomly picks a value from a discreet probability distribution */
-	static size_t RandomPickFromDensity(const std::vector<double>& density) {
-		double r = RandomNumbers::Uniform<double>();
+	static size_t RandomPickFromDensity(const std::vector<double>& density, double sum=1.0) {
+		double r = RandomNumbers::Uniform<double>(sum);
 		return FindIndexOfFirstLargerThan(density, r);
 		// TODO catch possible exceptions and transfer to InvalidDistributionException
 	}
@@ -206,11 +213,12 @@ struct TSampleSet
 public:
 	/** Randomly picks n samples using a probability which is proportional to the sample score */
 	TSampleSet DrawByScore(unsigned int n) const {
-		std::vector<double> density = ComputeScoreDensity();
+		double sum;
+		std::vector<double> density = ComputeScoreDensityUnnormalized(&sum);
 		TSampleSet picked;
 		picked.Reserve(n);
 		for(unsigned int i=0; i<n; ++i) {
-			size_t p = RandomPickFromDensity(density);
+			size_t p = RandomPickFromDensity(density, sum);
 			picked.Add(state(p), score(p));
 		}
 		return picked;
@@ -218,13 +226,14 @@ public:
 
 	/** Randomly picks n samples using a probability which is proportional to the sample score */
 	void Resample(unsigned int n) {
-		std::vector<double> density = ComputeScoreDensity();
+		double sum;
+		std::vector<double> density = ComputeScoreDensityUnnormalized(&sum);
 		std::vector<State> old_states = states_;
 		std::vector<Score> old_scores = scores_;
 		states_.resize(n);
 		scores_.resize(n);
 		for(unsigned int i=0; i<n; ++i) {
-			size_t p = RandomPickFromDensity(density);
+			size_t p = RandomPickFromDensity(density, sum);
 			states_[i] = old_states[p];
 			scores_[i] = old_scores[p];
 		}
@@ -444,7 +453,15 @@ public:
 		for(size_t i=0; i<Size(); i++) {
 			os << CreateSample(i) << ", ";
 		}
-		os << "}]";
+		os << "}]" << std::endl;
+	}
+
+	void printScores(std::ostream& os) const {
+		os << "[Sample Set = {";
+		for(size_t i=0; i<Size(); i++) {
+			os << score(i) << ", ";
+		}
+		os << "}]" << std::endl;
 	}
 
 	/** Prints all samples, one line per sample */
@@ -453,7 +470,7 @@ public:
 		for(size_t i=0; i<Size(); i++) {
 			os << "\t" << CreateSample(i) << "\n";
 		}
-		os << "}]\n";
+		os << "}]" << std::endl;
 	}
 
 private:
