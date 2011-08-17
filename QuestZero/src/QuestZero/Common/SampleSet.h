@@ -3,6 +3,7 @@
 //---------------------------------------------------------------------------
 #include "Sample.h"
 #include "RandomNumbers.h"
+#include <Danvil/Memory/MemOpsLegacy.h>
 #include <Danvil/Print.h>
 #include <Danvil/Ptr.h>
 #include <vector>
@@ -462,6 +463,14 @@ public:
 			os << score(i) << ", ";
 		}
 		os << "}]" << std::endl;
+	}
+
+	void PrintScoreInfo(std::ostream& os) const {
+		Score min, max, mean, dev;
+		Danvil::memops::MinAndMax(scores_.data(), scores_.size(), min, max);
+		mean = Danvil::memops::mean(scores_.data(), scores_.size());
+		dev = Danvil::memops::stdDeviation(scores_.data(), scores_.size(), mean);
+		os << "Sample Scores: Min=" << min << " / Mean=" << mean << " / Max=" << max << " / Dev=" << dev << std::endl;
 	}
 
 	/** Prints all samples, one line per sample */
