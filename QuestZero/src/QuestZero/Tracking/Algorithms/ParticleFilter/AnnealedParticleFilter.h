@@ -53,7 +53,7 @@ struct AnnealedParticleFilter
 
 	template<class Space, class VarFunction, class MotionModel>
 	Solution Track(const Range& range, const Space& space, const VarFunction& function, MotionModel motion) {
-		typedef BetterMeansBigger<Score> CMP;
+		typedef BetterMeansBigger<Score> CMP; // FIXME hardcoded!
 		Solution sol = range.solution_;
 		// pin down varying function
 		PinnedFunction<Time, State, Score, VarFunction> pinned(function);
