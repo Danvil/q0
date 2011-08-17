@@ -75,18 +75,10 @@ struct ParticleAnnealing
 	void OptimizeInplace(SampleSet& current, const Space& space, const Function& function, MotionModel motion) {
 		const double cMaximalPossibleNoiseFactor = 1.0;
 		double scale = cMaximalPossibleNoiseFactor * (1.0 - settings_.alpha_); // starting value follows from geometric sum
+		// assert that scores are evaluated!
+		current.EvaluateAll(function);
 		// iterate through layers
 		for(int m=settings_.layers_; m>0 ; m--) {
-			// find particle scores
-			current.EvaluateAll(function);
-//			// process scores such that best score is 1 and worst score is 0
-//			std::vector<Score> scores_raw = current.scores(); // save raw scores
-//			if(DoHistogramImprove) {
-//				PreprocessScores(current);
-//			}
-			// notify about samples (before mapping and drawing to get real scores and samples!)
-			current.printScores(std::cout);
-			this->NotifySamples(current);
 			// find best beta with respect to current scores
 			double beta = BetaOptimizationProblem<Score>::Optimize_Bisect(settings_.alpha_, current.scores(), 1e-2);
 			LOG_DEBUG << "Annealing " << (settings_.layers_ - m + 1) << "/" << settings_.layers_ << ": Beta=" << beta;
@@ -99,7 +91,6 @@ struct ParticleAnnealing
 			}
 			// apply beta
 			current.TransformScores(ExpScoreMapper(beta));
-			current.printScores(std::cout);
 			// create new sample set using weighted random drawing
 			current.Resample(settings_.particle_count_);
 			// apply noise scaling
@@ -107,6 +98,9 @@ struct ParticleAnnealing
 			scale *= settings_.alpha_;
 			// apply motion model to states
 			current.TransformStates(motion);
+			// find particle scores
+			current.EvaluateAll(function);
+			this->NotifySamples(current);
 		}
 	}
 
@@ -263,9 +257,8 @@ struct Annealing
 {
 	template<class Space, class Function, class MotionModel>
 	TSample<State, Score> Optimize(const Space& space, const Function& function, MotionModel motion) {
-		typedef BetterMeansSmaller<Score> CMP; // FIXME hardcoded!
+		typedef typename ComparerSelector<Score,DoMinimize>::Result CMP;
 		TSampleSet<State, Score> open(this->pickMany(space, this->settings_.particle_count_));
-		open.EvaluateAll(function);
 		this->OptimizeInplace(open, space, function, motion);
 		return this->template take<Space, CMP>(space, open);
 	}
