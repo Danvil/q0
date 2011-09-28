@@ -74,7 +74,6 @@ struct AnnealedParticleFilter
 			}
 			else {
 				// apply motion model to states
-				motion.SetNoiseAmount(1);
 				open_samples.TransformStates(motion);
 			}
 			// use annealing to refine the sample set

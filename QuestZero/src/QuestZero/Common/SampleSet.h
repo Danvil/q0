@@ -13,23 +13,128 @@
 namespace Q0 {
 //---------------------------------------------------------------------------
 
+struct EmptySampleSetException {};
+
+struct CanNotNormalizeZeroListException {};
+
+struct InvalidDistributionException {};
+
+namespace SamplingTools
+{
+	/** Normalizes a list of elements */
+	template<typename K>
+	double Sum(const std::vector<K>& v) {
+		double sum = 0;
+		for(std::vector<double>::const_iterator it=v.begin(); it!=v.end(); ++it) {
+			sum += double(*it);
+		}
+		return sum;
+	}
+
+	/** Normalizes a list of elements */
+	template<typename K>
+	std::vector<double> Normalize(const std::vector<K>& v, double sum) {
+		if(sum == 0) {
+			throw CanNotNormalizeZeroListException();
+		}
+		double scl = 1.0 / sum;
+		std::vector<double> weights;
+		weights.resize(v.size());
+		for(size_t i=0; i<v.size(); i++) {
+			weights[i] = double(v[i]) * scl;
+		}
+		return weights;
+	}
+
+	/** Normalizes a list of elements */
+	template<typename K>
+	std::vector<double> Normalize(const std::vector<K>& v) {
+		double sum = Sum(v);
+		return Normalize(v, sum);
+	}
+
+	/** Computes the non-unit density function of a discrete probability distribution
+	 * Non-unit means that the distribution is not normalized to be 1
+	 */
+	template<typename K>
+	static std::vector<double> ComputeDensityUnnormalized(const std::vector<K>& distribution) {
+		if(distribution.size() == 0) {
+			throw CanNotNormalizeZeroListException();
+		}
+		// we first build the density using the unnormalized weights
+		std::vector<double> density;
+		density.reserve(distribution.size());
+		double last = 0;
+		for(size_t i=0; i<distribution.size(); i++) {
+			last += double(distribution[i]);
+			density.push_back(last);
+		}
+		// 'last' is now the total sum of all scores
+		return density;
+	}
+
+	/** Computes the density function of a discrete probability distribution */
+	template<typename K>
+	std::vector<double> ComputeDensity(const std::vector<K>& scores) {
+		// we first build the density using the unnormalized scores
+		std::vector<double> density = ComputeDensityUnnormalized(scores);
+		// normalize density
+		return Normalize(density, density.back());
+	}
+
+	/** Finds the index of the first value larger than the given value */
+	inline
+	size_t FindIndexOfFirstLargerThan(const std::vector<double>& list, double val) {
+		// TODO use bisection search here if list is sorted!
+		for(std::vector<double>::const_iterator it=list.begin(); it!=list.end(); ++it) {
+			if(*it >= val) {
+				return it - list.begin();
+			}
+		}
+		throw InvalidDistributionException(); // TODO throw a different exception here!
+	}
+
+	/** Randomly picks one elements from a density function of a discrete probability distribution */
+	inline
+	size_t SampleDensity(const std::vector<double>& density) {
+		double r = RandomNumbers::Uniform<double>(density.back());
+		return FindIndexOfFirstLargerThan(density, r);
+		// TODO catch possible exceptions and transfer to InvalidDistributionException
+	}
+
+	/** Randomly picks several elements from a density function of a discrete probability distribution */
+	inline
+	std::vector<size_t> SampleDensity(const std::vector<double>& density, size_t count) {
+		std::vector<size_t> picked;
+		picked.reserve(count);
+		for(size_t i=0; i<count; ++i) {
+			size_t p = SampleDensity(density);
+			picked.push_back(p);
+		}
+		return picked;
+	}
+
+	/** Randomly picks several elements from a discrete probability distribution */
+	template<typename K>
+	std::vector<size_t> DrawFromDistribution(const std::vector<K>& distribution, size_t count) {
+		std::vector<double> density = ComputeDensityUnnormalized(distribution);
+		return SampleDensity(density, count);
+	}
+
+}
+
 /** A set of states with scores providing several convenience functions */
 template<typename State, typename Score>
 struct TSampleSet
 : public Danvil::Print::IPrintable
 {
-	struct EmptySampleSetException {};
-
-	struct CanNotNormalizeZeroListException {};
-
-	struct InvalidDistributionException {};
-
 	typedef TSample<State,Score> Sample;
 
 	TSampleSet() { }
 
 	TSampleSet(const std::vector<State>& states) {
 		Add(states);
+		ResetWeights();
 	}
 
 	TSampleSet(const std::vector<Sample>& samples) {
@@ -52,18 +157,21 @@ struct TSampleSet
 	void Reserve(size_t n) {
 		states_.reserve(n);
 		scores_.reserve(n);
+		weights_.reserve(n);
 	}
 
 	/** Resizes samples storage (will contain garbage!) */
 	void Resize(size_t n) {
 		states_.resize(n);
 		scores_.resize(n);
+		weights_.resize(n);
 	}
 
 	/** Adds a sample */
 	void Add(const State& state, Score score=C_UNKNOWN_SCORE) {
 		states_.push_back(state);
 		scores_.push_back(score);
+		weights_.push_back(0.0);
 	}
 
 	/** Adds a sample */
@@ -75,13 +183,15 @@ struct TSampleSet
 	/** Adds states (and sets score to unkown) */
 	void Add(const std::vector<State>& states) {
 		states_.insert(states_.end(), states.begin(), states.end());
-		scores_.insert(scores_.end(), C_UNKNOWN_SCORE);
+		scores_.insert(scores_.end(), states.size(), C_UNKNOWN_SCORE);
+		weights_.insert(weights_.end(), states.size(), 0.0);
 	}
 
 	/** Adds samples from another sample set */
 	void Add(const TSampleSet& data) {
 		states_.insert(states_.end(), data.states_.begin(), data.states_.end());
 		scores_.insert(scores_.end(), data.scores_.begin(), data.scores_.end());
+		weights_.insert(weights_.end(), data.weights_.begin(), data.weights_.end());
 	}
 
 	/** Adds samples from another sample set */
@@ -102,6 +212,11 @@ struct TSampleSet
 		return scores_[i];
 	}
 
+	/** Gets i-th score */
+	double weight(size_t i) const {
+		return weights_[i];
+	}
+
 	/** Sets i-th state vector */
 	void set_state(size_t i, const State& u) {
 		states_[i] = u;
@@ -112,9 +227,14 @@ struct TSampleSet
 		scores_[i] = s;
 	}
 
+	/** Sets i-th score */
+	void set_weight(size_t i, double s) {
+		weights_[i] = s;
+	}
+
 	/** Creates a sample for entry i */
 	Sample CreateSample(size_t i) const {
-		return Sample(state(i), score(i));
+		return Sample(state(i), score(i), weight(i));
 	}
 
 	/** Gets list of all states in the set */
@@ -123,121 +243,106 @@ struct TSampleSet
 	/** Gets list of all scores in the set */
 	const std::vector<Score>& scores() const { return scores_; }
 
+	const std::vector<double>& weights() const { return weights_; }
+
 	/** Sets all scores */
 	void SetAllScores(const std::vector<Score>& scores) {
 		assert(scores.size() == Size());
 		scores_ = scores;
 	}
 
-//	void SetScoresIndexed(const std::vector<Score>& scores, const std::vector<size_t>& indices) {
-//		for(size_t i=0; i<count(); i++) {
-//			setScore(indices[i], scores[i]);
-//		}
-//	}
-
-//	std::vector<State> GetStatesWithUnknownScore(std::vector<size_t>& indices) const {
-//		indices.clear();
-//		std::vector<State> unknown_states;
-//		indices.reserve(count());
-//		unknown_states.reserve(count());
-//		size_t i = 0;
-//		for(typename std::vector<Sample>::const_iterator it=_samples.begin(); it!=_samples.end(); ++it, i++) {
-//			if(it->isScoreUnknown()) {
-//				indices.push_back(i);
-//				unknown_states.push_back(it->state());
-//			}
-//		}
-//		return unknown_states;
-//	}
-
-//	bool AreAllStatesUnevaluated() const {
-//		for(typename std::vector<Sample>::const_iterator it=_samples.begin(); it!=_samples.end(); ++it) {
-//			if(it->isScoreKnown()) {
-//				return false;
-//			}
-//		}
-//		return true;
-//	}
-
-	std::vector<double> ComputeScoreDensityUnnormalized(double* sum) const {
-		if(Size() == 0) {
-			throw CanNotNormalizeZeroListException();
+	/** Sets all scores */
+	void SetAllScores(Score score) {
+		for(size_t i=0; i<scores_.size(); i++) {
+			scores_[i] = score;
 		}
-		// we first build the density using the unnormalized scores
-		std::vector<double> density;
-		density.reserve(Size());
-		double last = 0;
-		for(size_t i=0; i<Size(); i++) {
-			last += (double)score(i);
-			density.push_back(last);
-		}
-		// 'last' is now the total sum of all scores
-		*sum = last;
-		return density;
 	}
 
-	/** Computes the density of the probability distribution got by normalizing the samples scores */
-	std::vector<double> ComputeScoreDensity() const {
-		// we first build the density using the unnormalized scores
-		double sum;
-		std::vector<double> density = ComputeScoreDensityUnnormalized(&sum);
-		// 'sum' is now the total sum of all scores
-		// using this we perform the normalization
-		if(sum == 0) {
-			throw CanNotNormalizeZeroListException();
+	void SetAllWeights(double weight) {
+		for(size_t i=0; i<weights_.size(); i++) {
+			weights_[i] = weight;
 		}
-		double scl = 1.0 / sum;
-		for(std::vector<double>::iterator it=density.begin(); it!=density.end(); ++it) {
-			*it *= scl;
-		}
-		return density;
 	}
 
-	/** Finds the index of the first value larger than the given value */
-	static size_t FindIndexOfFirstLargerThan(const std::vector<double>& list, double val) {
-		// TODO use bisection search here if list is sorted!
-		for(std::vector<double>::const_iterator it=list.begin(); it!=list.end(); ++it) {
-			if(*it >= val) {
-				return it - list.begin();
-			}
-		}
-		throw InvalidDistributionException(); // TODO throw a different exception here!
+	void ResetWeights() {
+		double w = 1.0 / double(weights_.size());
+		SetAllWeights(w);
 	}
 
-	/** Randomly picks a value from a discreet probability distribution */
-	static size_t RandomPickFromDensity(const std::vector<double>& density, double sum=1.0) {
-		double r = RandomNumbers::Uniform<double>(sum);
-		return FindIndexOfFirstLargerThan(density, r);
-		// TODO catch possible exceptions and transfer to InvalidDistributionException
+	std::vector<double> ComputeScoreDensity() {
+		return SamplingTools::ComputeDensity(scores_);
 	}
 
-public:
-	/** Randomly picks n samples using a probability which is proportional to the sample score */
+	std::vector<double> ComputeWeightDensity() {
+		return SamplingTools::ComputeDensity(weights_);
+	}
+
 	TSampleSet DrawByScore(unsigned int n) const {
-		double sum;
-		std::vector<double> density = ComputeScoreDensityUnnormalized(&sum);
-		TSampleSet picked;
-		picked.Reserve(n);
-		for(unsigned int i=0; i<n; ++i) {
-			size_t p = RandomPickFromDensity(density, sum);
-			picked.Add(state(p), score(p));
+		std::vector<size_t> picked = SamplingTools::DrawFromDistribution(scores_, n);
+		TSampleSet picked_samples;
+		picked_samples.Reserve(picked.size());
+		for(unsigned int i=0; i<picked.size(); ++i) {
+			size_t p = picked[i];
+			picked_samples.Add(state(p), score(p));
 		}
-		return picked;
+		return picked_samples;
 	}
 
-	/** Randomly picks n samples using a probability which is proportional to the sample score */
-	void Resample(unsigned int n) {
-		double sum;
-		std::vector<double> density = ComputeScoreDensityUnnormalized(&sum);
+//	/** Randomly picks n samples using a probability which is proportional to the sample score */
+//	TSampleSet DrawByScore(unsigned int n) const {
+//		return DrawByScore(scores_, n);
+//	}
+
+	/** Randomly picks n samples using a probability which is proportional to the sample weight and sets weight to 1/n */
+	void Resample(size_t n) {
+		std::vector<size_t> picked = SamplingTools::DrawFromDistribution(weights_, n);
 		std::vector<State> old_states = states_;
 		std::vector<Score> old_scores = scores_;
-		states_.resize(n);
-		scores_.resize(n);
-		for(unsigned int i=0; i<n; ++i) {
-			size_t p = RandomPickFromDensity(density, sum);
+		Resize(picked.size());
+		double w = 1.0 / picked.size();
+		for(size_t i=0; i<picked.size(); ++i) {
+			size_t p = picked[i];
+			BOOST_ASSERT(p < old_states.size());
 			states_[i] = old_states[p];
 			scores_[i] = old_scores[p];
+			weights_[i] = w;
 		}
+	}
+
+	template<class Op>
+	void WeightedResample(const Op& importance_function) {
+		// evaluate importance function
+		std::vector<Score> importance = importance_function(states());
+		//std::vector<double> importance_weights = SamplingTools::Normalize(importance);
+		// weights are normalized afterwards, so we do not have to normalize importance weights
+		// pick random samples
+		std::vector<double> density = SamplingTools::ComputeDensityUnnormalized(importance);
+		std::vector<size_t> picked = SamplingTools::SampleDensity(density, Size());
+		// pick samples
+		std::vector<State> old_states = states_;
+		std::vector<Score> old_scores = scores_;
+		std::vector<double> old_weights = weights_;
+		states_.resize(picked.size());
+		scores_.resize(picked.size());
+		weights_.resize(picked.size());
+		for(unsigned int i=0; i<picked.size(); i++) {
+			size_t p = picked[i];
+			states_[i] = old_states[p];
+			scores_[i] = importance[p]; // set to importance // TODO leave score unchanged?
+			weights_[i] = old_weights[p] / double(importance[p]); // adapt sample weight!
+		}
+		// normalize weights
+		SamplingTools::Normalize(weights_);
+	}
+
+	template<class Op>
+	void ComputeLikelihood(const Op& f) {
+		scores_ = f(states());
+		for(unsigned int i=0; i<Size(); i++) {
+			weights_[i] *= double(scores_[i]);
+		}
+		// normalize weights
+		SamplingTools::Normalize(weights_);
 	}
 
 private:
@@ -259,27 +364,18 @@ public:
 	template<class Space, typename K>
 	void RandomizeStates(const Space& space, const std::vector<K>& noise) {
 		TransformStates(FunctionRandomizeState<Space,K>(space, noise));
-//		for(size_t i=0; i<Size(); ++i) {
-//			this->set_state(i, space.random(state(i), noise));
-//		}
 	}
 
 	/** Transforms all states by a function (invalidates scores) */
-	template<class Function>
-	void TransformStates(const Function& f) {
+	template<class Op>
+	void TransformStates(const Op& f) {
 		std::transform(states_.begin(), states_.end(), states_.begin(), f);
-//		for(size_t i=0; i<Size(); ++i) {
-//			this->set_state(i, op(state(i)));
-//		}
 	}
 
 	/** Transforms all scores with a function */
-	template<class Function>
-	void TransformScores(const Function& f) {
+	template<class Op>
+	void TransformScores(const Op& f) {
 		std::transform(scores_.begin(), scores_.end(), scores_.begin(), f);
-//		for(size_t i=0; i<Size(); ++i) {
-//			this->set_score(i, mapper(score(i)));
-//		}
 	}
 
 //	/** Evaluates only unknown samples */
@@ -297,11 +393,11 @@ public:
 //		}
 //	}
 
-	/** Computes scores for all states using an evaluation functin */
-	template<class Function>
-	void EvaluateAll(const Function& f) {
-		scores_ = f(states());
-	}
+//	/** Computes scores for all states using an evaluation functin */
+//	template<class Function>
+//	void EvaluateAll(const Function& f) {
+//		scores_ = f(states());
+//	}
 
 	template<class CMP>
 	void FindBestAndWorstScore(Score& best, Score& worst) const {
@@ -450,7 +546,7 @@ public:
 
 	/** Prints all samples as a list */
 	void print(std::ostream& os) const {
-		os << "[Sample Set = {";
+		os << "[Samples = {";
 		for(size_t i=0; i<Size(); i++) {
 			os << CreateSample(i) << ", ";
 		}
@@ -458,9 +554,17 @@ public:
 	}
 
 	void printScores(std::ostream& os) const {
-		os << "[Sample Set = {";
+		os << "[Sample Scores = {";
 		for(size_t i=0; i<Size(); i++) {
 			os << score(i) << ", ";
+		}
+		os << "}]" << std::endl;
+	}
+
+	void printScoresAndWeights(std::ostream& os) const {
+		os << "[Sample Weights/Scores = {";
+		for(size_t i=0; i<Size(); i++) {
+			os << "(" << weight(i) << ", " << score(i) << "), ";
 		}
 		os << "}]" << std::endl;
 	}
@@ -475,7 +579,7 @@ public:
 
 	/** Prints all samples, one line per sample */
 	void printInLines(std::ostream& os) const {
-		os << "[Sample Set = {\n";
+		os << "[Samples = {\n";
 		for(size_t i=0; i<Size(); i++) {
 			os << "\t" << CreateSample(i) << "\n";
 		}
@@ -483,11 +587,14 @@ public:
 	}
 
 private:
-	// list of states
+	// list of particle states
 	std::vector<State> states_;
 
-	// list of scores
+	// list of particle scores
 	std::vector<Score> scores_;
+
+	// list of particle weights in the representation of the probability distribution
+	std::vector<double> weights_;
 
 };
 

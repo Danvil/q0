@@ -242,7 +242,7 @@ namespace Cartesian {
 				for(size_t i=0; i<dimension(); i++) {
 					// build the sample interval [c1,c2]
 					S n = S(noise[i]);
-					assert(n); // noise must be positive!
+					assert(n >= S(0)); // noise must be positive!
 					S c1 = center[i] - n;
 					S c2 = center[i] + n;
 					assert(min_[i] < c2 && c1 < max_[i]); // hopefully the intervals overlap

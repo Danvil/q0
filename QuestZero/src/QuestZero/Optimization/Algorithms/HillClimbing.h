@@ -191,7 +191,7 @@ struct HillClimbing
 					samples.set_state(k, space.compose(current, delta));
 				}
 				// evaluate states
-				samples.EvaluateAll(function);
+				samples.ComputeLikelihood(function);
 				// notify resent steps
 				this->NotifySamples(samples);
 				// find best candidate
@@ -218,7 +218,7 @@ struct HillClimbing
 				|| IsBetter<Score,DoMinimize>(current_score, settings_.goal_)
 				|| std::abs(current_score - last_score) < cAccuracy
 			) {
-				return Sample(current, current_score);
+				return Sample(current, current_score, 1.0);
 			}
 			last_score = current_score;
 		}

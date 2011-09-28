@@ -23,7 +23,7 @@ namespace Q0 {
 
 struct Partition
 {
-	std::vector<size_t> state_ids_;
+	std::vector<size_t> noise_indices_;
 	unsigned long particle_count_;
 	unsigned long annealing_layers_;
 	float alpha_;
@@ -34,10 +34,13 @@ struct PartitionParticleFilterParameters
 {
 	PartitionParticleFilterParameters() {
 		repetition_count_ = 1;
+		particle_count_ = 1024;
 		noise_suppression_factor_ = 0.05;
 	}
 
 	unsigned int repetition_count_;
+
+	unsigned int particle_count_;
 
 	double noise_suppression_factor_;
 
@@ -63,10 +66,64 @@ struct PartitionParticleFilter
 
 	PartitionParticleFilterParameters params_;
 
-	static const unsigned int cInitialCount_ = 1000;
-
+	/** Partition sampling */
 	template<class Space, class VarFunction, class MotionModel>
 	Solution Track(const Range& range, const Space& space, const VarFunction& function, MotionModel motion) {
+		BOOST_ASSERT(UseAnnealing == false);
+		typedef BetterMeansBigger<Score> CMP;
+		Solution sol = range.solution_;
+		motion.SetSuppressionFactor(params_.noise_suppression_factor_);
+		// pin down varying function
+		PinnedFunction<Time, State, Score, VarFunction> pinned(function);
+		// create initial sample set
+		SampleSet open_samples(this->pickMany(space, params_.particle_count_));
+		// tracking loop
+		for(size_t tt=range.begin_; tt<range.end_; tt+=range.strive_) {
+			// set pin down time
+			pinned.setTime(sol.GetTime(tt));
+			// only the first time: evaluate initial sample set
+			if(tt == range.begin_) {
+				open_samples.ComputeLikelihood(pinned);
+				//open_samples.printScoresAndWeights(std::cout);
+			}
+			// create new sample set using weighted random drawing and set score to 1/n
+			try{
+				open_samples.Resample(params_.particle_count_);
+				//open_samples.printScoresAndWeights(std::cout);
+			} catch(CanNotNormalizeZeroListException&) {
+				LOG_WARNING << "All samples have a score of zero. This means the tracker lost the object!";
+				// tracker lost the object
+				return sol;
+			}
+			// process all partitions one after another
+			// TODO branching?
+			for(std::vector<Partition>::const_iterator it=params_.partitions_.begin(); it!=params_.partitions_.end(); ++it) {
+				std::cout << "Partition " << (it - params_.partitions_.begin()) << " '" << it->name_ << "'" << std::endl;
+				// apply motion model for the current partition only by setting the noise of other partitions to 0 (or the suppression factor)
+				motion.SetPartition(it->noise_indices_);
+				open_samples.TransformStates(motion);
+				// perform a weighted resampling (currently using the normal evaluation function)
+				open_samples.WeightedResample(pinned); // TODO partial resampling - use partition particle counts
+				//open_samples.printScoresAndWeights(std::cout);
+				// notify samples
+				this->NotifySamples(open_samples);
+			}
+			// compute likelihood
+			open_samples.ComputeLikelihood(pinned);
+			//open_samples.printScoresAndWeights(std::cout);
+			// notify samples
+			this->NotifySamples(open_samples);
+			// save best sample
+			sol.Set(tt, this->template take<Space, CMP>(space, open_samples));
+			// tracing
+//			this->NotifySamples(open_samples);
+			this->NotifySolution(sol);
+		}
+		return sol;
+	}
+
+	template<class Space, class VarFunction, class MotionModel>
+	Solution TrackOld(const Range& range, const Space& space, const VarFunction& function, MotionModel motion) {
 		typedef BetterMeansBigger<Score> CMP;
 		Solution sol = range.solution_;
 		// pin down varying function
@@ -76,7 +133,7 @@ struct PartitionParticleFilter
 		//         This way the optimizations are not completely independent, but as the noise
 		//         at the beginning should be low it should not matter.
 		//         Perhaps it is even better ...
-		SampleSet open_samples(this->pickMany(space, cInitialCount_));
+		SampleSet open_samples(this->pickMany(space, params_.particle_count_));
 		// tracking loop
 		for(size_t tt=range.begin_; tt<range.end_; tt+=range.strive_) {
 			// set pin down time
@@ -91,7 +148,7 @@ struct PartitionParticleFilter
 				for(std::vector<Partition>::const_iterator it=params_.partitions_.begin(); it!=params_.partitions_.end(); ++it) {
 					std::cout << "Partition " << (it - params_.partitions_.begin()) << " '" << it->name_ << "'" << std::endl;
 					// restrict noise to partition
-					motion.SetPartition(it->state_ids_, params_.noise_suppression_factor_);
+					motion.SetPartition(it->noise_indices_, params_.noise_suppression_factor_);
 					motion.SetNoiseAmount(1.0f);
 					// apply motion model which is simply white noise
 					open_samples.TransformStates(motion);
@@ -151,6 +208,11 @@ struct PartitionParticleFilter
 template<typename Time, typename State, typename Score, class StartingStates, class Take, class NotifySamples, class NotifySolution>
 struct PartitionParticleFilterWithAnnealing
 : public PartitionParticleFilter<Time, State, Score, StartingStates, Take, NotifySamples, NotifySolution, true>
+{};
+
+template<typename Time, typename State, typename Score, class StartingStates, class Take, class NotifySamples, class NotifySolution>
+struct PartitionParticleFilterNoAnnealing
+: public PartitionParticleFilter<Time, State, Score, StartingStates, Take, NotifySamples, NotifySolution, false>
 {};
 
 //---------------------------------------------------------------------------

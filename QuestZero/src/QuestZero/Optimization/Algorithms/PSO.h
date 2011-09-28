@@ -83,7 +83,7 @@ struct PSO
 			SampleSet samples = currentSamples();
 			// evaluate samples
 			LOG_DEBUG << "PSO: evaluate states";
-			samples.EvaluateAll(function);
+			samples.ComputeLikelihood(function);
 			// update global best
 			LOG_DEBUG << "PSO: update global best";
 			const Sample& best = samples.template FindBestSample<CMP>();

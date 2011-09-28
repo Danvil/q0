@@ -54,7 +54,7 @@ struct RND
 	Sample Optimize(const Space& space, const Function& function) {
 		SampleSet open(this->template pickMany(space, particleCount));
 		// evaluate initial samples
-		open.EvaluateAll(function);
+		open.ComputeLikelihood(function);
 		// update progress bar
 		this->NotifySamples(open);
 		// in every iteration add new particles, delete the worst particles
@@ -66,7 +66,7 @@ struct RND
 			SampleSet new_samples(space.template randomMany(particleCount));
 //			SampleSet new_samples(this->template pickMany(space, particleCount));
 			// evaluate the chunk
-			new_samples.EvaluateAll(function);
+			new_samples.ComputeLikelihood(function);
 			// add to open samples
 			open.Add(new_samples);
 			// pick the best

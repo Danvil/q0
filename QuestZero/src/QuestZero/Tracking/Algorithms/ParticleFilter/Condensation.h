@@ -53,13 +53,13 @@ struct Condensation
 			// apply motion model which is simply white noise
 			open_samples.TransformStates(motion);
 			// evaluate samples
-			open_samples.EvaluateAll(pinned);
+			open_samples.ComputeLikelihood(pinned);
 			// notify samples
 			this->NotifySamples(open_samples);
 			// resample using weighted random drawing
 			try{
 				open_samples.Resample(particle_count_);
-			} catch(typename SampleSet::CanNotNormalizeZeroListException&) {
+			} catch(CanNotNormalizeZeroListException&) {
 				LOG_WARNING << "All samples have a score of zero. This means the tracker lost the object!";
 				// tracker lost the object
 				return sol;

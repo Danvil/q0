@@ -76,7 +76,7 @@ struct ParticleAnnealing
 		const double cMaximalPossibleNoiseFactor = 1.0;
 		double scale = cMaximalPossibleNoiseFactor * (1.0 - settings_.alpha_); // starting value follows from geometric sum
 		// assert that scores are evaluated!
-		current.EvaluateAll(function);
+		current.ComputeLikelihood(function);
 		// iterate through layers
 		for(int m=settings_.layers_; m>0 ; m--) {
 			// find best beta with respect to current scores
@@ -94,12 +94,12 @@ struct ParticleAnnealing
 			// create new sample set using weighted random drawing
 			current.Resample(settings_.particle_count_);
 			// apply noise scaling
-			motion.SetNoiseAmount(scale);
+			motion.SetNoiseScale(scale);
 			scale *= settings_.alpha_;
 			// apply motion model to states
 			current.TransformStates(motion);
 			// find particle scores
-			current.EvaluateAll(function);
+			current.ComputeLikelihood(function);
 			this->NotifySamples(current);
 		}
 	}

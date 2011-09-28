@@ -47,9 +47,9 @@ struct Evolution
 	typedef typename ComparerSelector<Score,Minimize>::Result CMP;
 
 	Evolution() {
-		agent_count_ = 2048;
-		exchange_count_ = 256;
-		p_mutate_ = 0.3f;
+		agent_count_ = 1024;
+		p_mutate_ = 0.2f;
+		p_vary_low_ = 0.3f;
 		p_vary_high_ = 0.1f;
 		noise_low_factor_ = 1.0f;
 		noise_high_factor_ = 5.0f;
@@ -60,8 +60,8 @@ struct Evolution
 	std::string name() const { return "RND"; }
 
 	unsigned int agent_count_;
-	unsigned int exchange_count_;
 	float p_mutate_;
+	float p_vary_low_;
 	float p_vary_high_;
 	float noise_low_factor_;
 	float noise_high_factor_;
@@ -70,9 +70,11 @@ struct Evolution
 	template<class Space, class Function>
 	Sample Optimize(const Space& space, const Function& function) {
 		// preparations
-		unsigned int mutate_count = (unsigned int)(p_mutate_ * float(exchange_count_));
-		unsigned int vary_high_count = (unsigned int)(p_vary_high_ * float(exchange_count_));
-		unsigned int vary_low_count = exchange_count_ - mutate_count - vary_high_count;
+		int mutate_count = int(p_mutate_ * float(agent_count_));
+		int vary_low_count = int(p_vary_low_ * float(agent_count_));
+		int vary_high_count = int(p_vary_high_ * float(agent_count_));
+		int no_change = agent_count_ - mutate_count - vary_low_count - vary_high_count;
+		assert(no_change >= 0);
 		std::vector<double> noise_low = noise_;
 		std::vector<double> noise_high = noise_;
 		for(size_t i=0; i<noise_.size(); i++) {
@@ -83,48 +85,51 @@ struct Evolution
 		// get the initial set of samples
 		SampleSet open(this->template pickMany(space, agent_count_));
 		// evaluate initial samples
-		open.EvaluateAll(function);
+		open.SetAllWeights(1.0f);
+		open.ComputeLikelihood(function);
 		// update progress bar
 		this->NotifySamples(open);
 
 		// in every iteration add new particles, delete the worst particles
 		// iterate until a given condition is fulfilled
 		while(!this->IsTargetReached(open.template FindBestScore<CMP>())) {
-			// generate new samples
+			// generate new sample set
 			SampleSet new_samples;
-			new_samples.Reserve(exchange_count_);
+			new_samples.Reserve(agent_count_);
+			// pick probability of old samples
 			std::vector<double> density = open.ComputeScoreDensity();
 			// low vary
-			for(unsigned int i=0; i<vary_low_count; i++) {
-				size_t p = open.RandomPickFromDensity(density);
+			for(unsigned int i=0; i<(unsigned int)(vary_low_count); i++) {
+				size_t p = SamplingTools::SampleDensity(density);
 				State state = space.random(open.state(p), noise_low);
 				new_samples.Add(state);
 			}
-			// low vary
-			for(unsigned int i=0; i<vary_high_count; i++) {
-				size_t p = open.RandomPickFromDensity(density);
+			// high vary
+			for(unsigned int i=0; i<(unsigned int)(vary_high_count); i++) {
+				size_t p = SamplingTools::SampleDensity(density);
 				State state = space.random(open.state(p), noise_high);
 				new_samples.Add(state);
 			}
 			// mutate
-			for(unsigned int i=0; i<mutate_count; i++) {
-				size_t p1 = open.RandomPickFromDensity(density);
-				size_t p2 = open.RandomPickFromDensity(density);
+			for(unsigned int i=0; i<(unsigned int)(mutate_count); i++) {
+				size_t p1 = SamplingTools::SampleDensity(density);
+				size_t p2 = SamplingTools::SampleDensity(density);
 				State state = space.weightedSum(0.5f, open.state(p1), 0.5f, open.state(p2));
 				new_samples.Add(state);
 			}
-			assert(new_samples.Size() == exchange_count_);
+			// no change
+			for(unsigned int i=0; i<(unsigned int)(no_change); i++) {
+				size_t p = SamplingTools::SampleDensity(density);
+				const State& state = open.state(p);
+				new_samples.Add(state);
+			}
+			assert(new_samples.Size() == agent_count_);
 
-			// evaluate new samples
-			new_samples.EvaluateAll(function);
-
-			// remove worst particles
-			assert(open.Size() == agent_count_);
-			open = open.template DrawByScore(agent_count_ - exchange_count_);
-
-			// add new samples
-			open.Add(new_samples);
-			assert(open.Size() == agent_count_);
+			// use samples as new sample set and evaluate
+			open = new_samples;
+			open.SetAllWeights(1.0f);
+			open.ComputeLikelihood(function);
+			open.printScores(std::cout);
 
 			// update progress bar
 			this->NotifySamples(open);
