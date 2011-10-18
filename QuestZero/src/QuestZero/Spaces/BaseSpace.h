@@ -10,6 +10,7 @@
 //---------------------------------------------------------------------------
 #include "QuestZero/Policies/OperationFinalPolicy.h"
 #include <vector>
+#include <cstddef>
 //---------------------------------------------------------------------------
 namespace Q0 {
 namespace Spaces {
