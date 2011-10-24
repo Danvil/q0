@@ -104,6 +104,8 @@ namespace SO3 {
 		{
 			typedef Danvil::SO3::Quaternion<K> State;
 
+			Full() {}
+
 			size_t dimension() const {
 				return 3;
 			}
