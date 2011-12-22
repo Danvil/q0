@@ -367,7 +367,11 @@ namespace SO3 {
 	>
 	struct FullSO3Space
 	: public BaseSpace<Danvil::SO3::Quaternion<K>, Operator, Domain, OperationFinal>
-	{ };
+	{
+		virtual void print(std::ostream& os) const {
+			os << "FullSO3Space";
+		}
+	};
 
 	template<
 		typename K,
@@ -377,7 +381,12 @@ namespace SO3 {
 	>
 	struct ConeTwistSpace
 	: public BaseSpace<Danvil::SO3::Quaternion<K>, Operator, Domain, OperationFinal>
-	{ };
+	{
+		virtual void print(std::ostream& os) const {
+			os << "ConeTwistSpace";
+		}
+	};
+
 }
 
 //---------------------------------------------------------------------------

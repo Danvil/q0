@@ -112,7 +112,7 @@ struct MultiplierState
 	}
 
 	void print(std::ostream& os) const {
-		os << "[X: ";
+		os << "[X(" << count() << "): ";
 		for(size_t i=0; i<count(); ++i) {
 			//os << i << "=" << sub_[i];
 			os << sub_[i];
@@ -144,6 +144,7 @@ private:
 
 template<typename BaseSpace, typename State_, typename BT=typename State_::BaseState>
 struct MultiplierSpace
+: public Danvil::Print::IPrintable
 {
 	typedef State_ State;
 
@@ -154,6 +155,18 @@ struct MultiplierSpace
 	MultiplierSpace(SizePolicy sp=SizePolicy())
 	: size_policy_(sp) {
 		spaces_ = boost::shared_array<BaseSpace>(new BaseSpace[count()]);
+	}
+
+	void print(std::ostream& os) const {
+		os << "[X(" << count() << "): ";
+		for(size_t i=0; i<count(); ++i) {
+			//os << i << "=" << sub_[i];
+			os << spaces_[i];
+			if(i != count() - 1) {
+				os << ", ";
+			}
+		}
+		os << "]";
 	}
 
 	/** Number of parts */

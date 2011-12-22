@@ -136,7 +136,8 @@ private:
 
 template<class Typelist_, class State_>
 struct TypelistSpace
-: public Loki::Tuple<Typelist_>
+: public Loki::Tuple<Typelist_>,
+  public Danvil::Print::IPrintable
 {
 	typedef State_ State;
 	typedef Typelist_ Typelist;
@@ -161,6 +162,12 @@ struct TypelistSpace
 	template<int i>
 	void setSpace(const typename Loki::TL::TypeAt<Typelist, i>::Result& space) {
 		Loki::Field<i>(*this) = space;
+	}
+
+	void print(std::ostream& os) const {
+		os << "[TL: ";
+		printImpl(Loki::Int2Type<0>(), os);
+		os << "]";
 	}
 
 	unsigned int dimension() const {
@@ -273,6 +280,17 @@ struct TypelistSpace
 	}
 
 private:
+	template<int i>
+	void printImpl(Loki::Int2Type<i>, std::ostream& os) const {
+		os << space<i>();
+		if(i != N - 1) {
+			os << ", ";
+		}
+		printImpl(Loki::Int2Type<i+1>(), os);
+	}
+
+	void printImpl(Loki::Int2Type<N>, std::ostream&) const {}
+
 	template<int i>
 	void dimensionImpl(Loki::Int2Type<i>, unsigned int& sum) const {
 		sum += space<i>().dimension();

@@ -9,6 +9,7 @@
 #define SPACE_H_
 //---------------------------------------------------------------------------
 #include "QuestZero/Policies/OperationFinalPolicy.h"
+#include <Danvil/Print.h>
 #include <vector>
 #include <cstddef>
 //---------------------------------------------------------------------------
@@ -25,11 +26,16 @@ template<
 struct BaseSpace
 : public Operator,
   public Domain,
-  public OperationFinal
+  public OperationFinal,
+  public Danvil::Print::IPrintable
 {
 	typedef State_ State;
 
 	typedef double K;
+
+	virtual void print(std::ostream& os) const {
+		os << "BaseSpace";
+	}
 
 	/** Distance between two states */
 	K distance(const State& a, const State& b) const {

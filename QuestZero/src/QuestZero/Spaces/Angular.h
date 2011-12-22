@@ -355,17 +355,29 @@ namespace Angular {
 	>
 	struct AngularSpace
 	: public BaseSpace<State, Operator, Domain>
-	{ };
+	{
+		virtual void print(std::ostream& os) const {
+			os << "AngularSpace";
+		}
+	};
 
 	template<typename State>
 	struct FullAngularSpace
 	: public AngularSpace<State, Domains::Full<State> >
-	{ };
+	{
+		virtual void print(std::ostream& os) const {
+			os << "FullAngularSpace";
+		}
+	};
 
 	template<typename State>
 	struct IntervalAngularSpace
 	: public AngularSpace<State, Domains::Interval<State> >
-	{ };
+	{
+		virtual void print(std::ostream& os) const {
+			os << "IntervalAngularSpace";
+		}
+	};
 
 }
 

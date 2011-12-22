@@ -337,22 +337,38 @@ namespace Cartesian {
 	>
 	struct CartesianSpace
 	: public BaseSpace<State, Operator, Domain, OperationFinal>
-	{ };
+	{
+		virtual void print(std::ostream& os) const {
+			os << "CartesianSpace";
+		}
+	};
 
 	template<typename State>
 	struct InfiniteCartesianSpace
 	: public CartesianSpace<State, Domains::Infinite<State>, Operations::Linear<State>, OperationFinalPolicy::Unprojected<State> >
-	{ };
+	{
+		virtual void print(std::ostream& os) const {
+			os << "InfiniteCartesianSpace";
+		}
+	};
 
 	template<typename State>
 	struct FiniteCartesianSpace
 	: public CartesianSpace<State, Domains::Box<State> >
-	{ };
+	{
+		virtual void print(std::ostream& os) const {
+			os << "FiniteCartesianSpace";
+		}
+	};
 
 	template<typename K>
 	struct IntervalSpace
 	: public CartesianSpace<K, Domains::Interval<K> >
-	{ };
+	{
+		virtual void print(std::ostream& os) const {
+			os << "IntervalSpace";
+		}
+	};
 
 }
 
