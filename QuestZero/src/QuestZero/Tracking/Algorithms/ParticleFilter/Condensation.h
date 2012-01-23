@@ -25,34 +25,31 @@ namespace Q0 {
  * This algorithms tries to maximize the function values.
  * The number of function evaluations per time step is exactly equal to the number of particles.
  */
-template<typename Time, typename State, typename Score, class StartingStates, class Take, class NotifySamples, class NotifySolution>
+template<typename State, typename Score, class TimeControl, class StartingStates, class Take, class NotifySamples, class NotifySolution>
 struct Condensation
-: public StartingStates,
+: public TimeControl,
+  public StartingStates,
   public Take,
   public NotifySamples,
   public NotifySolution
 {
-	typedef TSolution<Time, State, Score> Solution;
-	typedef TRange<Time, State, Score> Range;
 	typedef TSampleSet<State, Score> SampleSet;
 
 	unsigned long particle_count_;
 
 	template<class Space, class VarFunction, class MotionModel>
-	Solution Track(const Range& range, const Space& space, const VarFunction& function, MotionModel motion) {
+	void Track(const Space& space, const VarFunction& function, MotionModel motion) {
 		typedef BetterMeansBigger<Score> CMP;
-		// prepare the solution
-		Solution sol = range.solution_;
 		// pin down varying function
-		PinnedFunction<Time, State, Score, VarFunction> pinned(function);
+		PinnedFunction<unsigned int, State, Score, VarFunction> pinned(function);
 		// initialize sample set with random samples
 		SampleSet open_samples(this->pickMany(space, particle_count_));
 		// tracking loop (evaluate from first unknown til next known)
-		for(size_t tt=range.begin_; tt<range.end_; tt+=range.strive_) {
+		for(unsigned int i=0; this->isRunning(i); i++) {
 			DANVIL_BENCHMARK_START(Q0_Condensation)
 			// set pin down time
 //			DANVIL_BENCHMARK_START(Q0_Condensation_SetTime)
-			pinned.setTime(sol.GetTime(tt));
+			pinned.setTime(i);
 //			DANVIL_BENCHMARK_STOP(Q0_Condensation_SetTime)
 			// apply motion model which is simply white noise
 //			DANVIL_BENCHMARK_START(Q0_Condensation_Transform)
@@ -62,10 +59,6 @@ struct Condensation
 			DANVIL_BENCHMARK_START(Q0_Condensation_Likelihood)
 			open_samples.ComputeLikelihood(pinned);
 			DANVIL_BENCHMARK_STOP(Q0_Condensation_Likelihood)
-			// notify samples
-			DANVIL_BENCHMARK_START(Q0_Condensation_NotifySamples)
-			this->NotifySamples(open_samples);
-			DANVIL_BENCHMARK_STOP(Q0_Condensation_NotifySamples)
 			// resample using weighted random drawing
 //			DANVIL_BENCHMARK_START(Q0_Condensation_Resample)
 			try{
@@ -73,24 +66,25 @@ struct Condensation
 			} catch(CanNotNormalizeZeroListException&) {
 				LOG_WARNING << "All samples have a score of zero. This means the tracker lost the object!";
 				// tracker lost the object
-				return sol;
+				return;
 			}
 //			DANVIL_BENCHMARK_STOP(Q0_Condensation_Resample)
-			// save best sample
-			sol.Set(tt, this->template take<Space, CMP>(space, open_samples));
-			// tracing
+			// notify all samples
+			DANVIL_BENCHMARK_START(Q0_Condensation_NotifySamples)
+			this->NotifySamples(i, open_samples);
+			DANVIL_BENCHMARK_STOP(Q0_Condensation_NotifySamples)
+			// notify picked best sample
 			DANVIL_BENCHMARK_START(Q0_Condensation_NotifySolution)
-			this->NotifySolution(sol);
+			this->NotifySolution(i, this->template take<Space, CMP>(space, open_samples));
 			DANVIL_BENCHMARK_STOP(Q0_Condensation_NotifySolution)
 			DANVIL_BENCHMARK_STOP(Q0_Condensation)
 		}
-		return sol;
 	}
 
 	template<class Space, class VarFunction>
-	Solution TrackWhiteNoise(const Range& range, const Space& space, const VarFunction& function, const std::vector<double>& noise) {
+	void TrackWhiteNoise(const Space& space, const VarFunction& function, const std::vector<double>& noise) {
 		MotionModels::SpaceRandomMotionModel<Space> motion(space, noise);
-		return Track(range, space, function, motion);
+		Track(space, function, motion);
 	}
 
 };
