@@ -25,13 +25,13 @@ namespace Q0 {
  * This algorithms tries to maximize the function values.
  * The number of function evaluations per time step is exactly equal to the number of particles.
  */
-template<typename State, typename Score, class TimeControl, class StartingStates, class Take, class NotifySamples, class NotifySolution>
+template<typename State, typename Score, class TimeControl, class StartingStates, class Take, class NotifySamples, class NotifyResult>
 struct Condensation
 : public TimeControl,
   public StartingStates,
   public Take,
   public NotifySamples,
-  public NotifySolution
+  public NotifyResult
 {
 	typedef TSampleSet<State, Score> SampleSet;
 
@@ -45,11 +45,11 @@ struct Condensation
 		// initialize sample set with random samples
 		SampleSet open_samples(this->pickMany(space, particle_count_));
 		// tracking loop (evaluate from first unknown til next known)
-		for(unsigned int i=0; this->isRunning(i); i++) {
+		for(unsigned int tt=0; this->isRunning(tt); tt++) {
 			DANVIL_BENCHMARK_START(Q0_Condensation)
 			// set pin down time
 //			DANVIL_BENCHMARK_START(Q0_Condensation_SetTime)
-			pinned.setTime(i);
+			pinned.setTime(tt);
 //			DANVIL_BENCHMARK_STOP(Q0_Condensation_SetTime)
 			// apply motion model which is simply white noise
 //			DANVIL_BENCHMARK_START(Q0_Condensation_Transform)
@@ -71,12 +71,12 @@ struct Condensation
 //			DANVIL_BENCHMARK_STOP(Q0_Condensation_Resample)
 			// notify all samples
 			DANVIL_BENCHMARK_START(Q0_Condensation_NotifySamples)
-			this->NotifySamples(i, open_samples);
+			this->NotifySamples(open_samples);
 			DANVIL_BENCHMARK_STOP(Q0_Condensation_NotifySamples)
 			// notify picked best sample
-			DANVIL_BENCHMARK_START(Q0_Condensation_NotifySolution)
-			this->NotifySolution(i, this->template take<Space, CMP>(space, open_samples));
-			DANVIL_BENCHMARK_STOP(Q0_Condensation_NotifySolution)
+			DANVIL_BENCHMARK_START(Q0_Condensation_NotifyResult)
+			this->NotifyTimestepResult(tt, this->template take<Space, CMP>(space, open_samples));
+			DANVIL_BENCHMARK_STOP(Q0_Condensation_NotifyResult)
 			DANVIL_BENCHMARK_STOP(Q0_Condensation)
 		}
 	}

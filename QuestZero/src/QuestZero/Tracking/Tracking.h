@@ -11,29 +11,30 @@
 #include "QuestZero/Common/SampleSet.h"
 #include "QuestZero/Tracking/TimeRange.h"
 #include "QuestZero/Tracking/Solution.h"
-#include "QuestZero/Policies/TracePolicy.h"
-#include "QuestZero/Policies/InitialStatesPolicy.h"
-#include "QuestZero/Policies/TakePolicy.h"
-#include "QuestZero/Policies/TargetPolicy.h"
+#include "QuestZero/Policies.hpp"
 ///---------------------------------------------------------------------------
 namespace Q0 {
 //---------------------------------------------------------------------------
 
 template<
-	typename Time_,
 	typename State_,
 	typename Score_,
-	template<typename,typename,typename,class,class,class,class> class Algorithm,
+	template<typename,typename,class,class,class,class,class> class Algorithm,
+	class TimeControl = Policies::TimeControlDelegate,
 	template<typename> class SinglePicker = InitialStatesPolicy::RandomPicker,
 	template<typename,typename> class Take = TakePolicy::TakeMean,
 	template<typename,typename> class NotifySamples = TracePolicy::Samples::None,
-	template<typename,typename,typename> class NotifySolution = TracePolicy::Solution::None
+	template<typename,typename> class TimestepResult = Policies::TimestepResultDummy
 >
 struct Tracking
-: public Algorithm<Time_, State_, Score_, InitialStatesPolicy::ManyPicker<State_, SinglePicker>, Take<State_,Score_>, NotifySamples<State_, Score_>, NotifySolution<Time_, State_, Score_> >
+: public Algorithm<
+			State_, Score_,
+			TimeControl,
+			InitialStatesPolicy::ManyPicker<State_, SinglePicker>,
+			Take<State_,Score_>,
+			NotifySamples<State_, Score_>,
+			TimestepResult<State_, Score_> >
 {
-	typedef Time_ Time;
-
 	typedef State_ State;
 
 	typedef Score_ Score;

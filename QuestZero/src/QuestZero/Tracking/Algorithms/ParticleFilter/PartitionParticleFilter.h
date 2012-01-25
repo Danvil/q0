@@ -53,36 +53,34 @@ struct PartitionParticleFilterParameters
  * Total number of evaluations per time step:
  * 	# = RepetitionCount * sum_{i=1}^{PartitionCount}{ParticelCount_i * AnnealingLayerCount_i}
  */
-template<typename Time, typename State, typename Score, class StartingStates, class Take, class NotifySamples, class NotifySolution, bool UseAnnealing>
+template<typename State, typename Score, class TimeControl, class StartingStates, class Take, class NotifySamples, class TimestepResult, bool UseAnnealing>
 struct PartitionParticleFilter
-: public StartingStates,
+: public TimeControl,
+  public StartingStates,
   public Take,
   public NotifySamples,
-  public NotifySolution
+  public TimestepResult
 {
-	typedef TSolution<Time, State, Score> Solution;
-	typedef TRange<Time, State, Score> Range;
 	typedef TSampleSet<State, Score> SampleSet;
 
 	PartitionParticleFilterParameters params_;
 
 	/** Partition sampling */
 	template<class Space, class VarFunction, class MotionModel>
-	Solution Track(const Range& range, const Space& space, const VarFunction& function, MotionModel motion) {
+	void Track(const Space& space, const VarFunction& function, MotionModel motion) {
 		BOOST_ASSERT(UseAnnealing == false);
 		typedef BetterMeansBigger<Score> CMP;
-		Solution sol = range.solution_;
 		motion.SetSuppressionFactor(params_.noise_suppression_factor_);
 		// pin down varying function
-		PinnedFunction<Time, State, Score, VarFunction> pinned(function);
+		PinnedFunction<unsigned int, State, Score, VarFunction> pinned(function);
 		// create initial sample set
 		SampleSet open_samples(this->pickMany(space, params_.particle_count_));
 		// tracking loop
-		for(size_t tt=range.begin_; tt<range.end_; tt+=range.strive_) {
+		for(unsigned int tt=0; this->isRunning(tt); tt++) {
 			// set pin down time
-			pinned.setTime(sol.GetTime(tt));
+			pinned.setTime(tt);
 			// only the first time: evaluate initial sample set
-			if(tt == range.begin_) {
+			if(tt == 0) {
 				open_samples.ComputeLikelihood(pinned);
 				//open_samples.printScoresAndWeights(std::cout);
 			}
@@ -93,7 +91,7 @@ struct PartitionParticleFilter
 			} catch(CanNotNormalizeZeroListException&) {
 				LOG_WARNING << "All samples have a score of zero. This means the tracker lost the object!";
 				// tracker lost the object
-				return sol;
+				return;
 			}
 			// process all partitions one after another
 			// TODO branching?
@@ -111,23 +109,16 @@ struct PartitionParticleFilter
 			// compute likelihood
 			open_samples.ComputeLikelihood(pinned);
 			//open_samples.printScoresAndWeights(std::cout);
-			// notify samples
-			this->NotifySamples(open_samples);
-			// save best sample
-			sol.Set(tt, this->template take<Space, CMP>(space, open_samples));
 			// tracing
-//			this->NotifySamples(open_samples);
-			this->NotifySolution(sol);
+			this->NotifyTimestepResult(tt, this->template take<Space, CMP>(space, open_samples));
 		}
-		return sol;
 	}
 
 	template<class Space, class VarFunction, class MotionModel>
-	Solution TrackOld(const Range& range, const Space& space, const VarFunction& function, MotionModel motion) {
+	void TrackOld(const Space& space, const VarFunction& function, MotionModel motion) {
 		typedef BetterMeansBigger<Score> CMP;
-		Solution sol = range.solution_;
 		// pin down varying function
-		PinnedFunction<Time, State, Score, VarFunction> pinned(function);
+		PinnedFunction<unsigned int, State, Score, VarFunction> pinned(function);
 		// initialize sample set with random samples
 		// Remark: We use one sample and the same sample set for all individual optimizations
 		//         This way the optimizations are not completely independent, but as the noise
@@ -135,11 +126,11 @@ struct PartitionParticleFilter
 		//         Perhaps it is even better ...
 		SampleSet open_samples(this->pickMany(space, params_.particle_count_));
 		// tracking loop
-		for(size_t tt=range.begin_; tt<range.end_; tt+=range.strive_) {
+		for(unsigned int tt=0; this->isRunning(tt); tt++) {
 			// set pin down time
-			pinned.setTime(sol.GetTime(tt));
+			pinned.setTime(tt);
 			// evaluate the initially picked samples
-			if(tt == range.begin_) {
+			if(tt == 0) {
 				open_samples.EvaluateAll(pinned);
 			}
 			// several iterations
@@ -172,18 +163,14 @@ struct PartitionParticleFilter
 						} catch(typename SampleSet::CanNotNormalizeZeroListException&) {
 							LOG_WARNING << "All samples have a score of zero. This means the tracker lost the object!";
 							// tracker lost the object
-							return sol;
+							return;
 						}
 					}
 				}
 			}
-			// save best sample
-			sol.Set(tt, this->template take<Space, CMP>(space, open_samples));
 			// tracing
-//			this->NotifySamples(open_samples);
-			this->NotifySolution(sol);
+			this->NotifyTimestepResult(tt, this->template take<Space, CMP>(space, open_samples));
 		}
-		return sol;
 	}
 
 //	template<class Space, class VarFunction, class MotionModel>
@@ -192,9 +179,9 @@ struct PartitionParticleFilter
 //	}
 
 	template<class Space, class VarFunction>
-	Solution TrackWhiteNoise(const Range& range, const Space& space, const VarFunction& function, const std::vector<double>& noise) {
+	void TrackWhiteNoise(const Space& space, const VarFunction& function, const std::vector<double>& noise) {
 		MotionModels::SpaceRandomMotionModel<Space> motion(space, noise);
-		return Track(range, space, function, motion);
+		Track(space, function, motion);
 	}
 
 //	template<class Space, class VarFunction>
@@ -205,14 +192,14 @@ struct PartitionParticleFilter
 
 };
 
-template<typename Time, typename State, typename Score, class StartingStates, class Take, class NotifySamples, class NotifySolution>
+template<typename State, typename Score, class TimeControl, class StartingStates, class Take, class NotifySamples, class TimestepResult>
 struct PartitionParticleFilterWithAnnealing
-: public PartitionParticleFilter<Time, State, Score, StartingStates, Take, NotifySamples, NotifySolution, true>
+: public PartitionParticleFilter<State, Score,TimeControl,  StartingStates, Take, NotifySamples, TimestepResult, true>
 {};
 
-template<typename Time, typename State, typename Score, class StartingStates, class Take, class NotifySamples, class NotifySolution>
+template<typename State, typename Score, class TimeControl, class StartingStates, class Take, class NotifySamples, class TimestepResult>
 struct PartitionParticleFilterNoAnnealing
-: public PartitionParticleFilter<Time, State, Score, StartingStates, Take, NotifySamples, NotifySolution, false>
+: public PartitionParticleFilter<State, Score, TimeControl, StartingStates, Take, NotifySamples, TimestepResult, false>
 {};
 
 //---------------------------------------------------------------------------

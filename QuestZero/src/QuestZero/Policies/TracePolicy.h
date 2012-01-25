@@ -101,38 +101,52 @@ namespace TracePolicy
 		};
 
 	}
+}
 
-	/** Policies for solution notification */
-	namespace Solution
+/** Policies for solution notification */
+namespace Policies
+{
+	/** Does nothing */
+	template<typename State, typename Score>
+	struct TimestepResultDummy
 	{
-		/** Does nothing */
-		template<typename Time, typename State, typename Score>
-		struct None {
-			void NotifySolution(const TSolution<Time, State, Score>&) {}
-		};
-		/** Prints the solution to the console */
-		template<typename Time, typename State, typename Score>
-		struct Console {
-			void NotifySolution(const TSolution<Time, State, Score>& solution) {
-				std::cout << "Current solution: " << solution << std::endl;
+		typedef TSample<State, Score> SampleType;
+
+		void NotifyTimestepResult(unsigned int, const SampleType&) {}
+	};
+
+	/** Prints the current best sample to a stream */
+	template<typename State, typename Score>
+	struct TimestepResultCout
+	{
+		typedef TSample<State, Score> SampleType;
+
+		void NotifyTimestepResult(unsigned int time, const SampleType& sample) {
+			std::cout << "Current timestep: time=" << time << ", sample=" << sample << std::endl;
+		}
+	};
+
+	/** Forwards the current best notification to a delegate */
+	template<typename State, typename Score>
+	struct TimestepResultDelegate
+	{
+		typedef TSample<State, Score> SampleType;
+
+		typedef boost::function<void(unsigned int, const SampleType&)> TimestepResultDelegateType;
+
+		void SetTimestepResultDelegate(const TimestepResultDelegateType& f) {
+			timestep_result_delegate_ = f;
+		}
+
+		void NotifyTimestepResult(unsigned int time, const SampleType& sample) {
+			if(timestep_result_delegate_) {
+				timestep_result_delegate_(time, sample);
 			}
-		};
-		/** Forwards the call to a function */
-		template<typename Time, typename State, typename Score>
-		struct Forward {
-			typedef boost::function<void(const TSolution<Time, State, Score>&)> Functor;
-			void SetNotifySolutionFunctor(const Functor& f) {
-				solution_functor_ = f;
-			}
-			void NotifySolution(const TSolution<Time, State, Score>& solution) {
-				if(solution_functor_) {
-					solution_functor_(solution);
-				}
-			}
-		private:
-			Functor solution_functor_;
-		};
-	}
+		}
+
+	private:
+		TimestepResultDelegateType timestep_result_delegate_;
+	};
 }
 
 //---------------------------------------------------------------------------

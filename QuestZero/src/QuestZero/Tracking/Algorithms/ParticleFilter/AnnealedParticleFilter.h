@@ -38,25 +38,23 @@ struct AnnealedParticleFilterParameters
 /** Annealed particle filter
  * The maximal number of function evaluations per time step is: particle count * maximal layer count
  */
-template<typename Time, typename State, typename Score, class StartingStates, class Take, class NotifySamples, class NotifySolution>
+template<typename State, typename Score, class TimeControl, class StartingStates, class Take, class NotifySamples, class TimestepResult>
 struct AnnealedParticleFilter
-: public StartingStates,
+: public TimeControl,
+  public StartingStates,
   public Take,
   public NotifySamples,
-  public NotifySolution
+  public TimestepResult
 {
-	typedef TSolution<Time, State, Score> Solution;
-	typedef TRange<Time, State, Score> Range;
 	typedef TSampleSet<State, Score> SampleSet;
 
 	AnnealedParticleFilterParameters params_;
 
 	template<class Space, class VarFunction, class MotionModel>
-	Solution Track(const Range& range, const Space& space, const VarFunction& function, MotionModel motion) {
+	void Track(const Space& space, const VarFunction& function, MotionModel motion) {
 		typedef BetterMeansBigger<Score> CMP; // FIXME hardcoded!
-		Solution sol = range.solution_;
 		// pin down varying function
-		PinnedFunction<Time, State, Score, VarFunction> pinned(function);
+		PinnedFunction<unsigned int, State, Score, VarFunction> pinned(function);
 		// initialize sample set with random samples
 		// Remark: We use one sample and the same sample set for all individual optimizations
 		//         This way the optimizations are not completely independent, but as the noise
@@ -64,11 +62,11 @@ struct AnnealedParticleFilter
 		//         Perhaps it is even better ...
 		SampleSet open_samples;
 		// tracking loop
-		for(size_t tt=range.begin_; tt<range.end_; tt+=range.strive_) {
+		for(unsigned int tt=0; this->isRunning(tt); tt++) {
 			// set pin down time
-			pinned.setTime(sol.GetTime(tt));
+			pinned.setTime(tt);
 			// evaluate the initially picked samples
-			if(tt == range.begin_) {
+			if(tt == 0) {
 				// generate initial sample set
 				open_samples = this->pickMany(space, params_.particle_count_);
 			}
@@ -83,18 +81,15 @@ struct AnnealedParticleFilter
 			pa.settings_.particle_count_ = params_.particle_count_;
 			pa.settings_.alpha_ = params_.alpha_;
 			pa.OptimizeInplace(open_samples, space, pinned, motion);
-			// save best sample
-			sol.Set(tt, this->template take<Space, CMP>(space, open_samples));
 			// tracing
-			this->NotifySolution(sol);
+			this->NotifyTimestepResult(tt, this->template take<Space, CMP>(space, open_samples));
 		}
-		return sol;
 	}
 
 	template<class Space, class VarFunction>
-	Solution TrackWhiteNoise(const Range& range, const Space& space, const VarFunction& function, const std::vector<double>& noise) {
+	void TrackWhiteNoise(const Space& space, const VarFunction& function, const std::vector<double>& noise) {
 		MotionModels::SpaceRandomMotionModel<Space> motion(space, noise);
-		return Track(range, space, function, motion);
+		Track(space, function, motion);
 	}
 
 };

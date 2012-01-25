@@ -66,26 +66,25 @@ struct AlternatingParticleFilterParameters
  * Total number of evaluations per time step:
  * 	# = RepetitionCount * StateDimension * AnnealingLayerCount * ParticleCount
  */
-template<typename Time, typename State, typename Score, class StartingStates, class Take, class NotifySamples, class NotifySolution, bool UseAnnealing>
+template<typename State, typename Score, class TimeControl, class StartingStates, class Take, class NotifySamples, class TimestepResult, bool UseAnnealing>
 struct AlternatingParticleFilter
-: public StartingStates,
+: public TimeControl,
+  public StartingStates,
   public Take,
   public NotifySamples,
-  public NotifySolution
+  public TimestepResult
 {
-	typedef TSolution<Time, State, Score> Solution;
-	typedef TRange<Time, State, Score> Range;
 	typedef TSampleSet<State, Score> SampleSet;
 
 	AlternatingParticleFilterParameters params_;
 
 	template<class Space, class VarFunction>
-	Solution Track(const Range& range, const Space& space, const VarFunction& function) {
+	Solution Track(const Space& space, const VarFunction& function) {
 		typedef BetterMeansBigger<Score> CMP;
 		// prepare the solution
 		Solution sol = range.solution_;
 		// pin down varying function
-		PinnedFunction<Time, State, Score, VarFunction> pinned(function);
+		PinnedFunction<unsigned int, State, Score, VarFunction> pinned(function);
 		// prepare object noise
 		// Remark: The trick is to adapt the noise vector such that only the current
 		//         object is changed. We provide the option to not set the noise
@@ -110,9 +109,9 @@ struct AlternatingParticleFilter
 		//         Perhaps it is even better ...
 		SampleSet open_samples(this->pickMany(space, params_.particle_count_));
 		// tracking loop
-		for(size_t tt=range.begin_; tt<range.end_; tt+=range.strive_) {
+		for(unsigned int tt=0; this->isRunning(tt); tt++) {
 			// set pin down time
-			pinned.setTime(sol.GetTime(tt));
+			pinned.setTime(tt);
 			// several iterations
 			for(unsigned int repetition=0; repetition<params_.repetition_count_; repetition++) {
 				// one part after the other
@@ -142,23 +141,20 @@ struct AlternatingParticleFilter
 						}
 					}
 					// notify samples
-					this->NotifySamples(open_samples);
+					this->NotifyResult(open_samples);
 				}
 			}
-			// save best sample
-			sol.Set(tt, this->template take<Space, CMP>(space, open_samples));
 			// tracing
-			this->NotifySamples(open_samples);
-			this->NotifySolution(sol);
+			this->NotifyTimestepResult(tt, this->template take<Space, CMP>(space, open_samples));
 		}
 		return sol;
 	}
 
 };
 
-template<typename Time, typename State, typename Score, class StartingStates, class Take, class NotifySamples, class NotifySolution>
+template<typename State, typename Score, class TimeControl, class StartingStates, class Take, class NotifySamples, class TimestepResult>
 struct AlternatingParticleFilterWithAnnealing
-: public AlternatingParticleFilter<Time, State, Score, StartingStates, Take, NotifySamples, NotifySolution, true>
+: public AlternatingParticleFilter<State, Score, TimeControl, StartingStates, Take, NotifySamples, TimestepResult, true>
 {};
 
 //---------------------------------------------------------------------------
