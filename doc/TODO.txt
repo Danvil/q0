@@ -4,8 +4,6 @@
 last edited: 05/30/2012
 
 
-*** Convert to CMake project
-
 *** Re-structure examples
 
 *** Re-structure templates
@@ -15,3 +13,5 @@ last edited: 05/30/2012
 *** Use Eigen instead of Danvil::ctLinAlg
 
 *** Remove reference to Danvil
+
+*** Provide install

@@ -11,7 +11,6 @@ using std::cout;
 using std::endl;
 //---------------------------------------------------------------------------
 
-namespace Problem01 { void run(); }
 namespace Problem02 { void run(); }
 namespace Problem03 { void run(); }
 namespace Problem04 { void run(); }
@@ -29,7 +28,6 @@ namespace Problem10 { void run(); }
 int main(int argc, char* argv[]) {
 	LOG_NOTICE << "Hello QuestZero!";
 
-	RUN(01)
 	RUN(02)
 	RUN(03)
 	//RUN(04)
