@@ -42,7 +42,7 @@ function FactorFunction() {
 
 int main(int argc, char* argv[])
 {
-	cout << "----- Registration -----" << endl;
+	cout << "----- Registration (rotation only) -----" << endl;
 	TestProblem(FactorSpace(), FactorFunction());
 
 	return 1;

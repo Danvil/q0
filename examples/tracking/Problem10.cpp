@@ -12,8 +12,6 @@
 #include <stdexcept>
 using namespace std;
 //----------------------------------------------------------------------------//
-namespace Problem10 {
-//----------------------------------------------------------------------------//
 
 typedef float Scalar;
 typedef Q0::Spaces::Angular::IntervalAngularSpace<Scalar> AS;
@@ -71,7 +69,7 @@ void TestRandomCentered(const AS& space, size_t n, Scalar center, Scalar window,
 
 #define RAD(X) Danvil::MoreMath::Degree2Radians(Scalar(X))
 
-void run()
+int main(int argc, char** argv)
 {
 	AS space;
 	space.set_lower(Scalar(0));
@@ -91,9 +89,7 @@ void run()
 	TestRandomCentered(space, 100, RAD(170), RAD(10.0), "07");
 	TestRandomCentered(space, 100, RAD(170), RAD(100.0), "08");
 
-
+	return 1;
 }
 
-//----------------------------------------------------------------------------//
-}
 //----------------------------------------------------------------------------//

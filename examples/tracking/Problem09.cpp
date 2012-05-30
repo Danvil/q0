@@ -5,10 +5,10 @@
  *      Author: david
  */
 
-#include "Benchmarks/Cartesian.h"
+#include "../Benchmarks/Cartesian.h"
 #include "QuestZero/Optimization/Functions.h"
 #include "QuestZero/Spaces/Cartesian.h"
-#include "QuestZero/Tracking/Algorithms/ParticleFilter/ParticleFilter.h"
+#include "QuestZero/Tracking/Algorithms/ParticleFilter/Condensation.h"
 #include "QuestZero/Tracking/Tracking.h"
 #include <QuestZero/Policies/TracePolicy.h>
 #include <Danvil/LinAlg.h>

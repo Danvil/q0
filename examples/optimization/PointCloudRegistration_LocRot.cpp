@@ -40,7 +40,7 @@ struct RegistrationFunction
 
 int main(int argc, char* argv[])
 {
-	cout << "----- Registration -----" << endl;
+	cout << "----- Registration (rotation and location) (TypelistSpace) -----" << endl;
 
 	space_t s;
 	s.space<0>().setDomainRange(state_loc_t(3,4,5));
