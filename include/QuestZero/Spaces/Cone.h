@@ -16,7 +16,6 @@
 #include <Danvil/Tools/MoreMath.h>
 #include <Danvil/Tools/Constants.h>
 #include <Danvil/Tools/Field.h>
-#include <Danvil/Print.h>
 #include <vector>
 #include <cassert>
 #include <cmath>

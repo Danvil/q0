@@ -13,6 +13,7 @@
 #include <QuestZero/Spaces/SO3.h>
 #include <QuestZero/Spaces/TypelistSpace.h>
 #include <Danvil/LinAlg.h>
+#include <Danvil/Print.h>
 #include <boost/bind.hpp>
 #include <iostream>
 using std::cout;

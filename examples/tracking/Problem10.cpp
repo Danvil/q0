@@ -9,6 +9,7 @@
 #include <Danvil/Tools/Log.h>
 #include <Danvil/Tools/MoreMath.h>
 #include <Danvil/String.h>
+#include <Danvil/Print.h>
 #include <stdexcept>
 using namespace std;
 //----------------------------------------------------------------------------//

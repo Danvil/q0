@@ -10,7 +10,7 @@
 //---------------------------------------------------------------------------
 #include "GetScalarType.h"
 #include "QuestZero/Common/Exceptions.h"
-#include <Danvil/Print.h>
+#include <QuestZero/Common/IPrintable.h>
 #include <loki/HierarchyGenerators.h>
 #include <loki/Typelist.h>
 #include <vector>
@@ -35,7 +35,7 @@ namespace Spaces {
 template<class Typelist_>
 struct TypelistState
 : public Loki::Tuple<Typelist_>,
-  public Danvil::Print::IPrintable
+  public IPrintable
 {
 	typedef Typelist_ Typelist;
 
@@ -137,7 +137,7 @@ private:
 template<class Typelist_, class State_>
 struct TypelistSpace
 : public Loki::Tuple<Typelist_>,
-  public Danvil::Print::IPrintable
+  public IPrintable
 {
 	typedef State_ State;
 	typedef Typelist_ Typelist;

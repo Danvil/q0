@@ -4,15 +4,15 @@
 last edited: 05/30/2012
 
 
+*** Use Eigen instead of Danvil::ctLinAlg
+
+*** Remove reference to Danvil
+
 *** Re-structure problem 07 and problem 10
 *** Fix problem 09
 
 *** Clean library design
 
 *** Unifiy naming convention (camelCase for methods, camel for namespaces)
-
-*** Use Eigen instead of Danvil::ctLinAlg
-
-*** Remove reference to Danvil
 
 *** Provide install

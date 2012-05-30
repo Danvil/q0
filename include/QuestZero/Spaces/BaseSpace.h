@@ -9,7 +9,7 @@
 #define SPACE_H_
 //---------------------------------------------------------------------------
 #include "QuestZero/Policies/OperationFinalPolicy.h"
-#include <Danvil/Print.h>
+#include <QuestZero/Common/IPrintable.h>
 #include <vector>
 #include <cstddef>
 //---------------------------------------------------------------------------
@@ -27,7 +27,7 @@ struct BaseSpace
 : public Operator,
   public Domain,
   public OperationFinal,
-  public Danvil::Print::IPrintable
+  public IPrintable
 {
 	typedef State_ State;
 

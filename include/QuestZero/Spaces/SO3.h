@@ -15,7 +15,6 @@
 #include <Danvil/SO3.h>
 #include <Danvil/Tools/MoreMath.h>
 #include <Danvil/Tools/Field.h>
-#include <Danvil/Print.h>
 #include <Danvil/Ptr.h>
 #include <boost/foreach.hpp>
 #include <boost/range.hpp>

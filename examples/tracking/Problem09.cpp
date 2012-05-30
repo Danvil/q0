@@ -12,6 +12,7 @@
 #include "QuestZero/Tracking/Tracking.h"
 #include <QuestZero/Policies/TracePolicy.h>
 #include <Danvil/LinAlg.h>
+#include <Danvil/Print.h>
 #include <boost/bind.hpp>
 #include <iostream>
 #include <sstream>

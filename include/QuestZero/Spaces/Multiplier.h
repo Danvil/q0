@@ -10,7 +10,7 @@
 //---------------------------------------------------------------------------
 #include "GetScalarType.h"
 #include "QuestZero/Common/Exceptions.h"
-#include <Danvil/Print.h>
+#include <QuestZero/Common/IPrintable.h>
 #include <Danvil/Tools/Debug.h>
 #include <boost/shared_array.hpp>
 #include <vector>
@@ -56,7 +56,7 @@ namespace MultiplierSizePolicies
 
 template<typename BaseState_, class SizePolicy_=MultiplierSizePolicies::DynamicSize>
 struct MultiplierState
-: public Danvil::Print::IPrintable
+: public IPrintable
 {
 	typedef SizePolicy_ SizePolicy;
 
@@ -144,7 +144,7 @@ private:
 
 template<typename BaseSpace, typename State_, typename BT=typename State_::BaseState>
 struct MultiplierSpace
-: public Danvil::Print::IPrintable
+: public IPrintable
 {
 	typedef State_ State;
 

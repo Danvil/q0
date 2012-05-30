@@ -12,6 +12,7 @@
 #include "QuestZero/Common/RandomNumbers.h"
 #include "QuestZero/Common/Sample.h"
 #include "QuestZero/Common/SampleSet.h"
+#include "QuestZero/Common/Log.h"
 #include <vector>
 #include <string>
 //---------------------------------------------------------------------------

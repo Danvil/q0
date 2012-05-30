@@ -11,6 +11,7 @@
 #include <QuestZero/Optimization/Functions.h>
 #include <QuestZero/Spaces/Cartesian.h>
 #include <Danvil/LinAlg.h>
+#include <Danvil/Print.h>
 #include <boost/bind.hpp>
 #include <iostream>
 using std::cout;

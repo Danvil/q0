@@ -3,8 +3,8 @@
 //---------------------------------------------------------------------------
 #include "Sample.h"
 #include "RandomNumbers.h"
+#include <QuestZero/Common/IPrintable.h>
 #include <Danvil/Memory/MemOpsLegacy.h>
-#include <Danvil/Print.h>
 #include <Danvil/Ptr.h>
 #include <vector>
 #include <algorithm>
@@ -126,7 +126,7 @@ namespace SamplingTools
 /** A set of states with scores providing several convenience functions */
 template<typename State, typename Score>
 struct TSampleSet
-: public Danvil::Print::IPrintable
+: public IPrintable
 {
 	typedef TSample<State,Score> Sample;
 

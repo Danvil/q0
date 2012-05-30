@@ -10,7 +10,7 @@
 //---------------------------------------------------------------------------
 #include "QuestZero/Common/Sample.h"
 #include "QuestZero/Tracking/TimeRange.h"
-#include <Danvil/Print.h>
+#include <QuestZero/Common/IPrintable.h>
 #include <vector>
 //---------------------------------------------------------------------------
 namespace Q0 {
@@ -18,7 +18,7 @@ namespace Q0 {
 
 template<typename Time, typename State, typename Score>
 struct TSolution
-: public Danvil::Print::IPrintable
+: public IPrintable
 {
 	struct EmptySolutionException {};
 

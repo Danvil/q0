@@ -50,7 +50,7 @@ public:
 		const K cNoise = 0.01;
 		//M R = AxisAngle.Random(Optimization.RandomNumbers.Generator).ToMatrix(); // FIXME why not working in mono?
 		Danvil::SO3::Quaternion<K> q = Danvil::SO3::RotationTools::UniformRandom<K>(&RandomNumbers::Uniform<K>);
-		cout << "Registration rotation: " << q << endl;
+		LOG_INFO << "Registration rotation: " << q;
 		M R = Danvil::SO3::ConvertToMatrix(q);
 		for(size_t i=0; i<point_count; i++) {
 			V x(

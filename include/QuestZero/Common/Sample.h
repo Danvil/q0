@@ -1,7 +1,7 @@
 #ifndef QUESTZERO_SAMPLE
 #define QUESTZERO_SAMPLE
 //---------------------------------------------------------------------------
-#include <Danvil/Print.h>
+#include <QuestZero/Common/IPrintable.h>
 #include <boost/assert.hpp>
 //---------------------------------------------------------------------------
 namespace Q0 {
@@ -13,7 +13,7 @@ namespace Q0 {
 
 template<typename State, typename Score>
 class TSample
-: public Danvil::Print::IPrintable
+: public IPrintable
 {
 private:
 	State _state;
