@@ -106,7 +106,7 @@ namespace Problem03
 {
 	typedef Danvil::SO3::Quaternion<double> state;
 
-	typedef Spaces::SO3::SO3Space<double> Space;
+	typedef Spaces::SO3::FullSO3Space<double> Space;
 
 	Space FactorSpace() { return Space(); }
 

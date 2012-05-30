@@ -97,7 +97,7 @@ struct NelderMead
 			simplex.set_state(i+1, p_i);
 		}
 		// evaluate score for simplex points
-		simplex.EvaluateAll(function);
+		simplex.ComputeLikelihood(function); // TODO correct function?
 		this->NotifySamples(simplex);
 
 		// the algorithm requires us to compute at most 4 points
@@ -157,7 +157,7 @@ struct NelderMead
 			extension.set_state(3, p_d);
 
 			// compute score of all candidates
-			extension.EvaluateAll(function);
+			extension.ComputeLikelihood(function); // TODO correct function?
 			this->NotifySamples(extension);
 			Score y_a = extension.score(0);
 			Score y_b = extension.score(1);
@@ -212,7 +212,7 @@ struct NelderMead
 						for(size_t i=0; i<n+1; i++) {
 							simplex.set_state(i, space.weightedSum(0.5, simplex.state(i), 0.5, simplex.state(i_best)));
 						}
-						simplex.EvaluateAll(function);
+						simplex.ComputeLikelihood(function); // TODO correct function?
 						this->NotifySamples(simplex);
 					}
 					else {

@@ -28,7 +28,7 @@ namespace Problem05
 	typedef Spaces::TypelistState<state_types> state;
 
 	typedef Spaces::Cartesian::FiniteCartesianSpace<state0> space0;
-	typedef Spaces::SO3::SO3Space<double> space1;
+	typedef Spaces::SO3::FullSO3Space<double> space1;
 	typedef LOKI_TYPELIST_2(space0,space1) space_types;
 	typedef Spaces::TypelistSpace<space_types, state> space;
 

@@ -50,7 +50,7 @@ void TestProblem(const Space& space, const Function& function)
 			TargetChecker,
 			InitialStatesPolicy::Fuser<InitialStatesPolicy::RandomPicker>::Result,
 			TakePolicy::TakeBest,
-			TracePolicy::Samples::None> algoRnd;
+			TracePolicy::Samples::None<typename Space::State, typename Function::Score> > algoRnd;
 	algoRnd.SetMaximumIterationCount(cIterationCount);
 	algoRnd.SetTargetScore(cScoreGoal);
 	algoRnd.particleCount = cParticleCount;
@@ -79,7 +79,7 @@ void TestProblem(const Space& space, const Function& function)
 			TargetChecker,
 			InitialStatesPolicy::Fuser<InitialStatesPolicy::RandomPicker>::Result,
 			TakePolicy::TakeBest,
-			TracePolicy::Samples::None> algoPso;
+			TracePolicy::Samples::None<typename Space::State, typename Function::Score> > algoPso;
 	algoPso.SetMaximumIterationCount(cIterationCount);
 	algoRnd.SetTargetScore(cScoreGoal);
 	algoPso.settings.particleCount = cParticleCount;

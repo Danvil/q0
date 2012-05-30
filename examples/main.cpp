@@ -33,12 +33,12 @@ int main(int argc, char* argv[]) {
 	RUN(02)
 	RUN(03)
 	//RUN(04)
-	RUN(05)
-	RUN(06)
-	RUN(07)
-	RUN(08)
+//	RUN(05)
+//	RUN(06)
+//	RUN(07)
+//	RUN(08)
 	//RUN(09)
-	RUN(10)
+//	RUN(10)
 
 	LOG_NOTICE << "Bye QuestZero!";
 	return 0;
