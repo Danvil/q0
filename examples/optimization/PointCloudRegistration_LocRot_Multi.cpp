@@ -61,13 +61,13 @@ int main(int argc, char** argv)
 {
 	cout << "----- Multi-Registration with position using TypelistSpace with Multiplier -----" << endl;
 
-	space_t myspace;
+	space_t space;
 	for(unsigned int i=0; i<N; i++) {
-		myspace.space<0>()[i].setDomainRange(state_loc_t(3,4,5));
+		space.space<0>()[i].setDomainRange(state_loc_t(3,4,5));
 	}
 
 	Functions::AddParallel<state_t,MultiRegistrationFunctionWPos> f;
 	f.createProblem(25);
 
-	TestProblem(myspace, f);
+	TestProblem(space, f);
 }

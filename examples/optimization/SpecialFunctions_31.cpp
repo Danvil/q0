@@ -17,47 +17,47 @@ using std::cout;
 using std::endl;
 using namespace Q0;
 
-typedef Danvil::ctLinAlg::Vec<double, 31> State;
+typedef Danvil::ctLinAlg::Vec<double, 31> state_t;
 
-typedef Spaces::Cartesian::FiniteCartesianSpace<State> Space;
+typedef Spaces::Cartesian::FiniteCartesianSpace<state_t> space_t;
 
-Space FactorSpace() {
-	Space space;
-	State range;
-	for(unsigned int i=0; i<State::Dimension; i++) {
+space_t FactorSpace() {
+	space_t space;
+	state_t range;
+	for(unsigned int i=0; i<state_t::Dimension; i++) {
 		range[i] = 10;
 	}
 	space.setDomainRange(range);
 	return space;
 }
 
-typedef Functions::BoostFunctionSingleWrapper<State,double> Function;
+typedef Functions::BoostFunctionSingleWrapper<state_t,double> Function;
 
 template<typename State>
 double shiftedMinima(boost::function<double(const State&)> f, const State& shift, const State& x) {
 	return f(x - shift);
 }
 
-Function FactorFunction(boost::function<double(const State&)> f1) {
+Function FactorFunction(boost::function<double(const state_t&)> f1) {
 	Function f;
-	State minima;
-	for(unsigned int i=0; i<State::Dimension; i++) {
+	state_t minima;
+	for(unsigned int i=0; i<state_t::Dimension; i++) {
 		minima[i] = 0.1 * (double)i;
 	}
-	f.set_functor(boost::bind(&shiftedMinima<State>, f1, minima, _1));
+	f.set_functor(boost::bind(&shiftedMinima<state_t>, f1, minima, _1));
 	return f;
 }
 
 int main(int argc, char* argv[])
 {
 	cout << "----- Cartesian Vec<double,31> --- DiscreetSphere -----" << endl;
-	TestProblem(FactorSpace(), FactorFunction(boost::bind(&Benchmarks::Cartesian<State>::DiscreetSphere, _1)));
+	TestProblem(FactorSpace(), FactorFunction(boost::bind(&Benchmarks::Cartesian<state_t>::DiscreetSphere, _1)));
 	cout << "----- Cartesian Vec<double,31> --- Schwefel2_21 -----" << endl;
-	TestProblem(FactorSpace(), FactorFunction(boost::bind(&Benchmarks::Cartesian<State>::Schwefel2_21, _1)));
+	TestProblem(FactorSpace(), FactorFunction(boost::bind(&Benchmarks::Cartesian<state_t>::Schwefel2_21, _1)));
 	cout << "----- Cartesian Vec<double,31> --- Rosenbrock -----" << endl;
-	TestProblem(FactorSpace(), FactorFunction(boost::bind(&Benchmarks::Cartesian<State>::Rosenbrock, _1)));
+	TestProblem(FactorSpace(), FactorFunction(boost::bind(&Benchmarks::Cartesian<state_t>::Rosenbrock, _1)));
 	cout << "----- Cartesian Vec<double,31> --- Rastrigin -----" << endl;
-	TestProblem(FactorSpace(), FactorFunction(boost::bind(&Benchmarks::Cartesian<State>::Rastrigin, _1)));
+	TestProblem(FactorSpace(), FactorFunction(boost::bind(&Benchmarks::Cartesian<state_t>::Rastrigin, _1)));
 
 	return 1;
 }

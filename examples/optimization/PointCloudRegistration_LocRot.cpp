@@ -42,13 +42,13 @@ int main(int argc, char* argv[])
 {
 	cout << "----- Registration (rotation and location) (TypelistSpace) -----" << endl;
 
-	space_t s;
-	s.space<0>().setDomainRange(state_loc_t(3,4,5));
+	space_t space;
+	space.space<0>().setDomainRange(state_loc_t(3,4,5));
 
 	Functions::AddParallel<state_t, RegistrationFunction> f;
 	f.createRandomProblem(100);
 
-	TestProblem(s, f);
+	TestProblem(space, f);
 
 	return 1;
 }

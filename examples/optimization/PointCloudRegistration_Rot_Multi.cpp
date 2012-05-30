@@ -20,15 +20,11 @@ using namespace Q0;
 
 static const unsigned int N = 4;
 
-typedef Danvil::SO3::Quaternion<double> base_state;
-typedef Spaces::MultiplierState<base_state, Spaces::MultiplierSizePolicies::FixedSize<N> > state;
+typedef Danvil::SO3::Quaternion<double> state_rot_t;
+typedef Spaces::MultiplierState<state_rot_t, Spaces::MultiplierSizePolicies::FixedSize<N> > state_t;
 
-typedef Spaces::SO3::FullSO3Space<double> base_space;
-typedef Spaces::MultiplierSpace<base_space, state> space;
-
-space FactorSpace() {
-	return space();
-}
+typedef Spaces::SO3::FullSO3Space<double> space_rot_t;
+typedef Spaces::MultiplierSpace<space_rot_t, state_t> space_t;
 
 struct MultiRegistrationFunction
 {
@@ -39,7 +35,7 @@ struct MultiRegistrationFunction
 		}
 	}
 
-	Score operator()(const state& s) const {
+	Score operator()(const state_t& s) const {
 		Score sum = 0;
 		for(unsigned int i=0; i<N; i++) {
 			Score x = r[i]->fit(Danvil::SO3::ConvertToMatrix(s[i]));
@@ -52,18 +48,21 @@ private:
 	PTR(Benchmarks::PointCloudRegistration<double>) r[N];
 };
 
-typedef Functions::AddParallel<state, MultiRegistrationFunction> function;
+typedef Functions::AddParallel<state_t, MultiRegistrationFunction> function;
 
 function FactorFunction() {
-	function f;
-	f.createProblem(25);
-	return f;
 }
 
 int main(int argc, char** argv)
 {
 	cout << "----- Multi-Registration with Multiplier State -----" << endl;
-	TestProblem(FactorSpace(), FactorFunction());
+
+	space_t space;
+
+	function f;
+	f.createProblem(25);
+
+	TestProblem(space, f);
 
 	return 1;
 }

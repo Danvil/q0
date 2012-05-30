@@ -17,33 +17,29 @@ using std::cout;
 using std::endl;
 using namespace Q0;
 
-typedef Danvil::SO3::Quaternion<double> state;
+typedef Danvil::SO3::Quaternion<double> state_t;
 
-typedef Spaces::SO3::FullSO3Space<double> Space;
-
-Space FactorSpace() { return Space(); }
+typedef Spaces::SO3::FullSO3Space<double> space_t;
 
 struct RegistrationFunction
 : public Benchmarks::PointCloudRegistration<double>
 {
 	typedef double Score;
-	double operator()(const state& x) const {
+	double operator()(const state_t& x) const {
 		return fit(Danvil::SO3::ConvertToMatrix(x));
 	}
 };
 
-typedef Functions::AddParallel<state,RegistrationFunction> function;
-
-function FactorFunction() {
-	function f;
-	f.createRandomProblem(100);
-	return f;
-}
-
 int main(int argc, char* argv[])
 {
 	cout << "----- Registration (rotation only) -----" << endl;
-	TestProblem(FactorSpace(), FactorFunction());
+
+	space_t space;
+
+	Functions::AddParallel<state_t,RegistrationFunction> f;
+	f.createRandomProblem(100);
+
+	TestProblem(space, f);
 
 	return 1;
 }
