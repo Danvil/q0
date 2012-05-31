@@ -25,7 +25,7 @@ namespace TakePolicy {
 	{
 		template<class Space, class CMP>
 		TSample<State,Score> take(const Space&, const TSampleSet<State,Score>& many) {
-			return many.template FindBestSample<CMP>();
+			return get_sample(many, find_best_by_score(many, CMP()));
 		}
 
 	protected:

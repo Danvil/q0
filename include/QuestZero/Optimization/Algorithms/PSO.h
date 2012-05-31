@@ -84,20 +84,20 @@ struct PSO
 			SampleSet samples = currentSamples();
 			// evaluate samples
 			LOG_DEBUG << "PSO: evaluate states";
-			samples.ComputeLikelihood(function);
+			compute_likelihood(samples, function);
 			// update global best
 			LOG_DEBUG << "PSO: update global best";
-			const Sample& best = samples.template FindBestSample<CMP>();
-			if(!globals.isSet() || CMP::compare(best.score(), globals.best_score())) {
-				globals.set(best);
+			auto best_id = find_best_by_score(samples, CMP());
+			if(!globals.isSet() || CMP::compare(get_score(samples, best_id), globals.best_score())) {
+				globals.set(get_sample(samples, best_id));
 			}
 			// update personal best and particle
 			LOG_DEBUG << "PSO: update personal best and particle";
 			for(size_t i = 0; i < particles.size(); i++) {
-				Score s = samples.score(i);
+				Score s = get_score(samples, i);
 				ParticleData& p = particles[i];
 				if(CMP::compare(s, p.best_score_)) {
-					p.best_state_ = samples.state(i);
+					p.best_state_ = get_state(samples, i);
 					p.best_score_ = s;
 				}
 				p.Update(space, globals);
@@ -146,8 +146,8 @@ private:
 		const State& best_state() const { return best_state_; }
 
 		void set(const Sample& s) {
-			best_state_ = s.state();
-			best_score_ = s.score();
+			best_state_ = s.state;
+			best_score_ = s.score;
 			is_best_set = true;
 		}
 
@@ -219,9 +219,9 @@ private:
 
 	SampleSet bestSamples() const {
 		SampleSet samples;
-		samples.Reserve(particles.size());
+		give_size_hint(samples, particles.size());
 		for(typename std::vector<ParticleData>::const_iterator it=particles.begin(); it!=particles.end(); ++it) {
-			samples.Add(it->best_state_, it->best_score_);
+			add_sample(samples, it->best_state_, it->best_score_);
 		}
 		return samples;
 	}

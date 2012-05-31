@@ -10,12 +10,10 @@
 #include <QuestZero/Optimization/Optimization.h>
 #include <QuestZero/Optimization/Functions.h>
 #include <QuestZero/Spaces/Cartesian.h>
-#include <Danvil/LinAlg.h>
 #include <Danvil/Print.h>
+#include <Danvil/LinAlg.h>
 #include <boost/bind.hpp>
 #include <iostream>
-using std::cout;
-using std::endl;
 using namespace Q0;
 
 typedef Danvil::ctLinAlg::Vec3f state_t;
@@ -44,13 +42,16 @@ Function FactorFunction(boost::function<double(const state_t&)> f1) {
 
 int main(int argc, char* argv[])
 {
-	cout << "----- Cartesian Vec3f --- DiscreetSphere -----" << endl;
+	std::cout << "Testing special benchmark functions" << std::endl;
+	std::cout << "Minimum is: [0,1,2]" <<  std::endl;
+
+	std::cout << "----- Cartesian Vec3f --- DiscreetSphere -----" << std::endl;
 	TestProblem(FactorSpace(), FactorFunction(boost::bind(&Benchmarks::Cartesian<state_t>::DiscreetSphere, _1)));
-	cout << "----- Cartesian Vec3f --- Schwefel2_21 -----" << endl;
+	std::cout << "----- Cartesian Vec3f --- Schwefel2_21 -----" << std::endl;
 	TestProblem(FactorSpace(), FactorFunction(boost::bind(&Benchmarks::Cartesian<state_t>::Schwefel2_21, _1)));
-	cout << "----- Cartesian Vec3f --- Rosenbrock -----" << endl;
+	std::cout << "----- Cartesian Vec3f --- Rosenbrock -----" << std::endl;
 	TestProblem(FactorSpace(), FactorFunction(boost::bind(&Benchmarks::Cartesian<state_t>::Rosenbrock, _1)));
-	cout << "----- Cartesian Vec3f --- Rastrigin -----" << endl;
+	std::cout << "----- Cartesian Vec3f --- Rastrigin -----" << std::endl;
 	TestProblem(FactorSpace(), FactorFunction(boost::bind(&Benchmarks::Cartesian<state_t>::Rastrigin, _1)));
 
 	return 1;

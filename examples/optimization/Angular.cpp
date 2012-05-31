@@ -13,8 +13,6 @@
 #include <Danvil/Print.h>
 #include <boost/bind.hpp>
 #include <iostream>
-using std::cout;
-using std::endl;
 using namespace Q0;
 
 typedef double real;
@@ -26,8 +24,13 @@ double function(real a) {
 
 int main(int argc, char* argv[])
 {
+
+	std::cout << "----- Find optimal angle (full interval) -----" << std::endl;
+	std::cout << "Optimum is: " << 0.63 * boost::math::constants::pi<real>() << std::endl;
+	std::cout << endl;
+
 	{
-		cout << "----- Find optimal angle (full interval) -----" << endl;
+		std::cout << "----- full interval -----" << std::endl;
 
 		Spaces::Angular::FullAngularSpace<real> space;
 
@@ -38,7 +41,7 @@ int main(int argc, char* argv[])
 	}
 
 	{
-		cout << "----- Find optimal angle (interval = [1/4 pi | 3/4 pi]) -----" << endl;
+		std::cout << "----- interval = [1/4 pi | 3/4 pi] -----" << std::endl;
 
 		Spaces::Angular::IntervalAngularSpace<real> space;
 		space.set_lower(0.25 * boost::math::constants::pi<real>());
@@ -51,7 +54,7 @@ int main(int argc, char* argv[])
 	}
 
 	{
-		cout << "----- Find optimal angle (interval = [1/4 pi | 1/2 pi]) -----" << endl;
+		std::cout << "----- interval = [1/4 pi | 1/2 pi] -----" << std::endl;
 
 		Spaces::Angular::IntervalAngularSpace<real> space;
 		space.set_lower(0.25 * boost::math::constants::pi<real>());

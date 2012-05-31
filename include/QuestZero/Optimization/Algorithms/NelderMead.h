@@ -54,12 +54,12 @@ struct NelderMead
 	/** Computes mean of all simplex points except 'i_worst' */
 	template<class Space>
 	State ComputeMean(const Space& space, const SampleSet& simplex, size_t i_worst) {
-		std::vector<double> weights(simplex.Size());
-		double w = 1.0 / double(simplex.Size() - 1);
+		std::vector<double> weights(num_samples(simplex));
+		double w = 1.0 / double(weights.size() - 1);
 		for(size_t i=0; i<weights.size(); i++) {
 			weights[i] = (i == i_worst) ? 0.0 : w;
 		}
-		return space.weightedSum(weights, simplex.states());
+		return space.weightedSum(weights, get_state_list(simplex));
 	}
 
 	/** Computes f*(u - pivot) + pivot */

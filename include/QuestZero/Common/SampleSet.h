@@ -31,7 +31,7 @@ template<typename SampleList>
 void give_size_hint(SampleList& list, std::size_t num) {}
 
 template<typename SampleList>
-std::size_t num_samples(SampleList& list);
+std::size_t num_samples(const SampleList& list);
 
 template<typename SampleList>
 typename detail::range<typename SampleList::state_iterator> states(SampleList& list);
@@ -47,6 +47,9 @@ typename detail::range<typename SampleList::score_const_iterator> scores(const S
 
 template<typename SampleList>
 typename SampleList::sample_descriptor add_sample(SampleList& list);
+
+template<typename SampleList>
+typename SampleList::sample_descriptor add_sample(SampleList& list, const typename SampleList::state_t& state, const typename SampleList::score_t& score);
 
 template<typename SampleList>
 void add_samples(SampleList& list, unsigned int num);
@@ -94,7 +97,8 @@ void set_state_list(SampleList& list, const std::vector<typename SampleList::sta
 	assert(state_list.size() == num_samples(list));
 	auto it = state_list.begin();
 	for(auto& x : states(list)) {
-		x = *(++it);
+		x = *it;
+		++it;
 	}
 }
 
@@ -107,7 +111,8 @@ void set_score_list(SampleList& list, const std::vector<typename SampleList::sco
 	assert(score_list.size() == num_samples(list));
 	auto it = score_list.begin();
 	for(auto& x : scores(list)) {
-		x = *(++it);
+		x = *it;
+		++it;
 	}
 }
 
@@ -118,7 +123,7 @@ std::vector<typename SampleList::score_t> evaluate(const SampleList& list, Funct
 	std::vector<typename SampleList::score_t> score_list;
 	score_list.reserve(num_samples(list));
 	for(auto& x : states(list)) {
-		score_list.push_back(f(get_state(list, x)));
+		score_list.push_back(f(x));
 	}
 	return score_list;
 }
@@ -148,7 +153,8 @@ void importance_scoring(SampleList& list, ImportanceFunction importance_function
 	std::vector<typename SampleList::score_t> importance = evaluate(list, importance_function);
 	auto it = importance.begin();
 	for(auto& x : scores(list)) {
-		x *= *(++it);
+		x *= *it;
+		++it;
 	}
 }
 
@@ -157,7 +163,8 @@ void compute_likelihood(SampleList& list, const Function& f) {
 	std::vector<typename SampleList::score_t> importance = evaluate(list, f);
 	auto it = importance.begin();
 	for(auto& x : scores(list)) {
-		x = *(++it);
+		x = *it;
+		++it;
 	}
 }
 
@@ -191,14 +198,14 @@ void randomize_states(SampleList& list, const Space& space, const std::vector<K>
 template<typename SampleList, typename ScoreComparer>
 typename SampleList::sample_descriptor find_best_by_score(const SampleList& list, ScoreComparer c) {
 	auto range = scores(list);
-	auto it = std::min(range.begin(), range.end(), c);
+	auto it = std::min_element(range.begin(), range.end(), c);
 	return it - range.begin(); // FIXME only works for random access containers!
 }
 
 template<typename SampleList, typename ScoreComparer>
 typename SampleList::sample_descriptor find_worst_by_score(const SampleList& list, ScoreComparer c) {
 	auto range = scores(list);
-	auto it = std::max(range.begin(), range.end(), c);
+	auto it = std::max_element(range.begin(), range.end(), c);
 	return it - range.begin(); // FIXME only works for random access containers!
 }
 

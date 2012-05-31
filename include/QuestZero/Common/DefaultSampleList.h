@@ -34,7 +34,7 @@ struct TSampleSet
 	TSampleSet() {}
 
 	TSampleSet(const std::vector<state_t>& states)
-	: states(states) {}
+	: states(states), scores(states.size()) {}
 
 	TSampleSet(const std::vector<state_t>& states, const std::vector<score_t>& scores)
 	: states(states), scores(scores) {}
@@ -48,35 +48,28 @@ void give_size_hint(TSampleSet<State,Score>& list, std::size_t num) {
 }
 
 template<typename State, typename Score>
-std::size_t num_samples(TSampleSet<State,Score>& list) {
+std::size_t num_samples(const TSampleSet<State,Score>& list) {
 	return list.states.size();
 }
 
 template<typename State, typename Score>
 typename detail::range<typename TSampleSet<State,Score>::state_iterator> states(TSampleSet<State,Score>& list) {
-	return { list.states.begin(), list.states.end() };
+	return std::make_pair(list.states.begin(), list.states.end());
 }
 
 template<typename State, typename Score>
 typename detail::range<typename TSampleSet<State,Score>::state_const_iterator> states(const TSampleSet<State,Score>& list) {
-	return { list.states.begin(), list.states.end() };
+	return std::make_pair(list.states.begin(), list.states.end());
 }
 
 template<typename State, typename Score>
 typename detail::range<typename TSampleSet<State,Score>::score_iterator> scores(TSampleSet<State,Score>& list) {
-	return { list.scores.begin(), list.scores.end() };
+	return std::make_pair(list.scores.begin(), list.scores.end());
 }
 
 template<typename State, typename Score>
 typename detail::range<typename TSampleSet<State,Score>::score_const_iterator> scores(const TSampleSet<State,Score>& list) {
-	return { list.scores.begin(), list.scores.end() };
-}
-
-template<typename State, typename Score>
-typename TSampleSet<State,Score>::sample_descriptor add_sample(TSampleSet<State,Score>& list) {
-	list.states.push_back();
-	list.scores.push_back();
-	return list.scores.size() - 1;
+	return std::make_pair(list.scores.begin(), list.scores.end());
 }
 
 /** Addes samples from src to list */
@@ -84,6 +77,19 @@ template<typename State, typename Score>
 void add_samples(TSampleSet<State,Score>& list, unsigned int num) {
 	list.states.resize(list.states.size() + num);
 	list.scores.resize(list.scores.size() + num);
+}
+
+template<typename State, typename Score>
+typename TSampleSet<State,Score>::sample_descriptor add_sample(TSampleSet<State,Score>& list) {
+	add_samples(list, 1);
+	return list.scores.size() - 1;
+}
+
+template<typename State, typename Score>
+typename TSampleSet<State,Score>::sample_descriptor add_sample(TSampleSet<State,Score>& list, const State& state, const Score& score) {
+	list.states.push_back(state);
+	list.scores.push_back(score);
+	return list.scores.size() - 1;
 }
 
 /** Addes samples from src to list */

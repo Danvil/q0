@@ -15,9 +15,13 @@ namespace Q0 {
 namespace detail {
 
 	template<typename T>
-	struct range
-	: public std::pair<T, T>
+	struct range : public std::pair<T,T>
 	{
+		range() {}
+
+		range(const std::pair<T,T>& p)
+		: std::pair<T,T>(p) {}
+
 		T begin() const { return this->first; }
 		T end() const { return this->second; }
 	};
