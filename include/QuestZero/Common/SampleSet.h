@@ -49,7 +49,13 @@ template<typename SampleList>
 typename SampleList::sample_descriptor add_sample(SampleList& list);
 
 template<typename SampleList>
+void add_samples(SampleList& list, unsigned int num);
+
+template<typename SampleList>
 void add_samples(SampleList& list, const SampleList& src);
+
+template<typename SampleList>
+const TSample<typename SampleList::state_t, typename SampleList::score_t>& get_sample(const SampleList& list, typename SampleList::sample_descriptor id);
 
 template<typename SampleList>
 const typename SampleList::state_t& get_state(const SampleList& list, typename SampleList::sample_descriptor id);
@@ -186,6 +192,13 @@ template<typename SampleList, typename ScoreComparer>
 typename SampleList::sample_descriptor find_best_by_score(const SampleList& list, ScoreComparer c) {
 	auto range = scores(list);
 	auto it = std::min(range.begin(), range.end(), c);
+	return it - range.begin(); // FIXME only works for random access containers!
+}
+
+template<typename SampleList, typename ScoreComparer>
+typename SampleList::sample_descriptor find_worst_by_score(const SampleList& list, ScoreComparer c) {
+	auto range = scores(list);
+	auto it = std::max(range.begin(), range.end(), c);
 	return it - range.begin(); // FIXME only works for random access containers!
 }
 

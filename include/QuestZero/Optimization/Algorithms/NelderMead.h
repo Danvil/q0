@@ -83,37 +83,36 @@ struct NelderMead
 		// the algorithm maintains a simplex of n+1 points
 		size_t n = space.dimension();
 		SampleSet simplex;
-		simplex.Resize(n + 1);
 
 		// FIXME find initial simplex points
 		// current method:
 		// first point is the random initial point
 		// other n points are taken by going from initial point into unit direction
-		simplex.set_state(0, initial);
+		set_state(simplex, add_sample(simplex), initial);
 		for(size_t i=0; i<n; i++) {
 			State p_i = space.compose(
 					space.unit(i, p_simplex_size),
 					initial);
-			simplex.set_state(i+1, p_i);
+			set_state(simplex, add_sample(simplex), p_i);
 		}
 		// evaluate score for simplex points
-		simplex.ComputeLikelihood(function); // TODO correct function?
+		compute_likelihood(simplex, function); // TODO correct function?
 		this->NotifySamples(simplex);
 
 		// the algorithm requires us to compute at most 4 points
 		// from which it selects a new candidate with which the
 		// current worst simplex point is replaced
 		SampleSet extension;
-		extension.Resize(4);
+		add_samples(extension, 4);
 
 		while(true) {
 			// determine best and worst simplex points
-			size_t i_best, i_worst;
-			simplex.template SearchBestAndWorst<CMP>(i_best, i_worst);
-			Score y_l = simplex.score(i_best);
-			Score y_h = simplex.score(i_worst);
+			auto i_best = find_best_by_score(simplex, CMP());
+			auto i_worst = find_worst_by_score(simplex, CMP());
+			Score y_l = get_score(simplex, i_best);
+			Score y_h = get_score(simplex, i_worst);
 
-			const State& p_h = simplex.state(i_worst);
+			const State& p_h = get_state(simplex, i_worst);
 
 			// for all candidates the mean point of all current
 			// simplex points except the worst point is required
@@ -127,7 +126,7 @@ struct NelderMead
 							space.difference(p_m, p_h),
 							p_alpha),
 					p_m);
-			extension.set_state(0, p_a);
+			set_state(extension, 0, p_a);
 
 			// second candidate: p_b = c*p_a + (1 - c)*p_m
 			//                       = p_m + c*(p_a - p_m)
@@ -136,7 +135,7 @@ struct NelderMead
 							space.difference(p_a, p_m),
 							p_gamma),
 					p_m);
-			extension.set_state(1, p_b);
+			set_state(extension, 1, p_b);
 
 			// third candidate: p_c = b*p_h + (1 - b)*p_m
 			//                      = p_m + b*(p_h - p_m)
@@ -145,7 +144,7 @@ struct NelderMead
 							space.difference(p_h, p_m),
 							p_beta),
 					p_m);
-			extension.set_state(2, p_c);
+			set_state(extension, 2, p_c);
 
 			// fourth candidate: p_d = b*p_a + (1 - b)*p_m
 			//                       = p_m + b*(p_a - p_m)
@@ -154,15 +153,15 @@ struct NelderMead
 							space.difference(p_a, p_m),
 							p_beta),
 					p_m);
-			extension.set_state(3, p_d);
+			set_state(extension, 3, p_d);
 
 			// compute score of all candidates
-			extension.ComputeLikelihood(function); // TODO correct function?
+			compute_likelihood(extension, function); // TODO correct function?
 			this->NotifySamples(extension);
-			Score y_a = extension.score(0);
-			Score y_b = extension.score(1);
-			Score y_c = extension.score(2);
-			Score y_d = extension.score(3);
+			Score y_a = get_score(extension, 0);
+			Score y_b = get_score(extension, 1);
+			Score y_c = get_score(extension, 2);
+			Score y_d = get_score(extension, 3);
 
 			// even some candidates will perhaps not be used
 			// in the following computation, we compute all
@@ -171,13 +170,13 @@ struct NelderMead
 
 			if(CMP::compare(y_a, y_l)) {
 				if(CMP::compare(y_b, y_l)) {
-					simplex.set_state(i_worst, p_b);
-					simplex.set_score(i_worst, y_b);
+					set_state(simplex, i_worst, p_b);
+					set_score(simplex, i_worst, y_b);
 					y_l = y_b;
 				}
 				else {
-					simplex.set_state(i_worst, p_a);
-					simplex.set_score(i_worst, y_a);
+					set_state(simplex, i_worst, p_a);
+					set_score(simplex, i_worst, y_a);
 					y_l = y_a;
 				}
 				i_best = i_worst; // we have stored a new best value there
@@ -189,7 +188,7 @@ struct NelderMead
 					if(i == i_worst) {
 						continue;
 					}
-					if(CMP::compare(y_a, simplex.score(i))) {
+					if(CMP::compare(y_a, get_score(simplex, i))) {
 						new_worst = false;
 						break;
 					}
@@ -210,19 +209,19 @@ struct NelderMead
 					if(CMP::compare(y_h, yu)) {
 						// reset the simplex
 						for(size_t i=0; i<n+1; i++) {
-							simplex.set_state(i, space.weightedSum(0.5, simplex.state(i), 0.5, simplex.state(i_best)));
+							set_state(simplex, i, space.weightedSum(0.5, get_state(simplex, i), 0.5, get_state(simplex, i_best)));
 						}
-						simplex.ComputeLikelihood(function); // TODO correct function?
+						compute_likelihood(simplex, function); // TODO correct function?
 						this->NotifySamples(simplex);
 					}
 					else {
-						simplex.set_state(i_worst, *pu);
-						simplex.set_score(i_worst, yu);
+						set_state(simplex, i_worst, *pu);
+						set_score(simplex, i_worst, yu);
 					}
 				}
 				else {
-					simplex.set_state(i_worst, p_a);
-					simplex.set_score(i_worst, y_a);
+					set_state(simplex, i_worst, p_a);
+					set_score(simplex, i_worst, y_a);
 				}
 			}
 
@@ -231,17 +230,17 @@ struct NelderMead
 			// check break condition
 			double y_mean = 0;
 			for(size_t i=0; i<n; i++) {
-				y_mean += simplex.score(i);
+				y_mean += get_score(simplex, i);
 			}
 			y_mean /= double(n);
 			double criterion = 0;
 			for(size_t i=0; i<n; i++) {
-				double x = simplex.score(i) - y_mean;
+				double x = get_score(simplex, i) - y_mean;
 				criterion += x * x;
 			}
 			criterion /= double(n);
 			if(this->IsTargetReached(y_l, std::sqrt(criterion))) {
-				return simplex.CreateSample(i_best);
+				return get_sample(simplex, i_best);
 			}
 		}
 	}

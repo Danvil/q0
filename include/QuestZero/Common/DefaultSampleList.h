@@ -81,9 +81,21 @@ typename TSampleSet<State,Score>::sample_descriptor add_sample(TSampleSet<State,
 
 /** Addes samples from src to list */
 template<typename State, typename Score>
+void add_samples(TSampleSet<State,Score>& list, unsigned int num) {
+	list.states.resize(list.states.size() + num);
+	list.scores.resize(list.scores.size() + num);
+}
+
+/** Addes samples from src to list */
+template<typename State, typename Score>
 void add_samples(TSampleSet<State,Score>& list, const TSampleSet<State,Score>& src) {
 	list.scores.insert(list.scores.end(), src.scores.begin(), src.scores.end());
 	list.states.insert(list.states.end(), src.states.begin(), src.states.end());
+}
+
+template<typename State, typename Score>
+TSample<State,Score> get_sample(const TSampleSet<State,Score>& list, typename TSampleSet<State,Score>::sample_descriptor id) {
+	return { get_state(list, id), get_score(list, id) };
 }
 
 template<typename State, typename Score>
