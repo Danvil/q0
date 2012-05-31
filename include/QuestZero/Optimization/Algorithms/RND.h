@@ -53,23 +53,24 @@ struct RND
 	Sample Optimize(const Space& space, const Function& function) {
 		SampleSet open(this->template pickMany(space, particleCount));
 		// evaluate initial samples
-		open.ComputeLikelihood(function);
+		compute_likelihood(open, function);
 		// update progress bar
 		this->NotifySamples(open);
 		// in every iteration add new particles, delete the worst particles
 		// iterate until a given condition is fulfilled
-		while(!this->IsTargetReached(open.template FindBestScore<CMP>())) {
+		auto best_id = find_best_by_score(open, CMP());
+		while(!this->IsTargetReached(get_score(open, best_id))) {
 			// add new samples by randomly selecting points
-			assert(open.Size() == particleCount);
+			assert(num_samples(open) == particleCount);
 			// generate new chunk of states
 			SampleSet new_samples(space.template randomMany(particleCount));
 //			SampleSet new_samples(this->template pickMany(space, particleCount));
 			// evaluate the chunk
-			new_samples.ComputeLikelihood(function);
+			compute_likelihood(new_samples, function);
 			// add to open samples
-			open.Add(new_samples);
+			add_samples(open, new_samples);
 			// pick the best
-			open = open.template FindBestSamples<CMP>(particleCount);
+			open = pick_best(open, particleCount, CMP());
 			// update progress bar
 			this->NotifySamples(open);
 		}
