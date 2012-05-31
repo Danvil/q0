@@ -11,7 +11,6 @@
 #include "QuestZero/Common/ScoreComparer.h"
 #include "QuestZero/Common/Sample.h"
 #include "QuestZero/Common/SampleSet.h"
-#include <Danvil/Tools/MoreMath.h>
 //---------------------------------------------------------------------------
 namespace Q0 {
 //---------------------------------------------------------------------------
@@ -62,7 +61,7 @@ namespace TakePolicy {
 		template<class Space, class CMP>
 		TSample<State,Score> take(const Space& space, const TSampleSet<State,Score>& many) {
 			Private::CmpChecker<State,Score, CMP>();
-			size_t cnt = (take_mean_max_count_ == 0) ? many.count() : Danvil::MoreMath::Min<size_t>(many.count(), take_mean_max_count_);
+			size_t cnt = (take_mean_max_count_ == 0) ? many.count() : std::min<size_t>(many.count(), take_mean_max_count_);
 			TSampleSet<State,Score> best = many.template FindBestSamplesAsSet<CMP>(cnt);
 			std::vector<Score> scores = best.scores();
 			std::vector<State> states_other = best.states();

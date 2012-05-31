@@ -138,9 +138,9 @@ inline bool IsLogged(LogLevel level) {
 //---------------------------------------------------------------------------
 
 #define LOG_DEBUG if(Q0::IsLogged(Q0::LogLevel::Debug)) Q0::detail::LogAccess(Q0::LogLevel::Debug, Q0::detail::LogSingleton())
-#define LOG_INFO if(Q0::IsLogged(Q0::LogLevel::Info)) Q0::detail::Private::LogAccess(Q0::LogLevel::Info, Q0::detail::LogSingleton())
-#define LOG_WARNING if(Q0::IsLogged(Q0::LogLevel::Warning)) Q0::detail::Private::LogAccess(Q0::LogLevel::Warning, Q0::detail::LogSingleton()) << "[File=" << __FILE__ << ", Line=" << __LINE__ << ", Function=" << __FUNCTION__ << "] "
-#define LOG_ERROR if(Q0::IsLogged(Q0::LogLevel::Error)) Q0::detail::Private::LogAccess(Q0::LogLevel::Error, Q0::detail::LogSingleton()) << "[File=" << __FILE__ << ", Line=" << __LINE__ << ", Function=" << __FUNCTION__ << "] "
+#define LOG_INFO if(Q0::IsLogged(Q0::LogLevel::Info)) Q0::detail::LogAccess(Q0::LogLevel::Info, Q0::detail::LogSingleton())
+#define LOG_WARNING if(Q0::IsLogged(Q0::LogLevel::Warning)) Q0::detail::LogAccess(Q0::LogLevel::Warning, Q0::detail::LogSingleton()) << "[File=" << __FILE__ << ", Line=" << __LINE__ << ", Function=" << __FUNCTION__ << "] "
+#define LOG_ERROR if(Q0::IsLogged(Q0::LogLevel::Error)) Q0::detail::LogAccess(Q0::LogLevel::Error, Q0::detail::LogSingleton()) << "[File=" << __FILE__ << ", Line=" << __LINE__ << ", Function=" << __FUNCTION__ << "] "
 
 //---------------------------------------------------------------------------
 #endif

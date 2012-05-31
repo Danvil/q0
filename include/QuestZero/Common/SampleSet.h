@@ -4,11 +4,18 @@
 #include "Sample.h"
 #include "RandomNumbers.h"
 #include <QuestZero/Common/IPrintable.h>
-#include <Danvil/Memory/MemOpsLegacy.h>
-#include <Danvil/Ptr.h>
-#include <vector>
-#include <algorithm>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/covariance.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/min.hpp>
+#include <boost/accumulators/statistics/max.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/variance.hpp>
+#include <boost/accumulators/statistics/variates/covariate.hpp>
 #include <ostream>
+#include <algorithm>
+#include <vector>
+#include <cmath>
 //---------------------------------------------------------------------------
 namespace Q0 {
 //---------------------------------------------------------------------------
@@ -570,10 +577,13 @@ public:
 	}
 
 	void PrintScoreInfo(std::ostream& os) const {
-		Score min, max, mean, dev;
-		Danvil::memops::MinAndMax(scores_.data(), scores_.size(), min, max);
-		mean = Danvil::memops::mean(scores_.data(), scores_.size());
-		dev = Danvil::memops::stdDeviation(scores_.data(), scores_.size(), mean);
+		using namespace boost::accumulators;
+		accumulator_set<double, stats<tag::min, tag::max, tag::mean, tag::variance>> score_acc;
+		score_acc = std::for_each(scores_.begin(), scores_.end(), score_acc);
+		Score min = min(score_acc);
+		Score max = max(score_acc);
+		Score mean = mean(score_acc);
+		Score dev = std::sqrt(variance(score_acc));
 		os << "Sample Scores: Min=" << min << " / Mean=" << mean << " / Max=" << max << " / Dev=" << dev << std::endl;
 	}
 

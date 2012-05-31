@@ -11,7 +11,6 @@
 #include <QuestZero/Spaces/TypelistSpace.h>
 #include <QuestZero/Optimization/Functions.h>
 #include <Danvil/LinAlg.h>
-#include <Danvil/Tools/MoreMath.h>
 #include <Danvil/Print.h>
 #include <boost/bind.hpp>
 #include <iostream>

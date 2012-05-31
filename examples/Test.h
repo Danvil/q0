@@ -14,7 +14,6 @@
 #include <QuestZero/Optimization/Algorithms/NelderMead.h>
 #include <QuestZero/Optimization/Optimization.h>
 #include <Danvil/Tools/Timer.h>
-#include <Danvil/Ptr.h>
 #include <iostream>
 using std::cout;
 using std::endl;

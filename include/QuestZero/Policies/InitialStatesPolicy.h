@@ -8,7 +8,6 @@
 #ifndef QUESTZERO_INITIALSTATESPOLICY_H
 #define QUESTZERO_INITIALSTATESPOLICY_H
 //---------------------------------------------------------------------------
-#include <Danvil/Ptr.h>
 #include <vector>
 //---------------------------------------------------------------------------
 namespace Q0 {

@@ -8,8 +8,8 @@
 #ifndef QUESTZERO_BENCHMARKS_CARTESIAN_H
 #define QUESTZERO_BENCHMARKS_CARTESIAN_H
 
-#include <Danvil/Tools/Constants.h>
 #include <Danvil/LinAlg.h>
+#include <boost/math/constants/constants.hpp>
 #include <cmath>
 
 namespace Benchmarks {
@@ -135,7 +135,7 @@ struct Cartesian
 	/// <returns></returns>
 	static K Rastrigin(const V& v) {
 		const K cA = (K)10;
-		const K cTwoPi = Danvil::TwoPi<K>();
+		const K cTwoPi = 2 * boost::math::constants::pi<K>();
 		K sum = 0;
 		for(unsigned int i = 0; i < v.dimension(); i++) {
 			K x = v[i];
@@ -170,9 +170,9 @@ struct Cartesian
 		for(unsigned int i = 0; i < v.dimension(); i++) {
 			K x = v[i];
 			sum += x * x;
-			prod *= std::cos(K(2) * Danvil::Pi<K>() * x);
+			prod *= std::cos(K(2) * boost::math::constants::pi<K>() * x);
 		}
-		return Danvil::E<K>() + K(20) - K(20) * std::exp(-K(0.2) * std::sqrt(sum / K(v.dimension()))) - std::exp(prod / K(v.dimension()));
+		return boost::math::constants::euler<K>() + K(20) - K(20) * std::exp(-K(0.2) * std::sqrt(sum / K(v.dimension()))) - std::exp(prod / K(v.dimension()));
 	}
 
 	/// <summary>

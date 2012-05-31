@@ -8,7 +8,6 @@
 #ifndef TIMERANGE_H_
 #define TIMERANGE_H_
 //---------------------------------------------------------------------------
-//#include <Danvil/Tools/MoreMath.h>
 #include <cmath>
 //---------------------------------------------------------------------------
 namespace Q0 {

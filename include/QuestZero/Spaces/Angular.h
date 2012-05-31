@@ -11,10 +11,9 @@
 #include "BaseSpace.h"
 #include "QuestZero/Common/RandomNumbers.h"
 #include "QuestZero/Common/Exceptions.h"
-#include <Danvil/Tools/MoreMath.h>
-#include <Danvil/Tools/Constants.h>
-#include <Danvil/Tools/Field.h>
+#include <Danvil/Tools/MoreMath.h> // FIXME remove
 #include <Danvil/SO3.h>
+#include <boost/math/constants/constants.hpp>
 #include <vector>
 #include <cassert>
 //---------------------------------------------------------------------------
@@ -41,7 +40,7 @@ namespace Angular {
 			double distance(K a, K b) const {
 				// compute shortest distance!
 				K w = Wrap(a - b);
-				return (double)Danvil::MoreMath::Min(w, Danvil::C_2_PI - w);
+				return static_cast<double>(std::min(w, K(2) * boost::math::constants::pi<K>() - w));
 			}
 
 			K scale(K a, double s) const {
@@ -92,7 +91,7 @@ namespace Angular {
 
 			/** Restrict the angle to [0,2Pi] */
 			static K Wrap(K x) {
-				return Danvil::MoreMath::Wrap(x, (K)Danvil::C_2_PI);
+				return Danvil::MoreMath::Wrap(x, K(2) * boost::math::constants::pi<K>());
 			}
 
 		protected:
@@ -133,7 +132,7 @@ namespace Angular {
 
 			State random() const {
 				// random number in [0, 2*Pi]
-				return RandomNumbers::Uniform<K>() * Danvil::C_2_PI;
+				return RandomNumbers::Uniform<K>() * K(2) * boost::math::constants::pi<K>();
 			}
 
 			template<typename NT>
@@ -157,21 +156,17 @@ namespace Angular {
 			// FIXME enforce float or double for K
 
 		private:
-			/** The used computation range is [0,R] (R could 2*pi or 1) */
-			// FIXME why can't we use Danvil::C_2_PI??
-			static constexpr K cRange = K(2.0 * 3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230664709384460955058223172535940812848111);
-
 			/** Wraps the angle to the used computation range */
 			static K wrap(K x) {
 				// TODO improve performance?
-				return Danvil::MoreMath::Wrap(x, cRange);
+				return Danvil::MoreMath::Wrap(x, boost::math::constants::two_pi<K>());
 			}
 
 		public:
 			/** Creates a space which allows all values */
 			Interval() {
 				set_lower(K(0));
-				set_upper(cRange);
+				set_upper(boost::math::constants::two_pi<K>());
 			}
 
 			/** Creates a space which allows only values in the given interval
@@ -230,7 +225,7 @@ namespace Angular {
 					else {
 						// be careful to map to the right bound
 						K d1 = lower_; // length of forbidden interval to the left
-						K d2 = cRange - upper_; // length of forbidden interval to the right
+						K d2 = boost::math::constants::two_pi<K>() - upper_; // length of forbidden interval to the right
 						K mean = (d1 + d2) / 2; // mean length of forbidden interval
 						if(d1 < d2) {
 							// the mid point of the excluded area lies in the right interval
@@ -270,11 +265,11 @@ namespace Angular {
 				else {
 					// sample outside of range to have a continuous interval
 					// 0 ++++ upper ------ lower xxxxx R xxxx R+upper ----...
-					K r = RandomNumbers::Uniform<K>(lower_, cRange + upper_);
+					K r = RandomNumbers::Uniform<K>(lower_, boost::math::constants::two_pi<K>() + upper_);
 					// wrap back
 					//return wrap(r);
-					if(r >= cRange) {
-						r -= cRange;
+					if(r >= boost::math::constants::two_pi<K>()) {
+						r -= boost::math::constants::two_pi<K>();
 					}
 					return r;
 				}

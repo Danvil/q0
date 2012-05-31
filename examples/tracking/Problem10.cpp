@@ -6,10 +6,9 @@
  */
 
 #include <QuestZero/Spaces/Angular.h>
-#include <Danvil/Tools/Log.h>
-#include <Danvil/Tools/MoreMath.h>
+#include <QuestZero/Common/Log.h>
+#include <boost/math/constants/constants.hpp>
 #include <Danvil/String.h>
-#include <Danvil/Print.h>
 #include <stdexcept>
 using namespace std;
 //----------------------------------------------------------------------------//
@@ -34,7 +33,7 @@ void TestContains(const AS& space, size_t n)
 			TEST(space.contains(s), "Problem10: Angular space does not contain valid state " << s)
 		}
 		for(size_t i=0; i<n; i++) {
-			Scalar s = space.lower() + Scalar(i) / Scalar(n) * (Danvil::TwoPi<Scalar>() - space.lower());
+			Scalar s = space.lower() + Scalar(i) / Scalar(n) * (2*boost::math::constants::pi<Scalar>() - space.lower());
 			TEST(space.contains(s), "Problem10: Angular space does not contain valid state " << s)
 		}
 	}
@@ -68,13 +67,13 @@ void TestRandomCentered(const AS& space, size_t n, Scalar center, Scalar window,
 	}
 }
 
-#define RAD(X) Danvil::MoreMath::Degree2Radians(Scalar(X))
+#define RAD(X) (X / 180 * boost::math::constants::pi<Scalar>())
 
 int main(int argc, char** argv)
 {
 	AS space;
-	space.set_lower(Scalar(0));
-	space.set_upper(Danvil::MoreMath::Degree2Radians(Scalar(90.0)));
+	space.set_lower(RAD(0));
+	space.set_upper(RAD(90));
 
 	unsigned int dim = space.dimension();
 	TEST(dim == 1, "Problem10: Angular dimension must be 1 not " << dim)

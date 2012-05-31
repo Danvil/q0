@@ -13,11 +13,6 @@
 #include "QuestZero/Common/Exceptions.h"
 #include <Danvil/LinAlg.h>
 #include <Danvil/SO3.h>
-#include <Danvil/Tools/MoreMath.h>
-#include <Danvil/Tools/Field.h>
-#include <Danvil/Ptr.h>
-#include <boost/foreach.hpp>
-#include <boost/range.hpp>
 #include <vector>
 #include <cassert>
 #include <cmath>

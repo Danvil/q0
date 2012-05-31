@@ -11,7 +11,6 @@
 #include "GetScalarType.h"
 #include "QuestZero/Common/Exceptions.h"
 #include <QuestZero/Common/IPrintable.h>
-#include <Danvil/Tools/Debug.h>
 #include <boost/shared_array.hpp>
 #include <vector>
 //---------------------------------------------------------------------------

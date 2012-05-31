@@ -27,12 +27,12 @@ namespace StateConversionPolicy
 
 		void write(size_t n, K* data) const {
 			INVALID_SIZE_EXCEPTION(n != numbersCount())
-			Danvil::Memops::Copy<K, State::Dimension>(data, this->begin());
+			std::copy(this->begin(), this->end(), data);
 		}
 
 		void read(size_t n, const K* data) {
 			INVALID_SIZE_EXCEPTION(n != numbersCount())
-			Danvil::Memops::Copy<K, State::Dimension>(this->begin(), data);
+			std::copy(data, data + n, this->begin());
 		}
 	};
 
@@ -46,14 +46,13 @@ namespace StateConversionPolicy
 		}
 
 		void write(std::vector<K>& v) const {
-			v.clear();
-			v.reserve(numbersCount());
-			Danvil::Memops::Copy<K, State::Dimension>(v.base(), this->begin());
+			v.resize(numbersCount());
+			std::copy(this->begin(), this->end(), v.begin());
 		}
 
 		void read(const State& state, const std::vector<K>& v) {
 			INVALID_SIZE_EXCEPTION(v.size() != numbersCount())
-			Danvil::Memops::Copy<K, State::Dimension>(this->begin(), v.base());
+			std::copy(v.begin(), v.end(), this->begin());
 		}
 	};
 }

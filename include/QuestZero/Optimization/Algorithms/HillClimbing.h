@@ -10,7 +10,7 @@
 //---------------------------------------------------------------------------
 #include "QuestZero/Common/SampleSet.h"
 #include "QuestZero/Common/ScoreComparer.h"
-#include <Danvil/Tools/Log.h>
+#include <QuestZero/Common/Log.h>
 #include <vector>
 #include <cassert>
 #include <cmath>

@@ -11,7 +11,6 @@
 #include "QuestZero/Common/ScoreComparer.h"
 #include "QuestZero/Common/Sample.h"
 #include "QuestZero/Common/SampleSet.h"
-#include <Danvil/Tools/MoreMath.h>
 #include <string>
 #include <vector>
 //---------------------------------------------------------------------------

@@ -13,9 +13,8 @@
 #include "QuestZero/Common/Exceptions.h"
 #include <Danvil/LinAlg.h>
 #include <Danvil/SO3.h>
-#include <Danvil/Tools/MoreMath.h>
-#include <Danvil/Tools/Constants.h>
-#include <Danvil/Tools/Field.h>
+#include <Danvil/Tools/MoreMath.h> // FIXME remove
+#include <Danvil/Tools/Constants.h> // FIXME remove
 #include <vector>
 #include <cassert>
 #include <cmath>

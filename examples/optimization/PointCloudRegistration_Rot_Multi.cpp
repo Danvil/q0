@@ -12,7 +12,6 @@
 #include <QuestZero/Optimization/Functions.h>
 #include <Danvil/LinAlg.h>
 #include <Danvil/Print.h>
-#include <Danvil/Tools/MoreMath.h>
 #include <boost/bind.hpp>
 #include <iostream>
 using std::cout;
