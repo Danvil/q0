@@ -15,7 +15,7 @@ Q0 is a template black box optimization and tracking toolbox.
 
 This library is under heavy development and contains bugs!
 
-USE AT YOUR ONE RISK!
+USE AT YOUR OWN RISK!
 
 Black box in this context describes functions where no derivatives
 are available. Most of theses algorithms are also meant to search for
