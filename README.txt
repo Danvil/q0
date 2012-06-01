@@ -1,6 +1,6 @@
 QuestZero (q0)
 
-Copyright 2012 by David Weikersdorfer, Technische Universitaet Muenchen
+All code Copyright 2012 by David Weikersdorfer, Technische Universitaet Muenchen
 
 Author: David Weikersdorfer
 Email: david.weikersdorfer@danvil.de
