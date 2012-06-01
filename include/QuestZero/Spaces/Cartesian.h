@@ -8,12 +8,11 @@
 #ifndef SPACE_CARTESIAN_H_
 #define SPACE_CARTESIAN_H_
 //---------------------------------------------------------------------------
-#include "GetScalarType.h"
 #include "BaseSpace.h"
 #include "QuestZero/Common/RandomNumbers.h"
 #include "QuestZero/Common/Exceptions.h"
 #include <QuestZero/Common/Tools.hpp>
-#include <Danvil/LinAlg.h>
+#include <Eigen/Dense>
 #include <vector>
 #include <cassert>
 //---------------------------------------------------------------------------
@@ -23,6 +22,24 @@ namespace Spaces {
 
 namespace Cartesian {
 
+	/** A cartesian state vector has to provide the following operations:
+	 * - state_t operator*(scalar_t, state_t) for multiplication of a vector by a scalar
+	 * - state_t operator+(state_t, state_t) for addition of two vectors
+	 * - state_t operator-(state_t) for unary negation of a vectors
+	 * - scalar_t operator[](unsigned int i) for access of the i-th element
+	 */
+
+	template<typename State>
+	struct VectorTraits;
+
+	template<typename K, int N, int _Options, int _MaxRows, int _MaxCols>
+	struct VectorTraits<Eigen::Matrix<K,N,1,_Options,_MaxRows,_MaxCols>>
+	{
+		typedef Eigen::Matrix<K,N,1,_Options,_MaxRows,_MaxCols> state_t;
+		typedef K scalar_t;
+		static const unsigned int dimension = N;
+	};
+
 	namespace Operations
 	{
 		template<typename State>
@@ -30,13 +47,21 @@ namespace Cartesian {
 		{
 			struct WeightedSumException {};
 
-			double distance(const State& a, const State& b) const {
-				return double(Danvil::ctLinAlg::Distance(a, b));
+			typedef typename VectorTraits<State>::scalar_t scalar_t;
+			static const unsigned int dim = VectorTraits<State>::dimension;
+
+			double distance(const State& x, const State& y) const {
+				State d = difference(x, y);
+				scalar_t sum = 0;
+				for(unsigned int i=0; i<dim; i++) {
+					scalar_t q = d[i];
+					sum += q*q;
+				}
+				return static_cast<double>(std::sqrt(sum));
 			}
 
 			State scale(const State& a, double s) const {
-				typedef typename Private::GetScalarType<State>::ScalarType S;
-				return S(s) * a;
+				return scalar_t(s) * a;
 			}
 
 			State inverse(const State& a) const {
@@ -48,29 +73,26 @@ namespace Cartesian {
 			}
 
 			State difference(const State& a, const State& b) const {
-				return compose(a, inverse(b));
+				return a + (-b);
 			}
 
 			template<typename K>
 			State weightedSum(K f1, const State& s1, K f2, const State& s2) const {
-				typedef typename Private::GetScalarType<State>::ScalarType S;
-				return (S)f1 * s1 + (S)f2 * s2;
+				return static_cast<scalar_t>(f1) * s1 + static_cast<scalar_t>(f2) * s2;
 			}
 
 			template<typename K>
 			State weightedSum(K f1, const State& s1, K f2, const State& s2, K f3, const State& s3) const {
-				typedef typename Private::GetScalarType<State>::ScalarType S;
-				return (S)f1 * s1 + (S)f2 * s2 + (S)f3 * s3;
+				return static_cast<scalar_t>(f1) * s1 + static_cast<scalar_t>(f2) * s2 + static_cast<scalar_t>(f3) * s3;
 			}
 
 			template<typename K>
 			State weightedSum(const std::vector<K>& factors, const std::vector<State>& states) const {
 				INVALID_SIZE_EXCEPTION(factors.size() != states.size()) // Number of factors and states must be equal!
 				INVALID_SIZE_EXCEPTION(states.size() == 0)  // Must have at least one element for WeightedSum!
-				typedef typename Private::GetScalarType<State>::ScalarType S;
-				State c = S(factors[0]) * states[0];
+				State c = static_cast<scalar_t>(factors[0]) * states[0];
 				for(size_t i=1; i<states.size(); i++) {
-					c += S(factors[i]) * states[i];
+					c += static_cast<scalar_t>(factors[i]) * states[i];
 				}
 				return c;
 			}
@@ -90,7 +112,7 @@ namespace Cartesian {
 		template<typename State>
 		struct Infinite
 		{
-			typedef typename State::ScalarType S;
+			typedef typename VectorTraits<State>::scalar_t S;
 
 			Infinite() : noise_scale_(S(1)), noise_sigma_(S(1)) {}
 
@@ -102,7 +124,7 @@ namespace Cartesian {
 
 			// TODO: allow states with variable dimension?
 			size_t dimension() const {
-				return State::Dimension;
+				return VectorTraits<State>::dimension;
 			}
 
 			State zero() const {
@@ -167,7 +189,7 @@ namespace Cartesian {
 		template<typename State>
 		struct Box
 		{
-			typedef typename State::ScalarType S;
+			typedef typename VectorTraits<State>::scalar_t S;
 
 			Box() {}
 
@@ -190,7 +212,7 @@ namespace Cartesian {
 
 			// TODO: allow states with variable dimension?
 			size_t dimension() const {
-				return State::Dimension;
+				return VectorTraits<State>::dimension;
 			}
 
 			State zero() const {

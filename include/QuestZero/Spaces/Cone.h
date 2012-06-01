@@ -12,8 +12,8 @@
 #include "QuestZero/Common/RandomNumbers.h"
 #include "QuestZero/Common/Exceptions.h"
 #include <QuestZero/Common/Tools.hpp>
-#include <Danvil/LinAlg.h>
 #include <Danvil/SO3.h>
+#include <Eigen/Dense>
 #include <boost/math/constants/constants.hpp>
 #include <vector>
 #include <cassert>
@@ -55,8 +55,8 @@ namespace Cone
 
 		Q quaternion() const { return q_; }
 
-		Danvil::ctLinAlg::Vec2<K> discPoint() const {
-			return Danvil::ctLinAlg::Vec2<K>(r_ * std::cos(phi_), r_ * std::sin(phi_));
+		Eigen::Matrix<K,2,1> discPoint() const {
+			return Eigen::Matrix<K,2,1>(r_ * std::cos(phi_), r_ * std::sin(phi_));
 		}
 
 		static double distance(const State& a, const State& b) {
@@ -83,15 +83,15 @@ namespace Cone
 
 		template<typename L>
 		static State weightedMean(const std::vector<L>& factors, const std::vector<State>& states) {
-			Danvil::ctLinAlg::Vec2<K> center = Danvil::ctLinAlg::Vec2<K>::Zero();
+			Eigen::Matrix<K,2,1> center = Eigen::Matrix<K,2,1>::Zero();
 			INVALID_SIZE_EXCEPTION(factors.size() != states.size()); // Number of factors and states must be equal!
 			// build the mean in the tangent space
 			// FIXME probably not correct ....
 			for(size_t i=0; i<factors.size(); i++) {
 				center += factors[i] * states[i].discPoint();
 			}
-			K direction = std::atan2(center.y, center.x);
-			K amount = center.length();
+			K direction = std::atan2(center.y(), center.x());
+			K amount = center.norm();
 			return State(direction, amount);
 		}
 
@@ -192,7 +192,7 @@ namespace Cone
 		}
 
 		S zero() const {
-			return State(K(0), K(0));
+			return S(K(0), K(0));
 		}
 
 		S unit(size_t i) const {
@@ -223,15 +223,15 @@ namespace Cone
 		S random() const {
 			// random point on unit disc with radius amount_max_
 			// direction is random angle
-			K direction = boost::math::constants::two_pi<K>() * RandoNumbers::Uniform<K>();
+			K direction = boost::math::constants::two_pi<K>() * RandomNumbers::Uniform<K>();
 			// amount is random radius (must use sqrt for uniform sampling)
-			K amount = amount_max_ * std::sqrt(RandoNumbers::Uniform<K>());
-			return S(direction, amout);;
+			K amount = amount_max_ * std::sqrt(RandomNumbers::Uniform<K>());
+			return S(direction, amount);
 		}
 
 		template<typename NT>
 		S random(const S& center, const std::vector<NT>& noise) const {
-			std::assert(noise.size() == dimension());
+			assert(noise.size() == this->dimension());
 			K direction_noise = noise[0];
 			K amount_noise = noise[1];
 			// randomly add to direction
@@ -252,7 +252,7 @@ namespace Cone
 
 	template<typename K>
 	struct ConeSpace
-	: public BaseSpace<State, Operations<K>, Domain<K> >
+	: public BaseSpace<State<K>, Operations<K>, Domain<K> >
 	{ };
 
 	typedef ConeSpace<float> ConeSpaceF;

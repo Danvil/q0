@@ -10,13 +10,12 @@
 #include <QuestZero/Optimization/Optimization.h>
 #include <QuestZero/Optimization/Functions.h>
 #include <QuestZero/Spaces/Cartesian.h>
-#include <Danvil/Print.h>
-#include <Danvil/LinAlg.h>
+#include <Eigen/Dense>
 #include <boost/bind.hpp>
 #include <iostream>
 using namespace Q0;
 
-typedef Danvil::ctLinAlg::Vec3f state_t;
+typedef Eigen::Matrix<float, 3, 1> state_t;
 
 typedef Spaces::Cartesian::FiniteCartesianSpace<state_t> space_t;
 

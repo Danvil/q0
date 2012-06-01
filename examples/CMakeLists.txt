@@ -1,7 +1,7 @@
-include_directories(
-	${q0_SOURCE_DIR}/include
-	${OpenCV_INCLUDE_DIRS}
-)
+#include_directories(
+#	${q0_SOURCE_DIR}/include
+#	${OpenCV_INCLUDE_DIRS}
+#)
 
 add_executable(Angular optimization/Angular.cpp)
 #add_executable(PointCloudRegistration_Rot optimization/PointCloudRegistration_Rot.cpp)
@@ -18,4 +18,3 @@ add_executable(SpecialFunctions_31 optimization/SpecialFunctions_31.cpp)
 #	${OpenCV_LIBS}
 #	boost_program_options
 #)
-
