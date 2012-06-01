@@ -12,6 +12,7 @@
 #include "BaseSpace.h"
 #include "QuestZero/Common/RandomNumbers.h"
 #include "QuestZero/Common/Exceptions.h"
+#include <QuestZero/Common/Tools.hpp>
 #include <Danvil/LinAlg.h>
 #include <vector>
 #include <cassert>
@@ -221,7 +222,7 @@ namespace Cartesian {
 				State v;
 				for(size_t i=0; i<dimension(); i++) {
 					// clamp value to the allowed interval
-					v[i] = Danvil::MoreMath::Clamp(s[i], min_[i], max_[i]);
+					v[i] = Clamp(s[i], min_[i], max_[i]);
 				}
 				return v;
 			}
@@ -303,7 +304,7 @@ namespace Cartesian {
 			}
 
 			State project(const State& s) const {
-				return Danvil::MoreMath::Clamp(s, min_, max_);
+				return Clamp(s, min_, max_);
 			}
 
 			State random() const {

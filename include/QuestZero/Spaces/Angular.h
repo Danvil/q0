@@ -11,7 +11,7 @@
 #include "BaseSpace.h"
 #include "QuestZero/Common/RandomNumbers.h"
 #include "QuestZero/Common/Exceptions.h"
-#include <Danvil/Tools/MoreMath.h> // FIXME remove
+#include <QuestZero/Common/Tools.hpp>
 #include <Danvil/SO3.h>
 #include <boost/math/constants/constants.hpp>
 #include <vector>
@@ -39,24 +39,24 @@ namespace Angular {
 
 			double distance(K a, K b) const {
 				// compute shortest distance!
-				K w = Wrap(a - b);
+				K w = Wrap2Pi(a - b);
 				return static_cast<double>(std::min(w, K(2) * boost::math::constants::pi<K>() - w));
 			}
 
 			K scale(K a, double s) const {
-				return Wrap(K(s) * a);
+				return Wrap2Pi(K(s) * a);
 			}
 
 			K inverse(K a) const {
-				return Wrap(-a);
+				return Wrap2Pi(-a);
 			}
 
 			K compose(K a, K b) const {
-				return Wrap(a + b);
+				return Wrap2Pi(a + b);
 			}
 
 			K difference(K a, K b) const {
-				return Wrap(a - b);
+				return Wrap2Pi(a - b);
 			}
 
 			template<typename S>
@@ -90,8 +90,8 @@ namespace Angular {
 			}
 
 			/** Restrict the angle to [0,2Pi] */
-			static K Wrap(K x) {
-				return Danvil::MoreMath::Wrap(x, K(2) * boost::math::constants::pi<K>());
+			static K Wrap2Pi(K x) {
+				return Wrap(x, K(2) * boost::math::constants::pi<K>());
 			}
 
 		protected:
@@ -127,7 +127,7 @@ namespace Angular {
 			}
 
 			State project(const State& s) const {
-				return Operations::AngularOps<K>::Wrap(s);
+				return Operations::AngularOps<K>::Wrap2Pi(s);
 			}
 
 			State random() const {
@@ -159,7 +159,7 @@ namespace Angular {
 			/** Wraps the angle to the used computation range */
 			static K wrap(K x) {
 				// TODO improve performance?
-				return Danvil::MoreMath::Wrap(x, boost::math::constants::two_pi<K>());
+				return Wrap(x, boost::math::constants::two_pi<K>());
 			}
 
 		public:
@@ -201,10 +201,12 @@ namespace Angular {
 				x = wrap(x);
 				if(lower_ < upper_) {
 					// test if in interval
-					return Danvil::MoreMath::InInterval(x, lower_, upper_);
+					//return Danvil::MoreMath::InInterval(x, lower_, upper_);
+					return lower_ <= x && x <= upper_;
 				} else {
 					// test if not in not allowed interval
-					return !Danvil::MoreMath::InInterval(x, upper_, lower_);
+					//return !Danvil::MoreMath::InInterval(x, upper_, lower_);
+					return !(upper_ <= x && x <= lower_);
 				}
 			}
 
@@ -218,7 +220,8 @@ namespace Angular {
 				// project to nearest border
 				if(lower_ < upper_) {
 					// normal case: allowed is [lower|upper]
-					if(Danvil::MoreMath::InInterval(x, lower_, upper_)) {
+					//if(Danvil::MoreMath::InInterval(x, lower_, upper_)) {
+					if(lower_ <= x && x <= upper_) {
 						// already in interval
 						return x;
 					}
@@ -230,18 +233,21 @@ namespace Angular {
 						if(d1 < d2) {
 							// the mid point of the excluded area lies in the right interval
 							// 0 --> lower +++++++ upper <---- mu -- R
-							return Danvil::MoreMath::InInterval(x, upper_, upper_ + mean) ? upper_ : lower_;
+							//return Danvil::MoreMath::InInterval(x, upper_, upper_ + mean) ? upper_ : lower_;
+							return (upper_ <= x && x <= upper_ + mean) ? upper_ : lower_;
 						}
 						else {
 							// the mid point of the excluded area lies in the left interval
 							// 0 -- mu ----> lower +++++++ upper <-- R
-							return Danvil::MoreMath::InInterval(x, lower_ - mean, lower_) ? lower_ : upper_;
+							//return Danvil::MoreMath::InInterval(x, lower_ - mean, lower_) ? lower_ : upper_;
+							return (lower_ - mean <= x && x <= lower_) ? lower_ : upper_;
 						}
 					}
 				}
 				else {
 					// two-interval case: allowed is [0|upper] and [lower|R]
-					if(!Danvil::MoreMath::InInterval(x, upper_, lower_)) {
+					//if(!Danvil::MoreMath::InInterval(x, upper_, lower_)) {
+					if(!(upper_ <= x && x <= lower_)) {
 						// already in interval
 						return x;
 					}
@@ -250,7 +256,8 @@ namespace Angular {
 						// compute mid point of excluded interval which is [upper|lower]
 						K mu = (lower_ + upper_) / 2;
 						// map to the nearer bound
-						return Danvil::MoreMath::InInterval(x, upper_, mu) ? upper_ : lower_;
+						//return Danvil::MoreMath::InInterval(x, upper_, mu) ? upper_ : lower_;
+						return (upper_ <= x && x <= mu) ? upper_ : lower_;
 					}
 				}
 			}

@@ -11,10 +11,10 @@
 #include "BaseSpace.h"
 #include "QuestZero/Common/RandomNumbers.h"
 #include "QuestZero/Common/Exceptions.h"
+#include <QuestZero/Common/Tools.hpp>
 #include <Danvil/LinAlg.h>
 #include <Danvil/SO3.h>
-#include <Danvil/Tools/MoreMath.h> // FIXME remove
-#include <Danvil/Tools/Constants.h> // FIXME remove
+#include <boost/math/constants/constants.hpp>
 #include <vector>
 #include <cassert>
 #include <cmath>
@@ -104,7 +104,7 @@ namespace Cone
 		}
 
 		void fromQuaternion() {
-			if(!Danvil::MoreMath::IsZero(q_.x())) {
+			if(!IsZeroEpsilon(q_.x())) {
 				throw "Q0::Spaces::Cone: quaternion is not of the correct form";
 			}
 			r_ = (q_.w >= K(1)) ? K(0) : (K(2) * std::acos(q_.w)); // precision stuff
@@ -183,7 +183,7 @@ namespace Cone
 	{
 		typedef State<K> S;
 
-		Domain() : amount_max_(Danvil::C_PI) {}
+		Domain() : amount_max_(boost::math::constants::pi<K>()) {}
 
 		Domain(K max) : amount_max_(max) {}
 
@@ -216,14 +216,14 @@ namespace Cone
 		}
 
 		S project(const S& s) const {
-			K amount = Danvil::MoreMath::Wrap(s.amount(), K(Danvil::C_2_PI));
+			K amount = Wrap(s.amount(), boost::math::constants::two_pi<K>());
 			return S(s.direction(), std::min(amount, amount_max_));
 		}
 
 		S random() const {
 			// random point on unit disc with radius amount_max_
 			// direction is random angle
-			K direction = K(Danvil::C_2_PI) * RandoNumbers::Uniform<K>();
+			K direction = boost::math::constants::two_pi<K>() * RandoNumbers::Uniform<K>();
 			// amount is random radius (must use sqrt for uniform sampling)
 			K amount = amount_max_ * std::sqrt(RandoNumbers::Uniform<K>());
 			return S(direction, amout);;
