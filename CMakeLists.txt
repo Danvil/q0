@@ -6,7 +6,6 @@ add_definitions(-std=c++0x -DBOOST_DISABLE_ASSERTS)
 
 include_directories(
 	${q0_SOURCE_DIR}/include
-	/home/david/git/DanvilTools/CT/src
 	${EIGEN3_INCLUDE_DIR}
 )
 

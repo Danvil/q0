@@ -12,7 +12,7 @@
 #include "QuestZero/Common/RandomNumbers.h"
 #include "QuestZero/Common/Exceptions.h"
 #include <QuestZero/Common/Tools.hpp>
-#include <Danvil/SO3.h>
+#include <QuestZero/Common/SO3.h>
 #include <Eigen/Dense>
 #include <boost/math/constants/constants.hpp>
 #include <vector>
@@ -37,7 +37,7 @@ namespace Cone
 	template<typename K>
 	struct State
 	{
-		typedef Danvil::SO3::Quaternion<K> Q;
+		typedef Eigen::Quaternion<K> Q;
 
 		State() {}
 
@@ -60,7 +60,7 @@ namespace Cone
 		}
 
 		static double distance(const State& a, const State& b) {
-			return Q::Distance(a.quaternion(), b.quaternion());
+			return a.quaternion().angularDistance(b.quaternion());
 		}
 
 		State scaled(K s) const {

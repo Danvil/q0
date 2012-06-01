@@ -12,7 +12,7 @@
 #include "QuestZero/Common/RandomNumbers.h"
 #include "QuestZero/Common/Exceptions.h"
 #include <QuestZero/Common/Tools.hpp>
-#include <Danvil/SO3.h>
+#include <QuestZero/Common/SO3.h>
 #include <boost/math/constants/constants.hpp>
 #include <vector>
 #include <cassert>
@@ -86,7 +86,7 @@ namespace Angular {
 			template<typename S>
 			K weightedSum(const std::vector<S>& factors, const std::vector<K>& states) const {
 				INVALID_SIZE_EXCEPTION(factors.size() != states.size()) // Number of factors and states must be equal!
-				return Danvil::SO3::RotationTools::WeightedMean(states, factors, (K)1e-3);
+				return Q0::SO3::WeightedMean(states, factors, (K)1e-3);
 			}
 
 			/** Restrict the angle to [0,2Pi] */
