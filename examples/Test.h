@@ -13,8 +13,7 @@
 #include <QuestZero/Optimization/Algorithms/PSO.h>
 #include <QuestZero/Optimization/Algorithms/NelderMead.h>
 #include <QuestZero/Optimization/Optimization.h>
-#include <Danvil/Tools/Timer.h>
-#include <Danvil/Print.h>
+#include "Benchmarks/Timer.h"
 #include <iostream>
 using std::cout;
 using std::endl;
