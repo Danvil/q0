@@ -97,6 +97,13 @@ struct BaseSpace
 
 };
 
+template<typename State, class Operator, class Domain, class OperationFinal>
+std::ostream& operator<<(std::ostream& os, const BaseSpace<State,Operator,Domain,OperationFinal>& state) {
+	state.print(os);
+	return os;
+}
+
+
 //---------------------------------------------------------------------------
 }}
 //---------------------------------------------------------------------------

@@ -10,34 +10,31 @@
 #include <QuestZero/Optimization/Optimization.h>
 #include <QuestZero/Optimization/Functions.h>
 #include <QuestZero/Spaces/SO3.h>
-#include <Danvil/LinAlg.h>
-#include <Danvil/Print.h>
 #include <boost/bind.hpp>
 #include <iostream>
-using std::cout;
-using std::endl;
-using namespace Q0;
 
-typedef Danvil::SO3::Quaternion<double> state_t;
+typedef double real_t;
 
-typedef Spaces::SO3::FullSO3Space<double> space_t;
+typedef Eigen::Quaternion<real_t> state_t;
+
+typedef Q0::Spaces::SO3::FullSO3Space<real_t> space_t;
 
 struct RegistrationFunction
-: public Benchmarks::PointCloudRegistration<double>
+: public Benchmarks::PointCloudRegistration<real_t>
 {
 	typedef double Score;
 	double operator()(const state_t& x) const {
-		return fit(Danvil::SO3::ConvertToMatrix(x));
+		return fit(x.toRotationMatrix());
 	}
 };
 
 int main(int argc, char* argv[])
 {
-	cout << "----- Registration (rotation only) -----" << endl;
+	std::cout << "----- Registration (rotation only) -----" << std::endl;
 
 	space_t space;
 
-	Functions::AddParallel<state_t,RegistrationFunction> f;
+	Q0::Functions::AddParallel<state_t,RegistrationFunction> f;
 	f.createRandomProblem(100);
 
 	TestProblem(space, f);

@@ -9,13 +9,12 @@
 #define QUESTZERO_BENCHMARKS_POINTCLOUDREGISTRATION_H_
 
 #include "QuestZero/Common/RandomNumbers.h"
-#include <Danvil/LinAlg.h>
-#include <Danvil/SO3.h>
+#include <QuestZero/Common/SO3.h>
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
 #include <vector>
 #include <cmath>
 #include <iostream>
-using std::cout;
-using std::endl;
 
 namespace Benchmarks
 {
@@ -24,8 +23,8 @@ template<typename K>
 class PointCloudRegistration
 {
 public:
-	typedef Danvil::ctLinAlg::Vec3<K> V;
-	typedef Danvil::ctLinAlg::Mat3<K> M;
+	typedef Eigen::Matrix<K,3,1> V;
+	typedef Eigen::Matrix<K,3,3> M;
 
 private:
 	std::vector<V> original;
@@ -49,9 +48,9 @@ public:
 		const K cRange = 10.0;
 		const K cNoise = 0.01;
 		//M R = AxisAngle.Random(Optimization.RandomNumbers.Generator).ToMatrix(); // FIXME why not working in mono?
-		Danvil::SO3::Quaternion<K> q = Danvil::SO3::RotationTools::UniformRandom<K>(&RandomNumbers::Uniform<K>);
-		LOG_INFO << "Registration rotation: " << q;
-		M R = Danvil::SO3::ConvertToMatrix(q);
+		Eigen::Quaternion<K> q = Q0::SO3::UniformRandom<K>(&RandomNumbers::Uniform<K>);
+		LOG_INFO << "Registration rotation: " << q.coeffs();
+		M R = q.toRotationMatrix();
 		for(size_t i=0; i<point_count; i++) {
 			V x(
 				RandomNumbers::UniformMP(cRange),
@@ -70,17 +69,17 @@ public:
 	double fit(const M& R) const {
 		double sum = 0;
 		for(size_t i=0; i<pointCount(); i++) {
-			sum += Danvil::ctLinAlg::Distance(R * original[i], target[i]);
+			sum += (R * original[i] - target[i]).norm();
 		}
-		return sqrt(sum) / (double)pointCount();
+		return std::sqrt(sum) / (double)pointCount();
 	}
 
 	double fit(const M& R, const V& t) const {
 		double sum = 0;
 		for(size_t i=0; i<pointCount(); i++) {
-			sum += Danvil::ctLinAlg::Distance(R * original[i] + t, target[i]);
+			sum += (R * original[i] + t - target[i]).norm();
 		}
-		return sqrt(sum) / (double)pointCount();
+		return std::sqrt(sum) / (double)pointCount();
 	}
 
 };

@@ -35,7 +35,8 @@ namespace SO3 {
 			}
 
 			State scale(const State& a, double s) const {
-				return Q0::SO3::ExpQ(s * Q0::SO3::Log(a));
+				Eigen::Matrix<K,3,1> r = s * Q0::SO3::Log(a);
+				return Q0::SO3::ExpQ(r);
 			}
 
 			State inverse(const State& a) const {

@@ -8,10 +8,10 @@
 #ifndef MULTIPLIER_H_
 #define MULTIPLIER_H_
 //---------------------------------------------------------------------------
-#include "GetScalarType.h"
 #include "QuestZero/Common/Exceptions.h"
 #include <QuestZero/Common/IPrintable.h>
 #include <boost/shared_array.hpp>
+#include <boost/assert.hpp>
 #include <vector>
 //---------------------------------------------------------------------------
 namespace Q0 {
@@ -61,8 +61,6 @@ struct MultiplierState
 
 	typedef BaseState_ BaseState;
 
-	typedef typename Private::GetScalarType<BaseState>::ScalarType ScalarType;
-
 	MultiplierState() {
 		// size_policy_ has default value
 		allocate();
@@ -101,12 +99,12 @@ struct MultiplierState
 	}
 
 	BaseState& operator[](size_t i) {
-		DEBUG_ASSERT_MESSAGE(i < count(), "Index out of bound");
+		BOOST_ASSERT_MSG(i < count(), "Index out of bound");
 		return sub_[i];
 	}
 
 	const BaseState& operator[](size_t i) const {
-		DEBUG_ASSERT_MESSAGE(i < count(), "Index out of bound");
+		BOOST_ASSERT_MSG(i < count(), "Index out of bound");
 		return sub_[i];
 	}
 
@@ -174,12 +172,12 @@ struct MultiplierSpace
 	}
 
 	BaseSpace& operator[](size_t i) {
-		DEBUG_ASSERT_MESSAGE(i < count(), "Part index out of bound!");
+		BOOST_ASSERT_MSG(i < count(), "Part index out of bound!");
 		return spaces_[i];
 	}
 
 	const BaseSpace& operator[](size_t i) const {
-		DEBUG_ASSERT_MESSAGE(i < count(), "Part index out of bound!");
+		BOOST_ASSERT_MSG(i < count(), "Part index out of bound!");
 		return spaces_[i];
 	}
 
@@ -372,6 +370,18 @@ private:
 	boost::shared_array<BaseSpace> spaces_;
 
 };
+
+template<typename BaseState, class SizePolicy>
+std::ostream& operator<<(std::ostream& os, const MultiplierState<BaseState,SizePolicy>& state) {
+	state.print(os);
+	return os;
+}
+
+template<typename BaseSpace, typename State_, typename BT>
+std::ostream& operator<<(std::ostream& os, const MultiplierSpace<BaseSpace,State_,BT>& state) {
+	state.print(os);
+	return os;
+}
 
 //---------------------------------------------------------------------------
 }}

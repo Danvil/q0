@@ -14,6 +14,17 @@
 #include <Eigen/Geometry>
 #include <boost/math/constants/constants.hpp>
 #include <cmath>
+#include <iostream>
+
+namespace Eigen
+{
+	template<typename K, int Options>
+	std::ostream& operator<<(std::ostream& os, const Quaternion<K,Options>& q) {
+		os << "Q(" << q.w() << ", " << q.x() << ", " << q.y() << ", " << q.z() << ")";
+		return os;
+	}
+}
+
 //---------------------------------------------------------------------------
 namespace Q0 {
 namespace SO3 {
@@ -54,7 +65,7 @@ K ShortestAngle(const Eigen::Quaternion<K>& q) {
 /** Returns an equal quaternion where w is positive */
 template<typename K>
 Eigen::Quaternion<K> SmallAngleForm(const Eigen::Quaternion<K>& q) {
-	return q.w() < 0 ? -q : q;
+	return q.w() < 0 ? Eigen::Quaternion<K>(-q.w(), -q.x(), -q.y(), -q.z()) : q;
 }
 
 /** Same as ExpR but returns a quaternion instead of a matrix */
@@ -92,7 +103,7 @@ Eigen::Matrix<K,3,3> ExpR(const Eigen::Matrix<K,3,1>& r) {
 template<typename K>
 Eigen::Matrix<K,3,1> Log(const Eigen::Quaternion<K>& q) {
 	// convert quaternion to axis/angle form
-	Eigen::AngleAxis<K> aa = q;
+	Eigen::AngleAxis<K> aa(q);
 	// and get rodriguez form
 	// TODO small angle form?
 	return aa.angle() * aa.axis();
@@ -255,13 +266,13 @@ namespace Private
 			std::cout << "e=" << e << std::endl;
 #endif
 			// check if the value is not changing anymore
-			if(e.length() < accuracy) {
+			if(e.norm() < accuracy) {
 				// no decide if we want this or the opposite
 				// beside y the "opposite rotation" is also a solution
 				// one is instable (and overall further away)
 				// we want the right one!
 				angle_axis_t y_aa(y);
-				angle_axis_t y_prime_aa(y_aa.axis(), y_aa.angle() - boost::math::constants::pi<K>());
+				angle_axis_t y_prime_aa(y_aa.angle() - boost::math::constants::pi<K>(), y_aa.axis());
 				quaternion_t y_prime(y_prime_aa);
 				// sum up dinstances
 				K error_1 = K(0);
@@ -286,8 +297,10 @@ namespace Private
 				LOG_ERROR << "Mean rotation algorithm did not converge!";
 				LOG_ERROR << "Current: " << y;
 				LOG_ERROR << "Last   : " << y_last;
-				LOG_ERROR << "Quaternions: " << qs;
-				LOG_ERROR << "Weights: " << wp.weights();
+				LOG_ERROR << "Weights -> Quaternions: ";
+				for(unsigned int i=0; i<qs.size(); i++) {
+					LOG_ERROR << wp.weights()[i] << " -> " << qs[i];
+				}
 				throw std::runtime_error("Mean rotation algorithm did not converge!");
 			}
 			y_last = y;

@@ -8,7 +8,6 @@
 #ifndef TYPELISTSPACE_H_
 #define TYPELISTSPACE_H_
 //---------------------------------------------------------------------------
-#include "GetScalarType.h"
 #include "QuestZero/Common/Exceptions.h"
 #include <QuestZero/Common/IPrintable.h>
 #include <loki/HierarchyGenerators.h>
@@ -38,8 +37,6 @@ struct TypelistState
   public IPrintable
 {
 	typedef Typelist_ Typelist;
-
-	typedef typename Private::GetScalarType<typename Loki::TL::TypeAt<Typelist, 0>::Result>::ScalarType ScalarType;
 
 	static const int N = Loki::TL::Length<Typelist>::value;
 
@@ -228,8 +225,7 @@ struct TypelistSpace
 
 	// TODO this is default
 	State mean(const std::vector<State>& states) const {
-		typedef typename State::ScalarType Scalar;
-		return weightedSum(std::vector<Scalar>(states.size(), (Scalar)1), states);
+		return weightedSum(std::vector<double>(states.size(), 1), states);
 	}
 
 	// TODO this is default
@@ -430,6 +426,12 @@ private:
 	void projectImpl(Loki::Int2Type<N>, State&, const State&) const {}
 
 };
+
+template<typename Typelist>
+std::ostream& operator<<(std::ostream& os, const TypelistState<Typelist>& state) {
+	state.print(os);
+	return os;
+}
 
 //---------------------------------------------------------------------------
 }}

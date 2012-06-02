@@ -12,28 +12,22 @@
 #include <QuestZero/Spaces/TypelistSpace.h>
 #include <QuestZero/Spaces/Multiplier.h>
 #include <QuestZero/Optimization/Functions.h>
-#include <Danvil/LinAlg.h>
-#include <Danvil/SO3.h>
-#include <Danvil/Print.h>
 #include <boost/bind.hpp>
 #include <iostream>
-using std::cout;
-using std::endl;
-using namespace Q0;
 
 static const unsigned int N = 4;
 
-typedef Danvil::ctLinAlg::Vec3<double> state_loc_t;
-typedef Spaces::MultiplierState<state_loc_t, Spaces::MultiplierSizePolicies::FixedSize<N> > state_loc_multi_t;
-typedef Danvil::SO3::Quaternion<double> state_rot_t;
-typedef Spaces::MultiplierState<state_rot_t, Spaces::MultiplierSizePolicies::FixedSize<N> > state_rot_multi_t;
-typedef Spaces::TypelistState<LOKI_TYPELIST_2(state_loc_multi_t,state_rot_multi_t)> state_t;
+typedef Eigen::Matrix<double,3,1> state_loc_t;
+typedef Q0::Spaces::MultiplierState<state_loc_t, Q0::Spaces::MultiplierSizePolicies::FixedSize<N> > state_loc_multi_t;
+typedef Eigen::Quaternion<double> state_rot_t;
+typedef Q0::Spaces::MultiplierState<state_rot_t, Q0::Spaces::MultiplierSizePolicies::FixedSize<N> > state_rot_multi_t;
+typedef Q0::Spaces::TypelistState<LOKI_TYPELIST_2(state_loc_multi_t,state_rot_multi_t)> state_t;
 
-typedef Spaces::Cartesian::FiniteCartesianSpace<state_loc_t> space_loc_t;
-typedef Spaces::MultiplierSpace<space_loc_t, state_loc_multi_t> space_loc_multi_t;
-typedef Spaces::SO3::FullSO3Space<double> space_rot_t;
-typedef Spaces::MultiplierSpace<space_rot_t, state_rot_multi_t> space_rot_multi_t;
-typedef Spaces::TypelistSpace<LOKI_TYPELIST_2(space_loc_multi_t,space_rot_multi_t), state_t> space_t;
+typedef Q0::Spaces::Cartesian::FiniteCartesianSpace<state_loc_t> space_loc_t;
+typedef Q0::Spaces::MultiplierSpace<space_loc_t, state_loc_multi_t> space_loc_multi_t;
+typedef Q0::Spaces::SO3::FullSO3Space<double> space_rot_t;
+typedef Q0::Spaces::MultiplierSpace<space_rot_t, state_rot_multi_t> space_rot_multi_t;
+typedef Q0::Spaces::TypelistSpace<LOKI_TYPELIST_2(space_loc_multi_t,space_rot_multi_t), state_t> space_t;
 
 struct MultiRegistrationFunctionWPos
 {
@@ -41,33 +35,33 @@ struct MultiRegistrationFunctionWPos
 
 	void createProblem(size_t n) {
 		for(unsigned int i=0; i<N; i++) {
-			r[i] = Danvil::Ptr(new Benchmarks::PointCloudRegistration<double>(N));
+			r[i].reset(new Benchmarks::PointCloudRegistration<double>(N));
 		}
 	}
 
 	Score operator()(const state_t& s) const {
 		Score sum = 0;
 		for(unsigned int i=0; i<N; i++) {
-			Score x = r[i]->fit(Danvil::SO3::ConvertToMatrix(s.part<1>()[i]), s.part<0>()[i]);
+			Score x = r[i]->fit(s.part<1>()[i].toRotationMatrix(), s.part<0>()[i]);
 			sum += x*x;
 		}
 		return sum;
 	}
 
 private:
-	PTR(Benchmarks::PointCloudRegistration<double>) r[N];
+	boost::shared_ptr<Benchmarks::PointCloudRegistration<double>> r[N];
 };
 
 int main(int argc, char** argv)
 {
-	cout << "----- Multi-Registration with position using TypelistSpace with Multiplier -----" << endl;
+	std::cout << "----- Multi-Registration with position using TypelistSpace with Multiplier -----" << std::endl;
 
 	space_t space;
 	for(unsigned int i=0; i<N; i++) {
 		space.space<0>()[i].setDomainRange(state_loc_t(3,4,5));
 	}
 
-	Functions::AddParallel<state_t,MultiRegistrationFunctionWPos> f;
+	Q0::Functions::AddParallel<state_t,MultiRegistrationFunctionWPos> f;
 	f.createProblem(25);
 
 	TestProblem(space, f);
