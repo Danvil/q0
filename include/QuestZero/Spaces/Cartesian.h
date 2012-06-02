@@ -29,8 +29,19 @@ namespace Cartesian {
 	 * - scalar_t operator[](unsigned int i) for access of the i-th element
 	 */
 
-	template<typename State>
-	struct VectorTraits;
+	template<typename K>
+	struct VectorTraits
+	{
+		typedef K state_t;
+		typedef K scalar_t;
+		static const unsigned int dimension = 1;
+		static const scalar_t& at(const state_t& x, unsigned int) {
+			return x;
+		}
+		static scalar_t& at(state_t& x, unsigned int) {
+			return x;
+		}
+	};
 
 	template<typename K, int N, int _Options, int _MaxRows, int _MaxCols>
 	struct VectorTraits<Eigen::Matrix<K,N,1,_Options,_MaxRows,_MaxCols>>
@@ -38,6 +49,12 @@ namespace Cartesian {
 		typedef Eigen::Matrix<K,N,1,_Options,_MaxRows,_MaxCols> state_t;
 		typedef K scalar_t;
 		static const unsigned int dimension = N;
+		static const scalar_t& at(const state_t& x, unsigned int i) {
+			return x[i];
+		}
+		static scalar_t& at(state_t& x, unsigned int i) {
+			return x[i];
+		}
 	};
 
 	namespace Operations
@@ -47,14 +64,15 @@ namespace Cartesian {
 		{
 			struct WeightedSumException {};
 
-			typedef typename VectorTraits<State>::scalar_t scalar_t;
-			static const unsigned int dim = VectorTraits<State>::dimension;
+			typedef VectorTraits<State> traits_t;
+			typedef typename traits_t::scalar_t scalar_t;
+			static const unsigned int dim = traits_t::dimension;
 
 			double distance(const State& x, const State& y) const {
 				State d = difference(x, y);
 				scalar_t sum = 0;
 				for(unsigned int i=0; i<dim; i++) {
-					scalar_t q = d[i];
+					scalar_t q = traits_t::at(d, i);
 					sum += q*q;
 				}
 				return static_cast<double>(std::sqrt(sum));
@@ -112,7 +130,8 @@ namespace Cartesian {
 		template<typename State>
 		struct Infinite
 		{
-			typedef typename VectorTraits<State>::scalar_t S;
+			typedef VectorTraits<State> traits_t;
+			typedef typename traits_t::scalar_t S;
 
 			Infinite() : noise_scale_(S(1)), noise_sigma_(S(1)) {}
 
@@ -130,7 +149,7 @@ namespace Cartesian {
 			State zero() const {
 				State v;
 				for(size_t i=0; i<dimension(); i++) {
-					v[i] = S(0);
+					traits_t::at(v, i) = S(0);
 				}
 				return v;
 			}
@@ -138,7 +157,7 @@ namespace Cartesian {
 			State unit(unsigned int k) const {
 				State v;
 				for(size_t i=0; i<dimension(); i++) {
-					v[i] = (i == size_t(k)) ? S(1) : S(0);
+					traits_t::at(v, i) = (i == size_t(k)) ? S(1) : S(0);
 				}
 				return v;
 			}
@@ -147,7 +166,7 @@ namespace Cartesian {
 			State unit(unsigned int k, SCL s) const {
 				State v;
 				for(size_t i=0; i<dimension(); i++) {
-					v[i] = (i == size_t(k)) ? S(s) : S(0);
+					traits_t::at(v, i) = (i == size_t(k)) ? S(s) : S(0);
 				}
 				return v;
 			}
@@ -159,7 +178,7 @@ namespace Cartesian {
 			State random() const {
 				State v;
 				for(size_t i=0; i<dimension(); i++) {
-					v[i] = noise_scale_ * RandomNumbers::Normal<S>(noise_sigma_);
+					traits_t::at(v, i) = noise_scale_ * RandomNumbers::Normal<S>(noise_sigma_);
 				}
 				return v;
 			}
@@ -170,9 +189,9 @@ namespace Cartesian {
 				State v;
 				for(size_t i=0; i<dimension(); i++) {
 					S n = S(noise[i]);
-					S c_min = center[i] - n;
-					S c_max = center[i] + n;
-					v[i] = RandomNumbers::Uniform(c_min, c_max);
+					S c_min = traits_t::at(center, i) - n;
+					S c_max = traits_t::at(center, i) + n;
+					traits_t::at(v, i) = RandomNumbers::Uniform(c_min, c_max);
 				}
 				return v;
 			}
@@ -189,7 +208,8 @@ namespace Cartesian {
 		template<typename State>
 		struct Box
 		{
-			typedef typename VectorTraits<State>::scalar_t S;
+			typedef VectorTraits<State> traits_t;
+			typedef typename traits_t::scalar_t S;
 
 			Box() {}
 
@@ -218,7 +238,7 @@ namespace Cartesian {
 			State zero() const {
 				State v;
 				for(size_t i=0; i<dimension(); i++) {
-					v[i] = S(0);
+					traits_t::at(v, i) = S(0);
 				}
 				return v;
 			}
@@ -226,7 +246,7 @@ namespace Cartesian {
 			State unit(unsigned int k) const {
 				State v;
 				for(size_t i=0; i<dimension(); i++) {
-					v[i] = (i == size_t(k)) ? S(1) : S(0);
+					traits_t::at(v, i) = (i == size_t(k)) ? S(1) : S(0);
 				}
 				return v;
 			}
@@ -235,7 +255,7 @@ namespace Cartesian {
 			State unit(unsigned int k, SCL s) const {
 				State v;
 				for(size_t i=0; i<dimension(); i++) {
-					v[i] = (i == size_t(k)) ? S(s) : S(0);
+					traits_t::at(v, i) = (i == size_t(k)) ? S(s) : S(0);
 				}
 				return v;
 			}
@@ -244,7 +264,7 @@ namespace Cartesian {
 				State v;
 				for(size_t i=0; i<dimension(); i++) {
 					// clamp value to the allowed interval
-					v[i] = Clamp(s[i], min_[i], max_[i]);
+					traits_t::at(v, i) = Clamp(traits_t::at(s, i), traits_t::at(min_, i), traits_t::at(max_, i));
 				}
 				return v;
 			}
@@ -253,7 +273,7 @@ namespace Cartesian {
 				State v;
 				for(size_t i=0; i<dimension(); i++) {
 					// pick uniformly distributed element in the allowed interval
-					v[i] = RandomNumbers::Uniform(min_[i], max_[i]);
+					traits_t::at(v, i) = RandomNumbers::Uniform(traits_t::at(min_, i), traits_t::at(max_, i));
 				}
 				return v;
 			}
@@ -264,16 +284,16 @@ namespace Cartesian {
 				State v;
 				for(size_t i=0; i<dimension(); i++) {
 					// build the sample interval [c1,c2]
-					S n = S(noise[i]);
+					S n = S(traits_t::at(noise, i));
 					assert(n >= S(0)); // noise must be positive!
-					S c1 = center[i] - n;
-					S c2 = center[i] + n;
-					assert(min_[i] < c2 && c1 < max_[i]); // hopefully the intervals overlap
+					S c1 = traits_t::at(center, i) - n;
+					S c2 = traits_t::at(center, i) + n;
+					assert(traits_t::at(min_, i) < c2 && c1 < traits_t::at(max_, i)); // hopefully the intervals overlap
 					// compute union of intervals
-					S c_min = std::max(min_[i], c1);
-					S c_max = std::min(max_[i], c2);
+					S c_min = std::max(traits_t::at(min_, i), c1);
+					S c_max = std::min(traits_t::at(max_, i), c2);
 					// pick uniformly distributed element in the interval
-					v[i] = RandomNumbers::Uniform(c_min, c_max);
+					traits_t::at(v, i) = RandomNumbers::Uniform(c_min, c_max);
 				}
 				return v;
 			}
@@ -285,69 +305,69 @@ namespace Cartesian {
 			~Box() {}
 		};
 
-		/** Finite interval in 1D Cartesian space */
-		template<typename State>
-		struct Interval
-		{
-			Interval() {}
-
-			Interval(const State& min, const State& max)
-			: min_(min),
-			  max_(max) {}
-
-			void setDomainRange(const State& range) {
-				min_ = -range;
-				max_ = range;
-			}
-
-			void setDomainMin(const State& min) {
-				min_ = min;
-			}
-
-			void setDomainMax(const State& max) {
-				max_ = max;
-			}
-
-			size_t dimension() const {
-				return 1;
-			}
-
-			State zero() const {
-				return State(0);
-			}
-
-			State unit(unsigned int) const {
-				return State(1);
-			}
-
-			template<typename SCL>
-			State unit(unsigned int, SCL s) const {
-				return State(s);
-			}
-
-			State project(const State& s) const {
-				return Clamp(s, min_, max_);
-			}
-
-			State random() const {
-				return RandomNumbers::Uniform(min_, max_);
-			}
-
-			template<typename K>
-			State random(const State& center, const std::vector<K>& noise) const {
-				INVALID_SIZE_EXCEPTION(noise.size() != dimension())
-				State n = State(noise[0]);
-				State c_min = std::max(min_, center - n);
-				State c_max = std::min(max_, center + n);
-				return RandomNumbers::Uniform(c_min, c_max);
-			}
-
-		private:
-			State min_, max_;
-
-		protected:
-			~Interval() {}
-		};
+//		/** Finite interval in 1D Cartesian space */
+//		template<typename State>
+//		struct Interval
+//		{
+//			Interval() {}
+//
+//			Interval(const State& min, const State& max)
+//			: min_(min),
+//			  max_(max) {}
+//
+//			void setDomainRange(const State& range) {
+//				min_ = -range;
+//				max_ = range;
+//			}
+//
+//			void setDomainMin(const State& min) {
+//				min_ = min;
+//			}
+//
+//			void setDomainMax(const State& max) {
+//				max_ = max;
+//			}
+//
+//			size_t dimension() const {
+//				return 1;
+//			}
+//
+//			State zero() const {
+//				return State(0);
+//			}
+//
+//			State unit(unsigned int) const {
+//				return State(1);
+//			}
+//
+//			template<typename SCL>
+//			State unit(unsigned int, SCL s) const {
+//				return State(s);
+//			}
+//
+//			State project(const State& s) const {
+//				return Clamp(s, min_, max_);
+//			}
+//
+//			State random() const {
+//				return RandomNumbers::Uniform(min_, max_);
+//			}
+//
+//			template<typename K>
+//			State random(const State& center, const std::vector<K>& noise) const {
+//				INVALID_SIZE_EXCEPTION(noise.size() != dimension())
+//				State n = State(noise[0]);
+//				State c_min = std::max(min_, center - n);
+//				State c_max = std::min(max_, center + n);
+//				return RandomNumbers::Uniform(c_min, c_max);
+//			}
+//
+//		private:
+//			State min_, max_;
+//
+//		protected:
+//			~Interval() {}
+//		};
 	}
 
 	//---------------------------------------------------------------------------
@@ -386,7 +406,7 @@ namespace Cartesian {
 
 	template<typename K>
 	struct IntervalSpace
-	: public CartesianSpace<K, Domains::Interval<K> >
+	: public CartesianSpace<K, Domains::Box<K> >
 	{
 		virtual void print(std::ostream& os) const {
 			os << "IntervalSpace";
