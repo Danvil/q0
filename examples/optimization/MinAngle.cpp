@@ -23,9 +23,12 @@ double function(real a) {
 int main(int argc, char* argv[])
 {
 
+	unsigned int p_num_particles = 10000;
+	bool p_verbose = true;
+
 	std::cout << "----- Find optimal angle (full interval) -----" << std::endl;
 	std::cout << "Optimum is: " << 0.63 * boost::math::constants::pi<real>() << std::endl;
-	std::cout << endl;
+	std::cout << std::endl;
 
 	{
 		std::cout << "----- full interval -----" << std::endl;
@@ -35,7 +38,7 @@ int main(int argc, char* argv[])
 		Functions::BoostFunctionSingleWrapper<real,real> f;
 		f.set_functor(boost::bind(&function, _1));
 
-		TestProblem(space, f);
+		TestProblem(space, f, p_num_particles, p_verbose);
 	}
 
 	{
@@ -48,7 +51,7 @@ int main(int argc, char* argv[])
 		Functions::BoostFunctionSingleWrapper<real,real> f;
 		f.set_functor(boost::bind(&function, _1));
 
-		TestProblem(space, f);
+		TestProblem(space, f, p_num_particles, p_verbose);
 	}
 
 	{
@@ -61,7 +64,7 @@ int main(int argc, char* argv[])
 		Functions::BoostFunctionSingleWrapper<real,real> f;
 		f.set_functor(boost::bind(&function, _1));
 
-		TestProblem(space, f);
+		TestProblem(space, f, p_num_particles, p_verbose);
 	}
 
 	return 1;

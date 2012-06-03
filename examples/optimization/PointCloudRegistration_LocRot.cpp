@@ -36,6 +36,10 @@ struct RegistrationFunction
 
 int main(int argc, char* argv[])
 {
+
+	unsigned int p_num_particles = 10000;
+	bool p_verbose = true;
+
 	std::cout << "----- Registration (rotation and location) (TypelistSpace) -----" << std::endl;
 
 	space_t space;
@@ -44,7 +48,7 @@ int main(int argc, char* argv[])
 	Q0::Functions::AddParallel<state_t, RegistrationFunction> f;
 	f.createRandomProblem(100);
 
-	TestProblem(space, f);
+	TestProblem(space, f, p_num_particles, p_verbose);
 
 	return 1;
 }
