@@ -14,29 +14,29 @@ Q0 is a template global optimization and tracking toolbox.
 
 Q0 is a fast and customizable C++ template library to find the global optimium of a static or time-dependent function defined over a general class of state spaces. The library can handle arbitrary combinations of cartesian vectors and spatial rotations.
 
-This library is not a local optimization library! Some special local optimization algorithms (i.e. Nelder-Mead) are included. All provided algorithms only rely on function evaluation and do not assume that derivatives are available.
+This library is not a local optimization library! Some special local optimization algorithms (i.e. Nelder-Mead) are included. Q0 works with any function defined over the state space. Functions do not need to have derivatives or be smooth.
 
-Q0 has mainly been used for high-dimensional human motion tracking throughout my PhD thesis. However it is currently in a state of re-structuring so not all elements might work as expected.
+Q0 has mainly been used throughout my PhD thesis for human motion tracking with a high-dimensional skeleton model. However it is currently in a state of re-structuring so not all elements might work as expected.
 
 USE AT YOUR OWN RISK!
 
-Supportes Space Components:
+Available Space Components:
 * Cartesian (fixed or dynamic dimension)
 * SO(2) (two-dimensional rotation)
 * SO(3) (three-dimensional rotation)
 
-There is also limited support for constraints on spaces:
+Available constraints on spaces (experimental):
 * Interval/box constraint on cartesian space
 * Interval constraint for SO(2)
 * Cone/Twist constraint for SO(3)
 
 Optimization Algorithms:
 * Mont Carlo Random Sampling
-* Nelder-Mead Simplex Method (local)
+* Nelder-Mead Simplex Method (local optimizer)
 * Particle Swarm Optimization (PSO)
-* Differential Evolution
+* Differential Evolution (under construction)
 
-Tracking Algorithms:
+Tracking Algorithms (under construction):
 * Condensation Particle Filter
 * Annealed Particle Filter
 * Hierarchical Particle Filter
@@ -62,7 +62,7 @@ http://eigen.tuxfamily.org
 GCC 4.6.3
 
 
-~~~~~ Build instructions ~~~~
+~~~~~ Instructions ~~~~
 
 This builds examples and tests. The main library is headers only.
 
