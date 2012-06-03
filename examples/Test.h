@@ -35,6 +35,7 @@ void printHeader(std::ostream& os) {
 template<typename State, typename Score>
 std::ostream& operator<<(std::ostream& os, const AlgoTestResult<State,Score>& x) {
 	std::cout << std::setw(32) << x.name << std::setw(16) << x.score << std::setw(16) << x.time_ms;
+	return os;
 }
 
 //template<typename State, typename Score>
