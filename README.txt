@@ -5,7 +5,7 @@ All code Copyright 2012 by David Weikersdorfer, Technische Universitaet Muenchen
 Author: David Weikersdorfer
 Email: david.weikersdorfer@danvil.de
 
-last edited: 06/01/2012
+last edited: 06/03/2012
 
 
 ~~~~~ ~~~~~ ~~~~~ ~~~~~ ~~~~~
@@ -52,9 +52,15 @@ Tracking Algorithms:
 ~~~~~ Required dependencies ~~~~~
 
 loki template library
-sudo apt-get install libloki-dev
+Required version: 0.1.7 or newer
+http://loki-lib.sourceforge.net/
 
-Eigen (version 3) linear algebra library
+Boost C++ Libraries
+Required version: 1.46.1 or newer
+http://www.boost.org/
+
+Eigen C++ template library for linear algebra
+Required version: 3.0 or newer
 http://eigen.tuxfamily.org
 
 
@@ -65,7 +71,7 @@ GCC 4.6.3
 
 ~~~~~ Build instructions ~~~~
 
-This builds the examples and tests. The main library is headers only.
+This builds examples and tests. The main library is headers only.
 
 mkdir build
 cd build
