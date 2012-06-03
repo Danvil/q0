@@ -10,36 +10,29 @@ last edited: 06/03/2012
 
 ~~~~~ ~~~~~ ~~~~~ ~~~~~ ~~~~~
 
+Q0 is a template global optimization and tracking toolbox.
 
-Q0 is a template black box optimization and tracking toolbox.
+Q0 is a fast and customizable C++ template library to find the global optimium of a static or time-dependent function defined over a general class of state spaces. The library can handle arbitrary combinations of cartesian vectors and spatial rotations.
 
-This library is under heavy development and contains bugs!
+This library is not a local optimization library! Some special local optimization algorithms (i.e. Nelder-Mead) are included. All provided algorithms only rely on function evaluation and do not assume that derivatives are available.
+
+Q0 has mainly been used for high-dimensional human motion tracking throughout my PhD thesis. However it is currently in a state of re-structuring so not all elements might work as expected.
 
 USE AT YOUR OWN RISK!
 
-Black box in this context describes functions where no derivatives
-are available. Most of theses algorithms are also meant to search for
-global maxima and not only local maxima.
-
-The library provides a general handling of the state space for
-algorithms through a small set of functions.
-
-Supportes Spaces:
-* Cartesian
+Supportes Space Components:
+* Cartesian (fixed or dynamic dimension)
 * SO(2) (two-dimensional rotation)
 * SO(3) (three-dimensional rotation)
 
-There is also limited support for constraints:
+There is also limited support for constraints on spaces:
 * Interval/box constraint on cartesian space
 * Interval constraint for SO(2)
 * Cone/Twist constraint for SO(3)
 
-There are implementations for several commonly used black box
-optimization and tracking algorithms.
-
 Optimization Algorithms:
 * Mont Carlo Random Sampling
-* Nelder-Mead Simplex Method
+* Nelder-Mead Simplex Method (local)
 * Particle Swarm Optimization (PSO)
 * Differential Evolution
 
