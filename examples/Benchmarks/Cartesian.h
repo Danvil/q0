@@ -53,10 +53,7 @@ struct Cartesian
 	static K DiscreetSphere(const V& v) {
 		K max = 0;
 		for(unsigned int i = 0; i < dim; i++) {
-			K x = std::abs(v[i]);
-			if(x > max) {
-				max = x;
-			}
+			max = std::max(max, std::abs(v[i]));
 		}
 		return max;
 	}
@@ -70,10 +67,7 @@ struct Cartesian
 	static K Schwefel2_21(const V& v) {
 		K max = 0;
 		for(unsigned int i = 0; i < dim; i++) {
-			K x = v[i];
-			if(x > max) {
-				max = x;
-			}
+			max = std::max(max, v[i]);
 		}
 		return max;
 	}

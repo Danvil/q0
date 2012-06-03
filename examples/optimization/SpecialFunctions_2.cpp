@@ -1,5 +1,5 @@
 /*
- * SpecialFunctions_31.cpp
+ * SpecialFunctions_3.cpp
  *
  *  Created on: May 30, 2012
  *      Author: david
@@ -15,12 +15,7 @@
 #include <boost/program_options.hpp>
 #include <iostream>
 
-typedef Eigen::Matrix<float, 31, 1> state_t;
-
-template<typename State>
-double shiftedMinima(boost::function<double(const State&)> f, const State& shift, const State& x) {
-	return f(x - shift);
-}
+typedef Eigen::Matrix<float, 2, 1> state_t;
 
 int main(int argc, char* argv[])
 {
@@ -40,18 +35,15 @@ int main(int argc, char* argv[])
 		po::notify(vm);
 	}
 
-	std::cout << "Optimizing in space [-10.0|+10.0]^31" << std::endl;
-	state_t range;
-	for(unsigned int i=0; i<range.rows(); i++) {
-		range[i] = 10;
-	}
+	std::cout << "Optimizing in space [-10.0|+10.0]^3" << std::endl;
+	state_t range(10, 10);
 	Q0::Spaces::Cartesian::FiniteCartesianSpace<state_t> space;
 	space.setDomainRange(range);
 
 	Q0::Functions::BoostFunctionSingleWrapper<state_t,double> f;
 
 	std::cout << std::endl;
-	std::cout << "----- DiscreetSphere --- Expected result: 0 -----" << std::endl;
+	std::cout << "----- DiscreetSphere --- Expected result: [0,0] -----" << std::endl;
 	std::cout << std::endl;
 	f.set_functor([](const state_t& x) {
 		return Benchmarks::Cartesian<state_t>::DiscreetSphere(x);
@@ -59,10 +51,26 @@ int main(int argc, char* argv[])
 	TestProblem(space, f, p_num_particles, p_print_result_state);
 
 	std::cout << std::endl;
-	std::cout << "----- Schwefel2_21 --- Expected result: -inf -----" << std::endl;
+	std::cout << "----- Schwefel2_21 --- Expected result: [-inf,-inf] -----" << std::endl;
 	std::cout << std::endl;
 	f.set_functor([](const state_t& x) {
 		return Benchmarks::Cartesian<state_t>::Schwefel2_21(x);
+	});
+	TestProblem(space, f, p_num_particles, p_print_result_state);
+
+	std::cout << std::endl;
+	std::cout << "----- Rosenbrock --- Expected result: [1,1] -----" << std::endl;
+	std::cout << std::endl;
+	f.set_functor([](const state_t& x) {
+		return Benchmarks::Cartesian<state_t>::Rosenbrock(x);
+	});
+	TestProblem(space, f, p_num_particles, p_print_result_state);
+
+	std::cout << std::endl;
+	std::cout << "----- Rastrigin --- Expected result: [0,0] -----" << std::endl;
+	std::cout << std::endl;
+	f.set_functor([](const state_t& x) {
+		return Benchmarks::Cartesian<state_t>::Rastrigin(x);
 	});
 	TestProblem(space, f, p_num_particles, p_print_result_state);
 

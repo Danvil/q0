@@ -13,21 +13,46 @@
 #include <QuestZero/Optimization/Algorithms/PSO.h>
 #include <QuestZero/Optimization/Algorithms/NelderMead.h>
 #include <QuestZero/Optimization/Optimization.h>
+#include <Eigen/Dense>
 #include "Benchmarks/Timer.h"
 #include <iostream>
-using std::cout;
-using std::endl;
 using namespace Q0;
 
+template<typename State, typename Score>
+struct AlgoTestResult
+{
+	std::string name;
+	State state;
+	Score score;
+	double time_ms;
+};
+
+void printHeader(std::ostream& os) {
+	std::cout << std::setw(32) << "Algorithm" << std::setw(16) << "Score" << std::setw(16) << "Time [ms]" << std::endl;
+	std::cout << std::setw(32) << "------------------------------" << std::setw(16) << "--------------" << std::setw(16) << "--------------" << std::endl;
+}
+
+template<typename State, typename Score>
+std::ostream& operator<<(std::ostream& os, const AlgoTestResult<State,Score>& x) {
+	std::cout << std::setw(32) << x.name << std::setw(16) << x.score << std::setw(16) << x.time_ms;
+}
+
+//template<typename State, typename Score>
+//void PrintAlgoTestResults(const std::vector<AlgoTestResult<State,Score>>& results) {
+//	std::cout << std::setw(32) << "Algorithm" << std::setw(16) << "Score" << std::setw(16) << "Time [ms]" << std::endl;
+//	for(const AlgoTestResult<State,Score>& x : results) {
+//		std::cout << std::setw(32) << x.name << std::setw(16) << x.score << std::setw(16) << x.time_ms << std::endl;
+//	}
+//}
+
 template<typename ALGO, class Space, class Function>
-void TestAlgo(ALGO algo, const Space& space, const Function& function)
+AlgoTestResult<typename ALGO::State, typename ALGO::Score> TestAlgo(ALGO algo, const Space& space, const Function& function)
 {
 	Danvil::Timer timer;
 	timer.start();
 	TSample<typename ALGO::State, typename ALGO::Score> best = algo.Optimize(space, function);
 	timer.stop();
-	cout << "Time: " << timer.getElapsedTimeInMilliSec() << " ms" << endl;
-	cout << "Result: " << best << endl;
+	return AlgoTestResult<typename ALGO::State, typename ALGO::Score>{"", best.state, best.score, timer.getElapsedTimeInMilliSec()};
 }
 
 #ifdef DEBUG
@@ -36,55 +61,95 @@ void TestAlgo(ALGO algo, const Space& space, const Function& function)
 	typedef TargetPolicy::ScoreTargetWithMaxChecks<BetterMeansSmaller<double>,double,false> TargetChecker;
 #endif
 
-const unsigned int cIterationCount = 10;
+const unsigned int cIterationCount = 16;
 const double cScoreGoal = 1e-3;
-const unsigned int cParticleCount = 1000;
+
+template<typename State>
+void printState(const State& x) {
+	std::cout << x << std::endl;
+}
+
+template<typename K, int N, int _Options, int _MaxRows, int _MaxCols>
+void printState(const Eigen::Matrix<K,N,1,_Options,_MaxRows,_MaxCols>& x) {
+	std::cout << x.transpose() << std::endl;
+}
 
 template<class Space, class Function>
-void TestProblem(const Space& space, const Function& function)
+void TestProblem(const Space& space, const Function& function, unsigned int num_particles, bool print_result_state)
 {
-	cout << "----- RND -----" << endl;
-	Optimization<typename Space::State, typename Function::Score,
-			RND,
-			TargetChecker,
-			InitialStatesPolicy::Fuser<InitialStatesPolicy::RandomPicker>::Result,
-			TakePolicy::TakeBest,
-			TracePolicy::Samples::None<typename Space::State, typename Function::Score> > algoRnd;
-	algoRnd.SetMaximumIterationCount(cIterationCount);
-	algoRnd.SetTargetScore(cScoreGoal);
-	algoRnd.particleCount = cParticleCount;
-	TestAlgo(algoRnd, space, function);
+	printHeader(std::cout);
 
-	cout << "----- Nelder Mead -----" << endl;
-	NelderMead<typename Space::State, typename Function::Score,
-			TargetChecker,
-			TracePolicy::Samples::None<typename Space::State, typename Function::Score>,
-			//TracePolicy::Samples::AllToConsole<typename Space::State, typename Function::Score>,
-			true> algoNM;
-//	algoRnd.SetMaximumIterationCount(cIterationCount);
-//	algoRnd.SetTargetScore(cScoreGoal);
-//	algoRnd.particleCount = cParticleCount;
-	algoNM.SetTargetScore(1e-08);
-	algoNM.SetMaximumIterationCount(cIterationCount * cParticleCount / 4); // evaluates 4 particles per iteration
-	algoNM.p_simplex_size = 0.5;
-	algoNM.p_alpha = 1.0;
-	algoNM.p_beta = 0.4;
-	algoNM.p_gamma = 3.0;
-	TestAlgo(algoNM, space, function);
+	{
+		Optimization<typename Space::State, typename Function::Score,
+				RND,
+				TargetChecker,
+				InitialStatesPolicy::Fuser<InitialStatesPolicy::RandomPicker>::Result,
+				TakePolicy::TakeBest,
+				TracePolicy::Samples::None<typename Space::State, typename Function::Score> > algoRnd;
+		algoRnd.SetMaximumIterationCount(cIterationCount);
+		algoRnd.SetTargetScore(cScoreGoal);
+		algoRnd.particleCount = num_particles / cIterationCount;
+		auto tr = TestAlgo(algoRnd, space, function);
+		tr.name = "RND";
+		std::cout << tr;
+		if(print_result_state) {
+			std::cout << "\t";
+			printState(tr.state);
+		}
+		else {
+			std::cout << tr << std::endl;
+		}
+	}
 
-	cout << "----- PSO -----" << endl;
-	Optimization<typename Space::State, typename Function::Score,
-			PSO,
-			TargetChecker,
-			InitialStatesPolicy::Fuser<InitialStatesPolicy::RandomPicker>::Result,
-			TakePolicy::TakeBest,
-			TracePolicy::Samples::None<typename Space::State, typename Function::Score> > algoPso;
-	algoPso.SetMaximumIterationCount(cIterationCount);
-	algoRnd.SetTargetScore(cScoreGoal);
-	algoPso.settings.particleCount = cParticleCount;
-	TestAlgo(algoPso, space, function);
+	{
+		NelderMead<typename Space::State, typename Function::Score,
+				TargetChecker,
+				TracePolicy::Samples::None<typename Space::State, typename Function::Score>,
+				//TracePolicy::Samples::AllToConsole<typename Space::State, typename Function::Score>,
+				true> algoNM;
+	//	algoRnd.SetMaximumIterationCount(cIterationCount);
+	//	algoRnd.SetTargetScore(cScoreGoal);
+	//	algoRnd.particleCount = cParticleCount;
+		algoNM.SetTargetScore(1e-08);
+		algoNM.SetMaximumIterationCount(num_particles / 4); // evaluates 4 particles per iteration
+		algoNM.p_simplex_size = 0.5;
+		algoNM.p_alpha = 1.0;
+		algoNM.p_beta = 0.4;
+		algoNM.p_gamma = 3.0;
+		auto tr = TestAlgo(algoNM, space, function);
+		tr.name = "Nelder Mead";
+		std::cout << tr;
+		if(print_result_state) {
+			std::cout << "\t";
+			printState(tr.state);
+		}
+		else {
+			std::cout << tr << std::endl;
+		}
+	}
 
-	cout << endl;
+	{
+		Optimization<typename Space::State, typename Function::Score,
+				PSO,
+				TargetChecker,
+				InitialStatesPolicy::Fuser<InitialStatesPolicy::RandomPicker>::Result,
+				TakePolicy::TakeBest,
+				TracePolicy::Samples::None<typename Space::State, typename Function::Score> > algoPso;
+		algoPso.SetMaximumIterationCount(cIterationCount);
+		algoPso.SetTargetScore(cScoreGoal);
+		algoPso.settings.particleCount = num_particles / cIterationCount;
+		auto tr = TestAlgo(algoPso, space, function);
+		tr.name = "PSO";
+		std::cout << tr;
+		if(print_result_state) {
+			std::cout << "\t";
+			printState(tr.state);
+		}
+		else {
+			std::cout << tr << std::endl;
+		}
+	}
+
 }
 
 #endif
