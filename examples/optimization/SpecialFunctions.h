@@ -1,21 +1,21 @@
 /*
- * Cartesian.h
+ * SpecialFunctions.h
  *
  *  Created on: Sep 5, 2010
  *      Author: david
  */
 
-#ifndef QUESTZERO_BENCHMARKS_CARTESIAN_H
-#define QUESTZERO_BENCHMARKS_CARTESIAN_H
+#ifndef Q0_EXAMPLES_SPECIALFUNCTIONS_H_
+#define Q0_EXAMPLES_SPECIALFUNCTIONS_H_
 
 #include <QuestZero/Spaces/Cartesian.h>
 #include <boost/math/constants/constants.hpp>
 #include <cmath>
 
-namespace Benchmarks {
+namespace Q0 {
 
 template<typename V>
-struct Cartesian
+struct SpecialFunctions
 {
 	typedef Q0::Spaces::Cartesian::VectorTraits<V> traits_t;
 	typedef typename traits_t::scalar_t K;
@@ -97,7 +97,7 @@ struct Cartesian
 	static K Schwefel1_2(const V& v) {
 		K sum = 0;
 		for(unsigned int i = 0; i < traits_t::dim(v); i++) {
-			for(int j = i; j < i; j++) {
+			for(unsigned int j = i; j < i; j++) {
 				sum += v[i];
 			}
 		}

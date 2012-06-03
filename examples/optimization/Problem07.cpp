@@ -5,7 +5,7 @@
  *      Author: david
  */
 
-#include "../Test.h"
+#include "Solve.h"
 #include <QuestZero/Spaces/Cartesian.h>
 #include <QuestZero/Spaces/SO3.h>
 #include <QuestZero/Spaces/TypelistSpace.h>

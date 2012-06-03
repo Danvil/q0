@@ -5,7 +5,7 @@
  *      Author: david
  */
 
-#include "../Test.h"
+#include "Solve.h"
 #include <QuestZero/Optimization/Optimization.h>
 #include <QuestZero/Optimization/Functions.h>
 #include <QuestZero/Spaces/Angular.h>

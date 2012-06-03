@@ -1,20 +1,21 @@
 /*
- * Test.h
+ * Solve.h
  *
  *  Created on: Sep 11, 2010
  *      Author: david
  */
 
-#ifndef TEST_H_
-#define TEST_H_
+#ifndef Q0_SOLVE_H_
+#define Q0_SOLVE_H_
 
 #include <QuestZero/Policies/TracePolicy.h>
 #include <QuestZero/Optimization/Algorithms/RND.h>
 #include <QuestZero/Optimization/Algorithms/PSO.h>
 #include <QuestZero/Optimization/Algorithms/NelderMead.h>
+#include <QuestZero/Optimization/Functions.h>
 #include <QuestZero/Optimization/Optimization.h>
+#include "../Timer.h"
 #include <Eigen/Dense>
-#include "Benchmarks/Timer.h"
 #include <iostream>
 using namespace Q0;
 
@@ -142,6 +143,15 @@ void TestProblem(const Space& space, const Function& function, unsigned int num_
 		}
 	}
 
+}
+
+template<typename Space, typename Function>
+void Solve(const Space& space, const Function& function, unsigned int num_particles, bool verbose)
+{
+	typedef typename Space::State state_t;
+	Q0::Functions::BoostFunctionSingleWrapper<state_t,double> f;
+	f.set_functor([function](const state_t& x) { return function(x); });
+	TestProblem(space, f, num_particles, verbose);
 }
 
 #endif

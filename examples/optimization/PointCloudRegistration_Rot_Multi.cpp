@@ -5,8 +5,8 @@
  *      Author: david
  */
 
-#include "../Test.h"
-#include "../Benchmarks/PointCloudRegistration.h"
+#include "Solve.h"
+#include "PointCloudRegistration.h"
 #include <QuestZero/Spaces/SO3.h>
 #include <QuestZero/Spaces/Multiplier.h>
 #include <QuestZero/Optimization/Functions.h>

@@ -5,13 +5,10 @@
  *      Author: david
  */
 
-#include "../Test.h"
-#include "../Benchmarks/Cartesian.h"
-#include <QuestZero/Optimization/Optimization.h>
-#include <QuestZero/Optimization/Functions.h>
+#include "Solve.h"
+#include "SpecialFunctions.h"
 #include <QuestZero/Spaces/Cartesian.h>
 #include <Eigen/Dense>
-#include <boost/bind.hpp>
 #include <boost/program_options.hpp>
 #include <iostream>
 
@@ -40,47 +37,60 @@ int main(int argc, char* argv[])
 	Q0::Spaces::Cartesian::FiniteCartesianSpace<state_t> space;
 	space.setDomainRange(range);
 
-	Q0::Functions::BoostFunctionSingleWrapper<state_t,double> f;
+	std::cout << std::endl;
+	std::cout << "----- Null --- Expected result: (0,0) -----" << std::endl;
+	std::cout << std::endl;
+	Solve(space, &Q0::SpecialFunctions<state_t>::Null, p_num_particles, p_print_result_state);
 
 	std::cout << std::endl;
-	std::cout << "----- Sphere --- Expected result: 0 -----" << std::endl;
+	std::cout << "----- Sphere --- Expected result: (0,0) -----" << std::endl;
 	std::cout << std::endl;
-	f.set_functor([](const state_t& x) {
-		return Benchmarks::Cartesian<state_t>::Sphere(x);
-	});
-	TestProblem(space, f, p_num_particles, p_print_result_state);
+	Solve(space, &Q0::SpecialFunctions<state_t>::Sphere, p_num_particles, p_print_result_state);
 
 	std::cout << std::endl;
-	std::cout << "----- DiscreetSphere --- Expected result: [0,0] -----" << std::endl;
+	std::cout << "----- DiscreetSphere --- Expected result: (0,0) -----" << std::endl;
 	std::cout << std::endl;
-	f.set_functor([](const state_t& x) {
-		return Benchmarks::Cartesian<state_t>::DiscreetSphere(x);
-	});
-	TestProblem(space, f, p_num_particles, p_print_result_state);
+	Solve(space, &Q0::SpecialFunctions<state_t>::DiscreetSphere, p_num_particles, p_print_result_state);
 
 	std::cout << std::endl;
-	std::cout << "----- Schwefel2_21 --- Expected result: [-inf,-inf] -----" << std::endl;
+	std::cout << "----- Schwefel2_21 --- Expected result: (-inf,-inf) -----" << std::endl;
 	std::cout << std::endl;
-	f.set_functor([](const state_t& x) {
-		return Benchmarks::Cartesian<state_t>::Schwefel2_21(x);
-	});
-	TestProblem(space, f, p_num_particles, p_print_result_state);
+	Solve(space, &Q0::SpecialFunctions<state_t>::Schwefel2_21, p_num_particles, p_print_result_state);
 
 	std::cout << std::endl;
-	std::cout << "----- Rosenbrock --- Expected result: [1,1] -----" << std::endl;
+	std::cout << "----- Schwefel2_22 --- Expected result: (0,0) -----" << std::endl;
 	std::cout << std::endl;
-	f.set_functor([](const state_t& x) {
-		return Benchmarks::Cartesian<state_t>::Rosenbrock(x);
-	});
-	TestProblem(space, f, p_num_particles, p_print_result_state);
+	Solve(space, &Q0::SpecialFunctions<state_t>::Schwefel2_22, p_num_particles, p_print_result_state);
 
 	std::cout << std::endl;
-	std::cout << "----- Rastrigin --- Expected result: [0,0] -----" << std::endl;
+	std::cout << "----- Schwefel1_2 --- Expected result: (inf,inf) -----" << std::endl;
 	std::cout << std::endl;
-	f.set_functor([](const state_t& x) {
-		return Benchmarks::Cartesian<state_t>::Rastrigin(x);
-	});
-	TestProblem(space, f, p_num_particles, p_print_result_state);
+	Solve(space, &Q0::SpecialFunctions<state_t>::Schwefel1_2, p_num_particles, p_print_result_state);
+
+	std::cout << std::endl;
+	std::cout << "----- Rosenbrock --- Expected result: (1,1) -----" << std::endl;
+	std::cout << std::endl;
+	Solve(space, &Q0::SpecialFunctions<state_t>::Rosenbrock, p_num_particles, p_print_result_state);
+
+	std::cout << std::endl;
+	std::cout << "----- Rastrigin --- Expected result: (0,0) -----" << std::endl;
+	std::cout << std::endl;
+	Solve(space, &Q0::SpecialFunctions<state_t>::Rastrigin, p_num_particles, p_print_result_state);
+
+	std::cout << std::endl;
+	std::cout << "----- Step --- Expected result: (0,0) -----" << std::endl;
+	std::cout << std::endl;
+	Solve(space, &Q0::SpecialFunctions<state_t>::Step, p_num_particles, p_print_result_state);
+
+	std::cout << std::endl;
+	std::cout << "----- Ackley --- Expected result: (0,0) -----" << std::endl;
+	std::cout << std::endl;
+	Solve(space, &Q0::SpecialFunctions<state_t>::Ackley, p_num_particles, p_print_result_state);
+
+	std::cout << std::endl;
+	std::cout << "----- Griewank --- Expected result: (0,0) -----" << std::endl;
+	std::cout << std::endl;
+	Solve(space, &Q0::SpecialFunctions<state_t>::Griewank, p_num_particles, p_print_result_state);
 
 	return 1;
 }
