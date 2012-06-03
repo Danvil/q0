@@ -42,10 +42,12 @@ namespace Cartesian {
 		static unsigned int dim(const state_t& x) {
 			return 1;
 		}
-		static const scalar_t& at(const state_t& x, unsigned int) {
+		static const scalar_t& at(const state_t& x, unsigned int i) {
+			assert(i < dim(x));
 			return x;
 		}
-		static scalar_t& at(state_t& x, unsigned int) {
+		static scalar_t& at(state_t& x, unsigned int i) {
+			assert(i < dim(x));
 			return x;
 		}
 	};
@@ -64,9 +66,11 @@ namespace Cartesian {
 			return N;
 		}
 		static const scalar_t& at(const state_t& x, unsigned int i) {
+			assert(i < dim(x));
 			return x[i];
 		}
 		static scalar_t& at(state_t& x, unsigned int i) {
+			assert(i < dim(x));
 			return x[i];
 		}
 	};
@@ -84,9 +88,11 @@ namespace Cartesian {
 			return x.rows();
 		}
 		static const scalar_t& at(const state_t& x, unsigned int i) {
+			assert(i < dim(x));
 			return x[i];
 		}
 		static scalar_t& at(state_t& x, unsigned int i) {
+			assert(i < dim(x));
 			return x[i];
 		}
 	};
