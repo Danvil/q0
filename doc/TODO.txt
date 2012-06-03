@@ -1,18 +1,16 @@
 
 ~~~~~ ~~~~~ ~~~~~ TODO ~~~~~ ~~~~~ ~~~~~
 
-last edited: 05/30/2012
+last edited: 06/03/2012
 
+*** Thorough testing of algorithms and spaces
 
-*** Use Eigen instead of Danvil::ctLinAlg
+*** Better design for space domain and space operations
 
-*** Remove reference to Danvil
-
-*** Re-structure problem 07 and problem 10
-*** Fix problem 09
-
-*** Clean library design
+*** Better design for algorithm policies
 
 *** Unifiy naming convention (camelCase for methods, camel for namespaces)
 
-*** Provide install
+*** Fixe example 09 and example 10
+
+*** Further design improvements
