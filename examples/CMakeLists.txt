@@ -10,9 +10,11 @@
 #add_executable(PointCloudRegistration_LocRot_Multi optimization/PointCloudRegistration_LocRot_Multi.cpp)
 #add_executable(Problem07 optimization/Problem07.cpp)
 add_executable(SpecialFunctions_2 optimization/SpecialFunctions_2.cpp)
-add_executable(SpecialFunctions_31 optimization/SpecialFunctions_31.cpp)
+#add_executable(SpecialFunctions_31 optimization/SpecialFunctions_31.cpp)
+add_executable(SpecialFunctions_dyn optimization/SpecialFunctions_dyn.cpp)
 #add_executable(Problem09 tracking/Problem09.cpp)
 #add_executable(Problem10 tracking/Problem10.cpp)
 
 target_link_libraries(SpecialFunctions_2 boost_program_options)
-target_link_libraries(SpecialFunctions_31 boost_program_options)
+#target_link_libraries(SpecialFunctions_31 boost_program_options)
+target_link_libraries(SpecialFunctions_dyn boost_program_options)

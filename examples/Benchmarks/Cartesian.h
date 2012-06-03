@@ -17,8 +17,8 @@ namespace Benchmarks {
 template<typename V>
 struct Cartesian
 {
-	typedef typename Q0::Spaces::Cartesian::VectorTraits<V>::scalar_t K;
-	static const unsigned int dim = Q0::Spaces::Cartesian::VectorTraits<V>::dimension;
+	typedef Q0::Spaces::Cartesian::VectorTraits<V> traits_t;
+	typedef typename traits_t::scalar_t K;
 
 	/// <summary>
 	/// The function f(x) = 0
@@ -37,7 +37,7 @@ struct Cartesian
 	/// <returns></returns>
 	static K Sphere(const V& v) {
 		K sum = 0;
-		for(unsigned int i = 0; i < dim; i++) {
+		for(unsigned int i = 0; i < traits_t::dim(v); i++) {
 			K x = v[i];
 			sum += x * x;
 		}
@@ -52,7 +52,7 @@ struct Cartesian
 	/// <returns></returns>
 	static K DiscreetSphere(const V& v) {
 		K max = 0;
-		for(unsigned int i = 0; i < dim; i++) {
+		for(unsigned int i = 0; i < traits_t::dim(v); i++) {
 			max = std::max(max, std::abs(v[i]));
 		}
 		return max;
@@ -66,7 +66,7 @@ struct Cartesian
 	/// <returns></returns>
 	static K Schwefel2_21(const V& v) {
 		K max = 0;
-		for(unsigned int i = 0; i < dim; i++) {
+		for(unsigned int i = 0; i < traits_t::dim(v); i++) {
 			max = std::max(max, v[i]);
 		}
 		return max;
@@ -80,7 +80,7 @@ struct Cartesian
 	/// <returns></returns>
 	static K Schwefel2_22(const V& v) {
 		K sum = 0, prod = 1;
-		for(unsigned int i = 0; i < dim; i++) {
+		for(unsigned int i = 0; i < traits_t::dim(v); i++) {
 			K x = std::abs(v[i]);
 			sum += x;
 			prod *= x;
@@ -96,7 +96,7 @@ struct Cartesian
 	/// <returns></returns>
 	static K Schwefel1_2(const V& v) {
 		K sum = 0;
-		for(unsigned int i = 0; i < dim; i++) {
+		for(unsigned int i = 0; i < traits_t::dim(v); i++) {
 			for(int j = i; j < i; j++) {
 				sum += v[i];
 			}
@@ -112,7 +112,7 @@ struct Cartesian
 	/// <returns></returns>
 	static K Rosenbrock(const V& v) {
 		K sum = 0;
-		for(unsigned int i = 0; i < dim - 1; i++) {
+		for(unsigned int i = 0; i < traits_t::dim(v) - 1; i++) {
 			K x = v[i];
 			K y = v[i + 1];
 			K a = y - x * x;
@@ -132,7 +132,7 @@ struct Cartesian
 		const K cA = (K)10;
 		const K cTwoPi = 2 * boost::math::constants::pi<K>();
 		K sum = 0;
-		for(unsigned int i = 0; i < dim; i++) {
+		for(unsigned int i = 0; i < traits_t::dim(v); i++) {
 			K x = v[i];
 			sum += x * x + cA * (1 - std::cos(cTwoPi * x));
 		}
@@ -147,7 +147,7 @@ struct Cartesian
 	/// <returns></returns>
 	static K Step(const V& v) {
 		K sum = 0;
-		for(unsigned int i = 0; i < dim; i++) {
+		for(unsigned int i = 0; i < traits_t::dim(v); i++) {
 			K a = std::floor(v[i] + K(0.5));
 			sum += a * a;
 		}
@@ -162,12 +162,12 @@ struct Cartesian
 	/// <returns></returns>
 	static K Ackley(const V& v) {
 		K sum = 0, prod = 1;
-		for(unsigned int i = 0; i < dim; i++) {
+		for(unsigned int i = 0; i < traits_t::dim(v); i++) {
 			K x = v[i];
 			sum += x * x;
 			prod *= std::cos(K(2) * boost::math::constants::pi<K>() * x);
 		}
-		return boost::math::constants::euler<K>() + K(20) - K(20) * std::exp(-K(0.2) * std::sqrt(sum / K(dim))) - std::exp(prod / K(dim));
+		return boost::math::constants::euler<K>() + K(20) - K(20) * std::exp(-K(0.2) * std::sqrt(sum / K(traits_t::dim(v)))) - std::exp(prod / K(traits_t::dim(v)));
 	}
 
 	/// <summary>
@@ -179,7 +179,7 @@ struct Cartesian
 	static K Griewank(const V& v) {
 		K sum = 0;
 		K prod = 1;
-		for(unsigned int i = 0; i < dim; i++) {
+		for(unsigned int i = 0; i < traits_t::dim(v); i++) {
 			K x = v[i];
 			sum += x * x;
 			prod *= std::cos(x / std::sqrt(i + 1));

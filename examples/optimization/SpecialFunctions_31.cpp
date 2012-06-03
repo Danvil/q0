@@ -25,7 +25,7 @@ double shiftedMinima(boost::function<double(const State&)> f, const State& shift
 int main(int argc, char* argv[])
 {
 	unsigned int p_num_particles = 16384;
-	bool p_print_result_state = true;
+	bool p_print_result_state = false;
 	{
 		namespace po = boost::program_options;
 		po::options_description desc("Allowed options");
@@ -49,6 +49,14 @@ int main(int argc, char* argv[])
 	space.setDomainRange(range);
 
 	Q0::Functions::BoostFunctionSingleWrapper<state_t,double> f;
+
+	std::cout << std::endl;
+	std::cout << "----- Sphere --- Expected result: 0 -----" << std::endl;
+	std::cout << std::endl;
+	f.set_functor([](const state_t& x) {
+		return Benchmarks::Cartesian<state_t>::Sphere(x);
+	});
+	TestProblem(space, f, p_num_particles, p_print_result_state);
 
 	std::cout << std::endl;
 	std::cout << "----- DiscreetSphere --- Expected result: 0 -----" << std::endl;

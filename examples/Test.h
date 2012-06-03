@@ -29,7 +29,7 @@ struct AlgoTestResult
 
 void printHeader(std::ostream& os) {
 	std::cout << std::setw(32) << "Algorithm" << std::setw(16) << "Score" << std::setw(16) << "Time [ms]" << std::endl;
-	std::cout << std::setw(32) << "------------------------------" << std::setw(16) << "--------------" << std::setw(16) << "--------------" << std::endl;
+	std::cout << std::setw(32) << "--------------------------------" << std::setw(16) << "--------------" << std::setw(16) << "--------------" << std::endl;
 }
 
 template<typename State, typename Score>
@@ -71,7 +71,7 @@ void printState(const State& x) {
 
 template<typename K, int N, int _Options, int _MaxRows, int _MaxCols>
 void printState(const Eigen::Matrix<K,N,1,_Options,_MaxRows,_MaxCols>& x) {
-	std::cout << x.transpose() << std::endl;
+	std::cout << std::fixed << std::setprecision(5) << x.transpose() << std::endl;
 }
 
 template<class Space, class Function>
@@ -91,13 +91,10 @@ void TestProblem(const Space& space, const Function& function, unsigned int num_
 		algoRnd.particleCount = num_particles / cIterationCount;
 		auto tr = TestAlgo(algoRnd, space, function);
 		tr.name = "RND";
-		std::cout << tr;
+		std::cout << tr << std::endl;
 		if(print_result_state) {
-			std::cout << "\t";
+			std::cout << "Result: ";
 			printState(tr.state);
-		}
-		else {
-			std::cout << tr << std::endl;
 		}
 	}
 
@@ -118,13 +115,10 @@ void TestProblem(const Space& space, const Function& function, unsigned int num_
 		algoNM.p_gamma = 3.0;
 		auto tr = TestAlgo(algoNM, space, function);
 		tr.name = "Nelder Mead";
-		std::cout << tr;
+		std::cout << tr << std::endl;
 		if(print_result_state) {
-			std::cout << "\t";
+			std::cout << "Result: ";
 			printState(tr.state);
-		}
-		else {
-			std::cout << tr << std::endl;
 		}
 	}
 
@@ -140,13 +134,10 @@ void TestProblem(const Space& space, const Function& function, unsigned int num_
 		algoPso.settings.particleCount = num_particles / cIterationCount;
 		auto tr = TestAlgo(algoPso, space, function);
 		tr.name = "PSO";
-		std::cout << tr;
+		std::cout << tr << std::endl;
 		if(print_result_state) {
-			std::cout << "\t";
+			std::cout << "Result: ";
 			printState(tr.state);
-		}
-		else {
-			std::cout << tr << std::endl;
 		}
 	}
 
