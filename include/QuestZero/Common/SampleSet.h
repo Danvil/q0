@@ -64,6 +64,15 @@ template<typename SampleList>
 const typename SampleList::state_t& get_state(const SampleList& list, typename SampleList::sample_descriptor id);
 
 template<typename SampleList>
+const typename SampleList::score_t& get_score(const SampleList& list, typename SampleList::sample_descriptor id);
+
+template<typename SampleList>
+void set_state(SampleList& list, typename SampleList::sample_descriptor, const typename SampleList::state_t& state);
+
+template<typename SampleList>
+void set_score(SampleList& list, typename SampleList::sample_descriptor, const typename SampleList::score_t& score_list);
+
+template<typename SampleList>
 std::vector<typename SampleList::state_t> get_state_list(const SampleList& list) {
 	// default implementation using states iterator range
 	std::vector<typename SampleList::state_t> state_list;
@@ -73,9 +82,6 @@ std::vector<typename SampleList::state_t> get_state_list(const SampleList& list)
 	}
 	return state_list;
 }
-
-template<typename SampleList>
-const typename SampleList::score_t& get_score(const SampleList& list, typename SampleList::sample_descriptor id);
 
 template<typename SampleList>
 std::vector<typename SampleList::score_t> get_score_list(const SampleList& list) {
@@ -89,9 +95,6 @@ std::vector<typename SampleList::score_t> get_score_list(const SampleList& list)
 }
 
 template<typename SampleList>
-void set_state(SampleList& list, typename SampleList::sample_descriptor, const typename SampleList::state_t& state);
-
-template<typename SampleList>
 void set_state_list(SampleList& list, const std::vector<typename SampleList::state_t>& state_list) {
 	// default implementation using states iterator range
 	assert(state_list.size() == num_samples(list));
@@ -101,9 +104,6 @@ void set_state_list(SampleList& list, const std::vector<typename SampleList::sta
 		++it;
 	}
 }
-
-template<typename SampleList>
-void set_score(SampleList& list, typename SampleList::sample_descriptor, const typename SampleList::score_t& score_list);
 
 template<typename SampleList>
 void set_score_list(SampleList& list, const std::vector<typename SampleList::score_t>& score_list) {
@@ -171,7 +171,6 @@ void compute_likelihood(SampleList& list, const Function& f) {
 /** Transforms all states by a function */
 template<typename SampleList, typename Function>
 void transform_states(SampleList& list, const Function& f) {
-	auto range = states(list);
 	for(auto& x : states(list)) {
 		x = f(x);
 	}
@@ -180,7 +179,6 @@ void transform_states(SampleList& list, const Function& f) {
 /** Transforms all scores with a function */
 template<typename SampleList, typename Function>
 void transform_scores(SampleList& list, const Function& f) {
-	auto range = scores(list);
 	for(auto& x : scores(list)) {
 		x = f(x);
 	}
