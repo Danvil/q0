@@ -24,11 +24,7 @@ namespace SamplingTools
 	/** Normalizes a list of elements */
 	template<typename K>
 	double Sum(const std::vector<K>& v) {
-		double sum = 0;
-		for(std::vector<double>::const_iterator it=v.begin(); it!=v.end(); ++it) {
-			sum += double(*it);
-		}
-		return sum;
+		return std::accumulate(v.begin(), v.end(), 0.0, [](double a, K v) { return a + static_cast<double>(v); } );
 	}
 
 	/** Normalizes a list of elements */
@@ -41,7 +37,7 @@ namespace SamplingTools
 		std::vector<double> weights;
 		weights.resize(v.size());
 		for(size_t i=0; i<v.size(); i++) {
-			weights[i] = double(v[i]) * scl;
+			weights[i] = static_cast<double>(v[i]) * scl;
 		}
 		return weights;
 	}
@@ -49,8 +45,7 @@ namespace SamplingTools
 	/** Normalizes a list of elements */
 	template<typename K>
 	std::vector<double> Normalize(const std::vector<K>& v) {
-		double sum = Sum(v);
-		return Normalize(v, sum);
+		return Normalize(v, Sum(v));
 	}
 
 	/** Computes the non-unit density function of a discrete probability distribution
@@ -58,9 +53,6 @@ namespace SamplingTools
 	 */
 	template<typename K>
 	static std::vector<double> ComputeDensityUnnormalized(const std::vector<K>& distribution) {
-		if(distribution.size() == 0) {
-			throw CanNotNormalizeZeroListException();
-		}
 		// we first build the density using the unnormalized weights
 		std::vector<double> density;
 		density.reserve(distribution.size());
@@ -82,42 +74,40 @@ namespace SamplingTools
 		return Normalize(density, density.back());
 	}
 
-	/** Finds the index of the first value larger than the given value */
-	inline
-	size_t FindIndexOfFirstLargerThan(const std::vector<double>& list, double val) {
-		// TODO use bisection search here if list is sorted!
-		for(std::vector<double>::const_iterator it=list.begin(); it!=list.end(); ++it) {
-			if(*it >= val) {
-				return it - list.begin();
-			}
-		}
-		throw InvalidDistributionException(); // TODO throw a different exception here!
-	}
-
-	/** Randomly picks one elements from a density function of a discrete probability distribution */
+	/** Randomly picks one elements from a density function of a discrete probability distribution
+	 * The density vector does need to be normalized but it's values must be ordered!
+	 */
 	inline
 	size_t SampleDensity(const std::vector<double>& density) {
+		if(density.size() == 0 || density.back() == 0.0) {
+			throw InvalidDistributionException();
+		}
+		// get random value in density
 		double r = RandomNumbers::Uniform<double>(density.back());
-		return FindIndexOfFirstLargerThan(density, r);
-		// TODO catch possible exceptions and transfer to InvalidDistributionException
+		// find lower bound (first in density which has value >= r)
+		auto it = std::lower_bound(density.begin(), density.end(), r);
+		// return index to lower bound
+		return it - density.begin();
 	}
 
 	/** Randomly picks several elements from a density function of a discrete probability distribution */
 	inline
 	std::vector<size_t> SampleDensity(const std::vector<double>& density, size_t count) {
-		std::vector<size_t> picked;
-		picked.reserve(count);
-		for(size_t i=0; i<count; ++i) {
-			size_t p = SampleDensity(density);
-			picked.push_back(p);
-		}
+		std::vector<size_t> picked(count);
+		std::generate(picked.begin(), picked.end(), [&density]() { return SampleDensity(density); });
 		return picked;
 	}
 
 	/** Randomly picks several elements from a discrete probability distribution */
 	template<typename K>
 	std::vector<size_t> DrawFromDistribution(const std::vector<K>& distribution, size_t count) {
+		if(distribution.size() == 0) {
+			throw InvalidDistributionException();
+		}
 		std::vector<double> density = ComputeDensityUnnormalized(distribution);
+		if(density.back() == 0.0) {
+			throw InvalidDistributionException();
+		}
 		return SampleDensity(density, count);
 	}
 
