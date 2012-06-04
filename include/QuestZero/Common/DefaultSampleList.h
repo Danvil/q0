@@ -9,6 +9,7 @@
 #define Q0_DEFAULTSAMPLELIST_H_
 
 #include "range.hpp"
+#include "Sample.h"
 #include <boost/assert.hpp>
 #include <vector>
 
