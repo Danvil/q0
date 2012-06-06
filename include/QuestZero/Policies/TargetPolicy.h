@@ -129,6 +129,60 @@ namespace TargetPolicy
 
 	};
 
+	template<typename Score, bool Console=true>
+	struct ScoreChangeTarget
+	{
+		typedef std::function<double(Score,Score)> DeltaFunctor;
+
+		ScoreChangeTarget()
+		: has_last_score_(false),
+		  target_delta_(0.0),
+		  fnc_delta_([](Score x, Score y) { return 0.0; }) // FIXME is it good to define a default?
+		{}
+
+		void SetTargetDelta(double delta) {
+			target_delta_ = delta;
+		}
+
+		void SetTargetDeltaFunctor(DeltaFunctor fnc) {
+			fnc_delta_ = fnc;
+		}
+
+		template<typename Compare>
+		bool IsTargetReached(Score score, Compare cmp) {
+			if(!has_last_score_) {
+				has_last_score_ = true;
+				last_score_ = score;
+				return false;
+			}
+			double d = fnc_delta_(score, last_score_);
+			if(Console) {
+				std::cout << "Current score=" << score << ", Last score=" << last_score_ << ", Delta=" << d << ", Target delta=" << target_delta_ << std::endl;
+			}
+			last_score_ = score;
+			if(d <= target_delta_) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+
+	private:
+		bool has_last_score_;
+		Score last_score_;
+		double target_delta_;
+		DeltaFunctor fnc_delta_;
+	};
+
+	/** Checks abs(score - last_score) <= target */
+	template<typename Score, bool Console>
+	void set_absdiff_score_change_target(ScoreChangeTarget<Score,Console>& obj, double target) {
+		obj.SetTargetDelta(target);
+		obj.SetTargetDeltaFunctor([](Score x, Score y) { return std::abs(x - y); });
+	}
+
+
 }
 
 //---------------------------------------------------------------------------

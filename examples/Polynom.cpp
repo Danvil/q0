@@ -29,12 +29,11 @@ int main()
 
 	Q0::Optimization<state_t, score_t,
 			Q0::PSO,
-			Q0::TargetPolicy::ScoreTargetWithMaxChecks<score_t,false>,
+			Q0::TargetPolicy::ScoreChangeTarget<score_t>,
 			Q0::InitialStatesPolicy::Fuser<Q0::InitialStatesPolicy::RandomPicker>::Result,
 			Q0::TakePolicy::TakeBest,
 			Q0::TracePolicy::Samples::None<state_t,score_t> > algoPso;
-	algoPso.SetMaximumIterationCount(1000);
-	algoPso.SetTargetScore(1e-5);
+	Q0::TargetPolicy::set_absdiff_score_change_target(algoPso, 1e-5);
 	algoPso.settings.particleCount = 100;
 
 	Q0::TSample<state_t, score_t> best = algoPso.Minimize(space, &polynom);
