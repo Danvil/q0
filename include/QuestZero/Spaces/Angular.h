@@ -363,25 +363,25 @@ namespace Angular {
 		}
 	};
 
-	template<typename State>
-	struct FullAngularSpace
-	: public AngularSpace<State, Domains::Full<State> >
-	{
-		virtual void print(std::ostream& os) const {
-			os << "FullAngularSpace";
-		}
-	};
-
-	template<typename State>
-	struct IntervalAngularSpace
-	: public AngularSpace<State, Domains::Interval<State> >
-	{
-		virtual void print(std::ostream& os) const {
-			os << "IntervalAngularSpace";
-		}
-	};
-
 }
+
+template<typename State>
+struct FullAngularSpace
+: public Angular::AngularSpace<State, Angular::Domains::Full<State> >
+{
+	virtual void print(std::ostream& os) const {
+		os << "FullAngularSpace";
+	}
+};
+
+template<typename State>
+struct IntervalAngularSpace
+: public Angular::AngularSpace<State, Angular::Domains::Interval<State> >
+{
+	virtual void print(std::ostream& os) const {
+		os << "IntervalAngularSpace";
+	}
+};
 
 //---------------------------------------------------------------------------
 }}

@@ -348,37 +348,37 @@ namespace SO3 {
 		};
 	}
 
-	//---------------------------------------------------------------------------
-
-	template<
-		typename K,
-		class Domain = Domains::Full<K>,
-		class Operator = Operations::SO3Ops<K>,
-		class OperationFinal = OperationFinalPolicy::Unprojected<Eigen::Quaternion<K> >
-	>
-	struct FullSO3Space
-	: public BaseSpace<Eigen::Quaternion<K>, Operator, Domain, OperationFinal>
-	{
-		virtual void print(std::ostream& os) const {
-			os << "FullSO3Space";
-		}
-	};
-
-	template<
-		typename K,
-		class Domain = Domains::ConeTwist<K>,
-		class Operator = Operations::SO3Ops<K>,
-		class OperationFinal = OperationFinalPolicy::Projected<Eigen::Quaternion<K> >
-	>
-	struct ConeTwistSpace
-	: public BaseSpace<Eigen::Quaternion<K>, Operator, Domain, OperationFinal>
-	{
-		virtual void print(std::ostream& os) const {
-			os << "ConeTwistSpace";
-		}
-	};
-
 }
+
+//---------------------------------------------------------------------------
+
+template<
+	typename K,
+	class Domain = SO3::Domains::Full<K>,
+	class Operator = SO3::Operations::SO3Ops<K>,
+	class OperationFinal = OperationFinalPolicy::Unprojected<Eigen::Quaternion<K> >
+>
+struct FullSO3Space
+: public BaseSpace<Eigen::Quaternion<K>, Operator, Domain, OperationFinal>
+{
+	virtual void print(std::ostream& os) const {
+		os << "FullSO3Space";
+	}
+};
+
+template<
+	typename K,
+	class Domain = SO3::Domains::ConeTwist<K>,
+	class Operator = SO3::Operations::SO3Ops<K>,
+	class OperationFinal = OperationFinalPolicy::Projected<Eigen::Quaternion<K> >
+>
+struct ConeTwistSpace
+: public BaseSpace<Eigen::Quaternion<K>, Operator, Domain, OperationFinal>
+{
+	virtual void print(std::ostream& os) const {
+		os << "ConeTwistSpace";
+	}
+};
 
 //---------------------------------------------------------------------------
 }}

@@ -23,7 +23,7 @@ int main()
 {
 	std::cout << "Computing minimum of polynom f(x) = x^4 - 2 x^3 - 1" << std::endl;
 
-	Q0::Spaces::Cartesian::InfiniteCartesianSpace<state_t> space;
+	Q0::Spaces::InfiniteCartesianSpace<state_t> space;
 
 	std::cout << "Using Particle Swarm Optimization (PSO)" << std::endl;
 

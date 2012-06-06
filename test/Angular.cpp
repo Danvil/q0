@@ -10,9 +10,9 @@
 
 int main(int argc, char** argv)
 {
-	Q0::Spaces::Angular::FullAngularSpace<float> space1;
+	Q0::Spaces::FullAngularSpace<float> space1;
 
-	Q0::Spaces::Angular::IntervalAngularSpace<float> space2;
+	Q0::Spaces::IntervalAngularSpace<float> space2;
 
 	return 1;
 }

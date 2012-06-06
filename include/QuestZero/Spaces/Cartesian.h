@@ -364,12 +364,10 @@ namespace Cartesian {
 		};
 	}
 
-	//---------------------------------------------------------------------------
-
 	template<
 		typename State,
-		class Domain = Domains::Infinite<State>,
-		class Operator = Operations::Linear<State>,
+		class Domain = Cartesian::Domains::Infinite<State>,
+		class Operator = Cartesian::Operations::Linear<State>,
 		class OperationFinal = OperationFinalPolicy::Projected<State>
 	>
 	struct CartesianSpace
@@ -380,34 +378,36 @@ namespace Cartesian {
 		}
 	};
 
-	template<typename State>
-	struct InfiniteCartesianSpace
-	: public CartesianSpace<State, Domains::Infinite<State>, Operations::Linear<State>, OperationFinalPolicy::Unprojected<State> >
-	{
-		virtual void print(std::ostream& os) const {
-			os << "InfiniteCartesianSpace";
-		}
-	};
-
-	template<typename State>
-	struct FiniteCartesianSpace
-	: public CartesianSpace<State, Domains::Box<State> >
-	{
-		virtual void print(std::ostream& os) const {
-			os << "FiniteCartesianSpace";
-		}
-	};
-
-	template<typename K>
-	struct IntervalSpace
-	: public CartesianSpace<K, Domains::Box<K> >
-	{
-		virtual void print(std::ostream& os) const {
-			os << "IntervalSpace";
-		}
-	};
-
 }
+
+//---------------------------------------------------------------------------
+
+template<typename State>
+struct InfiniteCartesianSpace
+: public Cartesian::CartesianSpace<State, Cartesian::Domains::Infinite<State>, Cartesian::Operations::Linear<State>, OperationFinalPolicy::Unprojected<State> >
+{
+	virtual void print(std::ostream& os) const {
+		os << "InfiniteCartesianSpace";
+	}
+};
+
+template<typename State>
+struct FiniteCartesianSpace
+: public Cartesian::CartesianSpace<State, Cartesian::Domains::Box<State> >
+{
+	virtual void print(std::ostream& os) const {
+		os << "FiniteCartesianSpace";
+	}
+};
+
+template<typename K>
+struct IntervalSpace
+: public Cartesian::CartesianSpace<K, Cartesian::Domains::Box<K> >
+{
+	virtual void print(std::ostream& os) const {
+		os << "IntervalSpace";
+	}
+};
 
 //---------------------------------------------------------------------------
 }}

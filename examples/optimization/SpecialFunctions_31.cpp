@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
 	for(unsigned int i=0; i<range.rows(); i++) {
 		range[i] = 10;
 	}
-	Q0::Spaces::Cartesian::FiniteCartesianSpace<state_t> space;
+	Q0::Spaces::FiniteCartesianSpace<state_t> space;
 	space.setDomainRange(range);
 
 	std::cout << std::endl;

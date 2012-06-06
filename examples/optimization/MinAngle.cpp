@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 	{
 		std::cout << "----- full interval -----" << std::endl;
 
-		Spaces::Angular::FullAngularSpace<real> space;
+		Spaces::FullAngularSpace<real> space;
 
 		Functions::BoostFunctionSingleWrapper<real,real> f;
 		f.set_functor(boost::bind(&function, _1));
@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
 	{
 		std::cout << "----- interval = [1/4 pi | 3/4 pi] -----" << std::endl;
 
-		Spaces::Angular::IntervalAngularSpace<real> space;
+		Spaces::IntervalAngularSpace<real> space;
 		space.set_lower(0.25 * boost::math::constants::pi<real>());
 		space.set_upper(0.75 * boost::math::constants::pi<real>());
 
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 	{
 		std::cout << "----- interval = [1/4 pi | 1/2 pi] -----" << std::endl;
 
-		Spaces::Angular::IntervalAngularSpace<real> space;
+		Spaces::IntervalAngularSpace<real> space;
 		space.set_lower(0.25 * boost::math::constants::pi<real>());
 		space.set_upper(0.50 * boost::math::constants::pi<real>());
 

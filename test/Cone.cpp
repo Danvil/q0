@@ -9,7 +9,7 @@
 
 int main(int argc, char** argv)
 {
-	Q0::Spaces::Cone::ConeSpace<float> space;
+	Q0::Spaces::ConeSpace<float> space;
 
 	return 1;
 }

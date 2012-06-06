@@ -10,7 +10,7 @@
 
 int main(int argc, char** argv)
 {
-	Q0::Spaces::SO3::FullSO3Space<double> space1;
+	Q0::Spaces::FullSO3Space<double> space1;
 
 	return 1;
 }

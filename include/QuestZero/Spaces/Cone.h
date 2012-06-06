@@ -250,15 +250,15 @@ namespace Cone
 		~Domain() {}
 	};
 
-	template<typename K>
-	struct ConeSpace
-	: public BaseSpace<State<K>, Operations<K>, Domain<K> >
-	{ };
-
-	typedef ConeSpace<float> ConeSpaceF;
-	typedef ConeSpace<double> ConeSpaceD;
-
 }
+
+template<typename K>
+struct ConeSpace
+: public BaseSpace<Cone::State<K>, Cone::Operations<K>, Cone::Domain<K> >
+{ };
+
+typedef ConeSpace<float> ConeSpaceF;
+typedef ConeSpace<double> ConeSpaceD;
 
 //---------------------------------------------------------------------------
 }}

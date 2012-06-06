@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 
 	std::cout << "Optimizing in space [-10.0|+10.0]^3" << std::endl;
 	state_t range(10, 10);
-	Q0::Spaces::Cartesian::FiniteCartesianSpace<state_t> space;
+	Q0::Spaces::FiniteCartesianSpace<state_t> space;
 	space.setDomainRange(range);
 
 	std::cout << std::endl;

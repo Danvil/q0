@@ -21,8 +21,8 @@ typedef Eigen::Matrix<Real,3,1> state_loc_t;
 typedef Eigen::Quaternion<Real> state_rot_t;
 typedef Q0::Spaces::TypelistState<LOKI_TYPELIST_2(state_loc_t,state_rot_t)> state_t;
 
-typedef Q0::Spaces::Cartesian::FiniteCartesianSpace<state_loc_t> space_loc_t;
-typedef Q0::Spaces::SO3::FullSO3Space<Real> space_rot_t;
+typedef Q0::Spaces::FiniteCartesianSpace<state_loc_t> space_loc_t;
+typedef Q0::Spaces::FullSO3Space<Real> space_rot_t;
 typedef Q0::Spaces::TypelistSpace<LOKI_TYPELIST_2(space_loc_t,space_rot_t), state_t> space_t;
 
 struct RegistrationFunction
