@@ -30,47 +30,47 @@ namespace Q0 {
 template<typename SampleList>
 void give_size_hint(SampleList& list, std::size_t num) {}
 
-template<typename SampleList>
-std::size_t num_samples(const SampleList& list);
-
-template<typename SampleList>
-typename detail::range<typename SampleList::state_iterator> states(SampleList& list);
-
-template<typename SampleList>
-typename detail::range<typename SampleList::state_const_iterator> states(const SampleList& list);
-
-template<typename SampleList>
-typename detail::range<typename SampleList::score_iterator> scores(SampleList& list);
-
-template<typename SampleList>
-typename detail::range<typename SampleList::score_const_iterator> scores(const SampleList& list);
-
-template<typename SampleList>
-typename SampleList::sample_descriptor add_sample(SampleList& list);
-
-template<typename SampleList>
-typename SampleList::sample_descriptor add_sample(SampleList& list, const typename SampleList::state_t& state, const typename SampleList::score_t& score);
-
-template<typename SampleList>
-void add_samples(SampleList& list, unsigned int num);
-
-template<typename SampleList>
-void add_samples(SampleList& list, const SampleList& src);
-
-template<typename SampleList>
-const TSample<typename SampleList::state_t, typename SampleList::score_t>& get_sample(const SampleList& list, typename SampleList::sample_descriptor id);
-
-template<typename SampleList>
-const typename SampleList::state_t& get_state(const SampleList& list, typename SampleList::sample_descriptor id);
-
-template<typename SampleList>
-const typename SampleList::score_t& get_score(const SampleList& list, typename SampleList::sample_descriptor id);
-
-template<typename SampleList>
-void set_state(SampleList& list, typename SampleList::sample_descriptor, const typename SampleList::state_t& state);
-
-template<typename SampleList>
-void set_score(SampleList& list, typename SampleList::sample_descriptor, const typename SampleList::score_t& score_list);
+//template<typename SampleList>
+//std::size_t num_samples(const SampleList& list);
+//
+//template<typename SampleList>
+//typename detail::range<typename SampleList::state_iterator> states(SampleList& list);
+//
+//template<typename SampleList>
+//typename detail::range<typename SampleList::state_const_iterator> states(const SampleList& list);
+//
+//template<typename SampleList>
+//typename detail::range<typename SampleList::score_iterator> scores(SampleList& list);
+//
+//template<typename SampleList>
+//typename detail::range<typename SampleList::score_const_iterator> scores(const SampleList& list);
+//
+//template<typename SampleList>
+//typename SampleList::sample_descriptor add_sample(SampleList& list);
+//
+//template<typename SampleList>
+//typename SampleList::sample_descriptor add_sample(SampleList& list, const typename SampleList::state_t& state, const typename SampleList::score_t& score);
+//
+//template<typename SampleList>
+//void add_samples(SampleList& list, unsigned int num);
+//
+//template<typename SampleList>
+//void add_samples(SampleList& list, const SampleList& src);
+//
+//template<typename SampleList>
+//const TSample<typename SampleList::state_t, typename SampleList::score_t>& get_sample(const SampleList& list, typename SampleList::sample_descriptor id);
+//
+//template<typename SampleList>
+//const typename SampleList::state_t& get_state(const SampleList& list, typename SampleList::sample_descriptor id);
+//
+//template<typename SampleList>
+//const typename SampleList::score_t& get_score(const SampleList& list, typename SampleList::sample_descriptor id);
+//
+//template<typename SampleList>
+//void set_state(SampleList& list, typename SampleList::sample_descriptor, const typename SampleList::state_t& state);
+//
+//template<typename SampleList>
+//void set_score(SampleList& list, typename SampleList::sample_descriptor, const typename SampleList::score_t& score_list);
 
 template<typename SampleList>
 std::vector<typename SampleList::state_t> get_state_list(const SampleList& list) {
