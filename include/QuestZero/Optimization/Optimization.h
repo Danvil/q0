@@ -20,25 +20,29 @@ namespace Q0 {
 template<
 	typename State_,
 	typename Score_,
-	template<class,class,class,class,class,class,bool> class Algorithm,
+	template<class,class,class,class,class,class> class Algorithm,
 	class Target,
 	template<class> class Picker = InitialStatesPolicy::Fuser<InitialStatesPolicy::RandomPicker>::Result,
 	template<class,class> class Take = TakePolicy::TakeBest,
-	class NotifySamples = TracePolicy::Samples::BestToConsole<State_,Score_>,
-	//template<class,class> class NotifySamples = TracePolicy::Samples::BestToConsole,
-	bool DoMinimize = true
+	class NotifySamples = TracePolicy::Samples::BestToConsole<State_,Score_>
+	//template<class,class> class NotifySamples = TracePolicy::Samples::BestToConsole
 >
 struct Optimization
-: public Algorithm<State_, Score_, Target, Picker<State_>, Take<State_,Score_>, NotifySamples, DoMinimize>
+: public Algorithm<State_, Score_, Target, Picker<State_>, Take<State_,Score_>, NotifySamples>
 {
 	typedef State_ State;
 	typedef Score_ Score;
+	typedef TSample<State,Score> Sample;
 
-//	template<class Space, class Function>
-//	static TSample<State,Score> Optimize(const Space& space, const Function& function) {
-//		Optimization<State, Score, Algorithm, Target, SinglePicker, Take, Tracer> x;
-//		return x.optimize(space, function);
-//	}
+	template<class Space, class Function>
+	Sample Minimize(const Space& space, const Function& function) {
+		return this->template Optimize(space, function, std::less<Score>());
+	}
+
+	template<class Space, class Function>
+	Sample Maximize(const Space& space, const Function& function) {
+		return this->template Optimize(space, function, std::greater<Score>());
+	}
 };
 
 //---------------------------------------------------------------------------

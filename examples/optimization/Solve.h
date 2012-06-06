@@ -52,16 +52,10 @@ AlgoTestResult<typename ALGO::State, typename ALGO::Score> TestAlgo(ALGO algo, c
 {
 	Danvil::Timer timer;
 	timer.start();
-	TSample<typename ALGO::State, typename ALGO::Score> best = algo.Optimize(space, function);
+	TSample<typename ALGO::State, typename ALGO::Score> best = algo.Minimize(space, function);
 	timer.stop();
 	return AlgoTestResult<typename ALGO::State, typename ALGO::Score>{"", best.state, best.score, timer.getElapsedTimeInMilliSec()};
 }
-
-#ifdef DEBUG
-	typedef TargetPolicy::ScoreTargetWithMaxChecks<BetterMeansSmaller<double>,double,true> TargetChecker;
-#else
-	typedef TargetPolicy::ScoreTargetWithMaxChecks<BetterMeansSmaller<double>,double,false> TargetChecker;
-#endif
 
 const unsigned int cIterationCount = 16;
 const double cScoreGoal = 1e-3;
@@ -81,13 +75,20 @@ void TestProblem(const Space& space, const Function& function, unsigned int num_
 {
 	printHeader(std::cout);
 
+#ifdef DEBUG
+	typedef TargetPolicy::ScoreTargetWithMaxChecks<typename Function::Score,true> TargetChecker;
+#else
+	typedef TargetPolicy::ScoreTargetWithMaxChecks<typename Function::Score,false> TargetChecker;
+#endif
+
 	{
 		Optimization<typename Space::State, typename Function::Score,
 				RND,
 				TargetChecker,
 				InitialStatesPolicy::Fuser<InitialStatesPolicy::RandomPicker>::Result,
 				TakePolicy::TakeBest,
-				TracePolicy::Samples::None<typename Space::State, typename Function::Score> > algoRnd;
+				TracePolicy::Samples::None<typename Space::State, typename Function::Score>
+		> algoRnd;
 		algoRnd.SetMaximumIterationCount(cIterationCount);
 		algoRnd.SetTargetScore(cScoreGoal);
 		algoRnd.particleCount = num_particles / cIterationCount;
@@ -101,11 +102,13 @@ void TestProblem(const Space& space, const Function& function, unsigned int num_
 	}
 
 	{
-		NelderMead<typename Space::State, typename Function::Score,
+		Optimization<typename Space::State, typename Function::Score,
+				NelderMead,
 				TargetChecker,
-				TracePolicy::Samples::None<typename Space::State, typename Function::Score>,
-				//TracePolicy::Samples::AllToConsole<typename Space::State, typename Function::Score>,
-				true> algoNM;
+				InitialStatesPolicy::Fuser<InitialStatesPolicy::RandomPicker>::Result,
+				TakePolicy::TakeBest,
+				TracePolicy::Samples::None<typename Space::State, typename Function::Score>
+		> algoNM;
 	//	algoRnd.SetMaximumIterationCount(cIterationCount);
 	//	algoRnd.SetTargetScore(cScoreGoal);
 	//	algoRnd.particleCount = cParticleCount;
@@ -130,7 +133,8 @@ void TestProblem(const Space& space, const Function& function, unsigned int num_
 				TargetChecker,
 				InitialStatesPolicy::Fuser<InitialStatesPolicy::RandomPicker>::Result,
 				TakePolicy::TakeBest,
-				TracePolicy::Samples::None<typename Space::State, typename Function::Score> > algoPso;
+				TracePolicy::Samples::None<typename Space::State, typename Function::Score>
+		> algoPso;
 		algoPso.SetMaximumIterationCount(cIterationCount);
 		algoPso.SetTargetScore(cScoreGoal);
 		algoPso.settings.particleCount = num_particles / cIterationCount;

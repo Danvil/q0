@@ -8,9 +8,9 @@
 #ifndef QUESTZERO_TAKEPOLICY_H
 #define QUESTZERO_TAKEPOLICY_H
 //---------------------------------------------------------------------------
-#include "QuestZero/Common/ScoreComparer.h"
 #include "QuestZero/Common/Sample.h"
 #include "QuestZero/Common/SampleSet.h"
+#include <functional>
 //---------------------------------------------------------------------------
 namespace Q0 {
 //---------------------------------------------------------------------------
@@ -23,9 +23,9 @@ namespace TakePolicy {
 	template<typename State, typename Score>
 	struct TakeBest
 	{
-		template<class Space, class CMP>
-		TSample<State,Score> take(const Space&, const TSampleSet<State,Score>& many) {
-			return get_sample(many, find_best_by_score(many, CMP()));
+		template<class Space, typename Compare>
+		TSample<State,Score> take(const Space&, const TSampleSet<State,Score>& many, Compare cmp) {
+			return get_sample(many, find_best_by_score(many, cmp));
 		}
 
 	protected:
@@ -34,22 +34,22 @@ namespace TakePolicy {
 
 	//---------------------------------------------------------------------------
 
-	namespace Private {
-		// this will yield a compiler error if this policy is used with something else than BetterMeansBigger
-		template<class State, typename Score, class CMP> struct CmpChecker;
-		template<class State, typename Score> struct CmpChecker<State, Score, BetterMeansBigger<Score> > {};
-	}
-
 	/** Returns a weighted mean of all sample states in the set weighted by sample score
-	 * Warning: Works only with BetterMeansBigger SampleSets!
-	 * Warning: The sample set may contain different "groups" of samples. Building the
+	 * Weights are computed from scores using a functor.
+	 * The default is to use the score as a weight.
+	 * The sample set may contain different "groups" of samples. Building the
 	 * mean between states of different groups may result in a state which is worse than
 	 * both the original states!
 	 */
 	template<typename State, typename Score>
 	struct TakeMean
 	{
-		TakeMean() : take_mean_max_count_(0) {}
+		typedef std::function<double(Score)> ScoreToWeightFunctor;
+
+		TakeMean()
+		: take_mean_max_count_(0),
+		  ScoreToWeightFunctor([](Score s) { return s; })
+		{}
 
 		/** Sets the number of best samples to consider
 		 * @param 0 means all samples. recommend is top 1-10%
@@ -58,36 +58,41 @@ namespace TakePolicy {
 			take_mean_max_count_ = cnt;
 		}
 
-		template<class Space, class CMP>
-		TSample<State,Score> take(const Space& space, const TSampleSet<State,Score>& many) {
-			Private::CmpChecker<State,Score, CMP>();
-			size_t cnt = (take_mean_max_count_ == 0) ? many.count() : std::min<size_t>(many.count(), take_mean_max_count_);
-			TSampleSet<State,Score> best = many.template FindBestSamplesAsSet<CMP>(cnt);
-			std::vector<Score> scores = best.scores();
-			std::vector<State> states_other = best.states();
-			std::vector<typename Space::State> states;
+		template<class Space, class CMP, typename Compare>
+		TSample<State,Score> take(const Space& space, const TSampleSet<State,Score>& many, Compare cmp) {
+			size_t cnt = (take_mean_max_count_ == 0) ? num_samples(many) : std::min<size_t>(num_samples(many), take_mean_max_count_);
+			TSampleSet<State,Score> best = pick_best(many, cnt, cmp);
+			std::vector<Score> scores = get_score_list(best);
+			std::vector<State> states_other = get_state_list(best);
+			std::vector<State> states;
+			std::vector<double> weight(scores.size());
 			states.reserve(cnt);
-			Score score_sum = 0;
+			double weight_sum = 0;
 			Score mixed_score = 0;
 			for(size_t i=0; i<scores.size(); ++i) {
 				states.push_back(states_other[i]); // convert to Space::State (the given state may by a derived from this)
-				Score x = scores[i];
-				score_sum += x;
-				mixed_score += x * x; // wired ....
+				// FIXME why the second state list?
+				Score s = scores[i];
+				double w = fnc_score_to_weight_(s);
+				weight[i] = w;
+				weight_sum += w;
+				mixed_score += w * s; // TODO is this legal?
 			}
-			Score scl = 1.0 / score_sum;
-			mixed_score *= scl; // same as with the states!
+			double scl = 1.0 / weight_sum;
+			mixed_score = scl * mixed_score; // TODO is this legal?
 			for(size_t i=0; i<scores.size(); ++i) {
-				scores[i] *= scl;
+				weight[i] *= scl;
 			}
 			// weighted mean of samples
 			// FIXME the score is of course not right! we should evaluate
-			State mixed = space.weightedSum(scores, states);
+			State mixed = space.weightedSum(weight, states);
 			return TSample<State,Score>(mixed, mixed_score);
 		}
 
 	private:
 		unsigned int take_mean_max_count_;
+
+		ScoreToWeightFunctor fnc_score_to_weight_;
 
 	protected:
 		~TakeMean() {}

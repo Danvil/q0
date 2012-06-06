@@ -208,7 +208,9 @@ typename SampleList::sample_descriptor find_worst_by_score(const SampleList& lis
 }
 
 template<typename SampleList, typename ScoreComparer>
-SampleList pick_best(const SampleList& list, unsigned int num, ScoreComparer c) {
+SampleList pick_best(const SampleList& list, std::size_t num, ScoreComparer c) {
+	// assert that not too much samples are picked
+	num = std::min(num, num_samples(list));
 	// TODO Perhaps this is faster with partial_sort_copy? Would require a samples(list) function!
 	struct Item {
 		typename SampleList::sample_descriptor id;
@@ -221,6 +223,7 @@ SampleList pick_best(const SampleList& list, unsigned int num, ScoreComparer c) 
 		typename SampleList::sample_descriptor id = it - scores_range.begin(); // FIXME only works for random access!
 		items.push_back({id, *it});
 	}
+	// TODO if more than half are picked, sort the other half instead for speed up
 	std::partial_sort(items.begin(), items.begin() + num, items.end(), [&c](const Item& x, const Item& y) {
 		return c(x.score, y.score);
 	});

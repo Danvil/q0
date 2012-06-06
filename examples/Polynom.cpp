@@ -27,10 +27,9 @@ int main()
 
 	std::cout << "Using Particle Swarm Optimization (PSO)" << std::endl;
 
-	typedef Q0::TargetPolicy::ScoreTargetWithMaxChecks<Q0::BetterMeansSmaller<score_t>,score_t,false> TargetChecker;
 	Q0::Optimization<state_t, score_t,
-	Q0::PSO,
-			TargetChecker,
+			Q0::PSO,
+			Q0::TargetPolicy::ScoreTargetWithMaxChecks<score_t,false>,
 			Q0::InitialStatesPolicy::Fuser<Q0::InitialStatesPolicy::RandomPicker>::Result,
 			Q0::TakePolicy::TakeBest,
 			Q0::TracePolicy::Samples::None<state_t,score_t> > algoPso;
@@ -38,7 +37,7 @@ int main()
 	algoPso.SetTargetScore(1e-5);
 	algoPso.settings.particleCount = 100;
 
-	Q0::TSample<state_t, score_t> best = algoPso.Optimize(space, &polynom);
+	Q0::TSample<state_t, score_t> best = algoPso.Minimize(space, &polynom);
 
 	std::cout << "Optimization result:" << std::endl;
 	std::cout << "x_min = " << best.state << std::endl;

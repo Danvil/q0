@@ -8,7 +8,6 @@
 #ifndef ALGORITHMS_RND_H
 #define ALGORITHMS_RND_H
 //---------------------------------------------------------------------------
-#include "QuestZero/Common/ScoreComparer.h"
 #include "QuestZero/Common/Sample.h"
 #include "QuestZero/Common/SampleSet.h"
 #include <string>
@@ -26,8 +25,7 @@ template<
 	class Target,
 	class StartingStates,
 	class Take,
-	class NotifySamples,
-	bool Minimize
+	class NotifySamples
 >
 struct RND
 : public Target,
@@ -37,7 +35,6 @@ struct RND
 {
 	typedef TSample<State,Score> Sample;
 	typedef TSampleSet<State,Score> SampleSet;
-	typedef typename ComparerSelector<Score,Minimize>::Result CMP;
 
 	RND() {
 		particleCount = 100;
@@ -49,17 +46,17 @@ struct RND
 
 	unsigned int particleCount;
 
-	template<class Space, class Function>
-	Sample Optimize(const Space& space, const Function& function) {
+	template<typename Space, typename Function, typename Compare>
+	Sample Optimize(const Space& space, const Function& function, Compare cmp) {
 		SampleSet open(this->template pickMany(space, particleCount));
 		// evaluate initial samples
 		compute_likelihood(open, function);
 		// update progress bar
-		this->NotifySamples(open);
+		this->NotifySamples(open, cmp);
 		// in every iteration add new particles, delete the worst particles
 		// iterate until a given condition is fulfilled
-		auto best_id = find_best_by_score(open, CMP());
-		while(!this->IsTargetReached(get_score(open, best_id))) {
+		auto best_id = find_best_by_score(open, cmp);
+		while(!this->IsTargetReached(get_score(open, best_id), cmp)) {
 			// add new samples by randomly selecting points
 			assert(num_samples(open) == particleCount);
 			// generate new chunk of states
@@ -70,12 +67,12 @@ struct RND
 			// add to open samples
 			add_samples(open, new_samples);
 			// pick the best
-			open = pick_best(open, particleCount, CMP());
+			open = pick_best(open, particleCount, cmp);
 			// update progress bar
-			this->NotifySamples(open);
+			this->NotifySamples(open, cmp);
 		}
 		// return last best samples
-		return this->template take<Space, CMP>(space, open);
+		return this->template take(space, open, cmp);
 	}
 };
 

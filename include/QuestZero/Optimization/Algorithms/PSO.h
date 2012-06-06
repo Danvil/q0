@@ -8,7 +8,6 @@
 #ifndef QUESTZERO_ALGORITHMS_PSO_H_
 #define QUESTZERO_ALGORITHMS_PSO_H_
 //---------------------------------------------------------------------------
-#include "QuestZero/Common/ScoreComparer.h"
 #include "QuestZero/Common/RandomNumbers.h"
 #include "QuestZero/Common/Sample.h"
 #include "QuestZero/Common/SampleSet.h"
@@ -39,14 +38,11 @@ struct PSOSettings
 /// See http://www.hvass-labs.org/projects/swarmops/
 /// See Particle Swarm Optimization: Developments, Application and Ressources, Eberhart, R. and Shi, Y.
 /// </summary>
-template<
-	class State,
-	class Score,
+template<class State, class Score,
 	class Target,
 	class StartingStates,
 	class Take,
-	class NotifySamples,
-	bool Minimize
+	class NotifySamples
 >
 struct PSO
 : public Target,
@@ -65,10 +61,8 @@ struct PSO
 
 	PSOSettings settings;
 
-	typedef typename ComparerSelector<Score,Minimize>::Result CMP;
-
-	template<class Space, class Function>
-	Sample Optimize(const Space& space, const Function& function) {
+	template<class Space, class Function, typename Compare>
+	Sample Optimize(const Space& space, const Function& function, Compare cmp) {
 		globals.set(settings);
 		// generate start samples
 		std::vector<State> initial_states = this->pickMany(space, settings.particleCount);
@@ -87,8 +81,8 @@ struct PSO
 			compute_likelihood(samples, function);
 			// update global best
 			LOG_DEBUG << "PSO: update global best";
-			auto best_id = find_best_by_score(samples, CMP());
-			if(!globals.isSet() || CMP::compare(get_score(samples, best_id), globals.best_score())) {
+			auto best_id = find_best_by_score(samples, cmp);
+			if(!globals.isSet() || cmp(get_score(samples, best_id), globals.best_score())) {
 				globals.set(get_sample(samples, best_id));
 			}
 			// update personal best and particle
@@ -96,7 +90,7 @@ struct PSO
 			for(size_t i = 0; i < particles.size(); i++) {
 				Score s = get_score(samples, i);
 				ParticleData& p = particles[i];
-				if(CMP::compare(s, p.best_score_)) {
+				if(cmp(s, p.best_score_)) {
 					p.best_state_ = get_state(samples, i);
 					p.best_score_ = s;
 				}
@@ -104,15 +98,15 @@ struct PSO
 			}
 			// notify about new samples
 			LOG_DEBUG << "PSO: notify about new samples";
-			this->NotifySamples(bestSamples());
+			this->NotifySamples(bestSamples(), cmp);
 			// check if break condition is satisfied
 			LOG_DEBUG << "PSO: check break condition";
-			if(this->IsTargetReached(globals.best_score())) {
+			if(this->IsTargetReached(globals.best_score(), cmp)) {
 				break;
 			}
 		}
 		LOG_DEBUG << "PSO: picking result";
-		return this->template take<Space, CMP>(space, bestSamples());
+		return this->template take(space, bestSamples(), cmp);
 	}
 
 private:
@@ -227,15 +221,6 @@ private:
 	}
 
 };
-
-//---------------------------------------------------------------------------
-
-template< class State, class Score, class Target, class StartingStates, class Take, class NotifySamples>
-struct PSO_min : public PSO<State, Score, Target, StartingStates, Take, NotifySamples, true> {};
-
-template< class State, class Score, class Target, class StartingStates, class Take, class NotifySamples>
-struct PSO_max : public PSO<State, Score, Target, StartingStates, Take, NotifySamples, false> {};
-
 //---------------------------------------------------------------------------
 }
 //---------------------------------------------------------------------------

@@ -9,7 +9,6 @@
 #define Q0_OPTIMIZATION_NELDERMEAD_H_
 //----------------------------------------------------------------------------//
 #include "QuestZero/Common/SampleSet.h"
-#include "QuestZero/Common/ScoreComparer.h"
 #include <vector>
 #include <cassert>
 #include <cmath>
@@ -20,20 +19,22 @@ namespace Q0 {
 /// <summary>
 /// Nelder Mead Downhill Simplex Optimization Algorithm
 /// </summary>
-template<typename State_, class Score_,
-	class Take,
-	class NotifySamples,
-	bool Minimize
+template<typename State_, typename Score_,
+class Target,
+class StartingStates,
+class Take,
+class NotifySamples
 >
 struct NelderMead
-: public Take,
+: public Target,
+  public StartingStates, // FIXME use
+  public Take, // FIXME use
   public NotifySamples
 {
 	typedef State_ State;
 	typedef Score_ Score;
 	typedef TSample<State,Score> Sample;
 	typedef TSampleSet<State,Score> SampleSet;
-	typedef typename ComparerSelector<Score,Minimize>::Result CMP;
 
 	NelderMead() {
 		p_simplex_size = 1.0;
@@ -74,8 +75,8 @@ struct NelderMead
 		);
 	}
 
-	template<class Space, class Function>
-	Sample Optimize(const Space& space, const Function& function) {
+	template<class Space, class Function, typename Compare>
+	Sample Optimize(const Space& space, const Function& function, Compare cmp) {
 
 		// FIXME find starting point
 		State initial = space.random();
@@ -97,7 +98,7 @@ struct NelderMead
 		}
 		// evaluate score for simplex points
 		compute_likelihood(simplex, function); // TODO correct function?
-		this->NotifySamples(simplex);
+		this->NotifySamples(simplex, cmp);
 
 		// the algorithm requires us to compute at most 4 points
 		// from which it selects a new candidate with which the
@@ -107,8 +108,8 @@ struct NelderMead
 
 		while(true) {
 			// determine best and worst simplex points
-			auto i_best = find_best_by_score(simplex, CMP());
-			auto i_worst = find_worst_by_score(simplex, CMP());
+			auto i_best = find_best_by_score(simplex, cmp);
+			auto i_worst = find_worst_by_score(simplex, cmp);
 			Score y_l = get_score(simplex, i_best);
 			Score y_h = get_score(simplex, i_worst);
 
@@ -157,7 +158,7 @@ struct NelderMead
 
 			// compute score of all candidates
 			compute_likelihood(extension, function); // TODO correct function?
-			this->NotifySamples(extension);
+			this->NotifySamples(extension, cmp);
 			Score y_a = get_score(extension, 0);
 			Score y_b = get_score(extension, 1);
 			Score y_c = get_score(extension, 2);
@@ -168,8 +169,8 @@ struct NelderMead
 			// 4 at once to make use of parallel evaluation
 			// TODO is this really faster ?
 
-			if(CMP::compare(y_a, y_l)) {
-				if(CMP::compare(y_b, y_l)) {
+			if(cmp(y_a, y_l)) {
+				if(cmp(y_b, y_l)) {
 					set_state(simplex, i_worst, p_b);
 					set_score(simplex, i_worst, y_b);
 					y_l = y_b;
@@ -188,7 +189,7 @@ struct NelderMead
 					if(i == i_worst) {
 						continue;
 					}
-					if(CMP::compare(y_a, get_score(simplex, i))) {
+					if(cmp(y_a, get_score(simplex, i))) {
 						new_worst = false;
 						break;
 					}
@@ -196,7 +197,7 @@ struct NelderMead
 				if(new_worst) {
 					State* pu;
 					Score yu;
-					if(CMP::compare(y_h, y_a)) {
+					if(cmp(y_h, y_a)) {
 						// yes case
 						pu = &p_c;
 						yu = y_c;
@@ -206,13 +207,13 @@ struct NelderMead
 						pu = &p_d;
 						yu = y_d;
 					}
-					if(CMP::compare(y_h, yu)) {
+					if(cmp(y_h, yu)) {
 						// reset the simplex
 						for(size_t i=0; i<n+1; i++) {
 							set_state(simplex, i, space.weightedSum(0.5, get_state(simplex, i), 0.5, get_state(simplex, i_best)));
 						}
 						compute_likelihood(simplex, function); // TODO correct function?
-						this->NotifySamples(simplex);
+						this->NotifySamples(simplex, cmp);
 					}
 					else {
 						set_state(simplex, i_worst, *pu);
@@ -225,7 +226,7 @@ struct NelderMead
 				}
 			}
 
-			this->NotifySamples(simplex);
+			this->NotifySamples(simplex, cmp);
 
 			// check break condition
 			double y_mean = 0;
@@ -239,7 +240,7 @@ struct NelderMead
 				criterion += x * x;
 			}
 			criterion /= double(n);
-			if(this->IsTargetReached(y_l, std::sqrt(criterion))) {
+			if(this->IsTargetReached(y_l, std::sqrt(criterion), cmp)) {
 				return get_sample(simplex, i_best);
 			}
 		}
