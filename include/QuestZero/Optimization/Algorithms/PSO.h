@@ -141,7 +141,7 @@ private:
 
 		bool isSet() const { return is_best_set; }
 
-		double best_score() const { return best_score_; }
+		Score best_score() const { return best_score_; }
 
 		const State& best_state() const { return best_state_; }
 
@@ -166,7 +166,7 @@ private:
 		double psi_global_;
 		bool is_best_set;
 		State best_state_;
-		double best_score_;
+		Score best_score_;
 	};
 
 	struct ParticleData
@@ -181,7 +181,7 @@ private:
 		State last;
 		State current;
 		State best_state_;
-		double best_score_;
+		Score best_score_;
 
 		template<class Space>
 		void Update(const Space& space, const GlobalData& globals) {
