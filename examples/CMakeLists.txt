@@ -3,6 +3,7 @@
 #	${OpenCV_INCLUDE_DIRS}
 #)
 
+add_executable(Polynom Polynom.cpp)
 add_executable(MinAngle optimization/MinAngle.cpp)
 #add_executable(PointCloudRegistration_Rot optimization/PointCloudRegistration_Rot.cpp)
 add_executable(PointCloudRegistration_LocRot optimization/PointCloudRegistration_LocRot.cpp)
