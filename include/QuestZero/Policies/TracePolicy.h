@@ -11,81 +11,57 @@ namespace Q0 {
 
 namespace TracePolicy
 {
-	/** Policies for samples notification */
-	namespace Samples
+	/** Does nothing */
+	struct None
 	{
-		/** Does nothing */
-		template<typename State, typename Score>
-		struct None
-		{
-			template<typename Compare>
-			void NotifySamples(const TSampleSet<State,Score>&, Compare) {}
-		};
+		template<typename SampleSet>
+		void NotifySamples(const SampleSet&) {}
+	};
 
-		/** Prints the best particle to the console */
-		template<typename State, typename Score>
-		struct BestToConsole
-		{
-			template<typename Compare>
-			void NotifySamples(const TSampleSet<State,Score>& samples, Compare cmp) {
-				std::cout << "Current best sample: " << get_sample(samples, find_best_by_score(samples, cmp)) << std::endl;
+	/** Prints the best particle to the console */
+	template<typename Compare>
+	struct BestToConsole
+	{
+		Compare compare;
+
+		template<typename SampleSet>
+		void NotifySamples(const SampleSet& samples) {
+			std::cout << "Current best sample: " << get_sample(samples, find_best_by_score(samples, compare)) << std::endl;
+		}
+	};
+
+	/** Prints all particles to the console */
+	struct AllToConsole
+	{
+		template<typename SampleSet>
+		void NotifySamples(const SampleSet& samples) {
+			samples.printInLines(std::cout);
+		}
+	};
+
+	/** Forward best particle to a functor */
+	template<typename State, typename Score, typename Compare>
+	struct BestToFunctorImpl
+	{
+		Compare compare;
+
+		typedef boost::function<void(const State&, Score)> Functor;
+
+		void SetNotifySamplesFunctor(const Functor& f) {
+			samples_functor_ = f;
+		}
+
+		template<typename SampleSet>
+		void NotifySamples(const SampleSet& samples) {
+			if(samples_functor_) {
+				TSample<State,Score> best = get_sample(samples, find_best_by_score(samples, compare));
+				samples_functor_(best.state(), best.score());
 			}
-		};
+		}
 
-		/** Prints all particles to the console */
-		template<typename State, typename Score>
-		struct AllToConsole
-		{
-			template<typename Compare>
-			void NotifySamples(const TSampleSet<State,Score>& samples, Compare) {
-				samples.printInLines(std::cout);
-			}
-		};
-
-		/** Forward best particle to a functor */
-		template<typename State, typename Score>
-		struct BestToFunctorImpl
-		{
-			typedef boost::function<void(const State&, Score score)> Functor;
-
-			void SetNotifySamplesFunctor(const Functor& f) {
-				samples_functor_ = f;
-			}
-
-			template<typename Compare>
-			void NotifySamples(const TSampleSet<State,Score>& samples, Compare cmp) {
-				if(samples_functor_) {
-					TSample<State,Score> best = get_sample(samples, find_best_by_score(samples, cmp));
-					samples_functor_(best.state(), best.score());
-				}
-			}
-
-		private:
-			Functor samples_functor_;
-		};
-
-		/** Forwards all particles to a functor */
-		template<typename State, typename Score>
-		struct ForwardToFunction
-		{
-			typedef boost::function<void(const TSampleSet<State,Score>&)> Functor;
-
-			void SetNotifySamplesFunctor(const Functor& f) {
-				samples_functor_ = f;
-			}
-
-			template<typename Compare>
-			void NotifySamples(const TSampleSet<State,Score>& samples, Compare) {
-				if(samples_functor_) {
-					samples_functor_(samples);
-				}
-			}
-
-		private:
-			Functor samples_functor_;
-		};
-
-	}
+	private:
+		Functor samples_functor_;
+	};
 }
 
 /** Policies for solution notification */

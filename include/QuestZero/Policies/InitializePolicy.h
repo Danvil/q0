@@ -12,34 +12,32 @@
 //---------------------------------------------------------------------------
 namespace Q0 {
 //---------------------------------------------------------------------------
-namespace InitialStatesPolicy {
 
-	//---------------------------------------------------------------------------
+namespace InitializePolicy
+{
 
-	template<typename State, template <typename> class SinglePicker>
+	template<typename State, template<typename> class SinglePicker>
 	struct ManyPicker
 	: public SinglePicker<State>
 	{
-		template<class Space>
-		std::vector<State> pickMany(const Space& space, size_t n) {
-			std::vector<State> states;
-			states.reserve(n);
-			for(size_t i=0; i<n; ++i) {
-				states.push_back(this->pick(space));
+		template<typename SampleSet, typename Space>
+		void PickInitial(SampleSet& samples, const Space& space, size_t n) {
+			for(size_t i=0; i<n; i++) {
+				auto id = add_sample(samples);
+				set_state(samples, id, SinglePicker<State>::pick(space));
 			}
-			return states;
 		}
 
 	protected:
 		~ManyPicker() {}
 	};
 
-	template<template <typename> class SP>
-	struct Fuser {
+	/** Helper to convert a single picker to a multi picker */
+	template<template<typename> class SP>
+	struct Fuser
+	{
 		template<typename State> struct Result : public ManyPicker<State, SP> {};
 	};
-
-	//---------------------------------------------------------------------------
 
 	/** Picks a random state each time using the random function of the space */
 	template<typename State>
@@ -54,14 +52,11 @@ namespace InitialStatesPolicy {
 		~RandomPicker() {}
 	};
 
-	//---------------------------------------------------------------------------
-
 	/** Always picks the previously set state without modification */
 	template<typename State>
 	struct RepeatOne
 	{
 		void setDefaultState(const State& state) {
-			LOG_DEBUG << "RepeatOne default state: " << state;
 			default_state_ = state;
 		}
 
@@ -76,8 +71,6 @@ namespace InitialStatesPolicy {
 	protected:
 		~RepeatOne() {}
 	};
-
-	//---------------------------------------------------------------------------
 
 	/** Repeatedly picks states from a previously set of states without modification */
 	template<typename State>
@@ -108,8 +101,6 @@ namespace InitialStatesPolicy {
 	protected:
 		~RepeatMany() {}
 	};
-
-	//---------------------------------------------------------------------------
 
 	/** Picks a randomly modified state by using the random function of the space */
 	template<typename State>
@@ -150,9 +141,8 @@ namespace InitialStatesPolicy {
 		~OneWithNoise() {}
 	};
 
-	//---------------------------------------------------------------------------
-
 }
+
 //---------------------------------------------------------------------------
 }
 //---------------------------------------------------------------------------

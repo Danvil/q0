@@ -10,7 +10,7 @@
 //---------------------------------------------------------------------------
 #include "QuestZero/Common/RandomNumbers.h"
 #include "QuestZero/Common/Sample.h"
-#include "QuestZero/Common/SampleSet.h"
+#include "QuestZero/Common/CombinedSampleList.h"
 #include "QuestZero/Common/Log.h"
 #include <vector>
 #include <string>
@@ -32,89 +32,52 @@ struct PSOSettings
 	double factor_global;
 };
 
-/// <summary>
-/// The particle swarm algorithm
-/// See http://en.wikipedia.org/wiki/Particle_swarm_optimization
-/// See http://www.hvass-labs.org/projects/swarmops/
-/// See Particle Swarm Optimization: Developments, Application and Ressources, Eberhart, R. and Shi, Y.
-/// </summary>
-template<class State, class Score,
-	class Target,
-	class StartingStates,
-	class Take,
-	class NotifySamples
->
-struct PSO
-: public Target,
-  public StartingStates,
-  public Take,
-  public NotifySamples
+namespace detail
 {
-	typedef TSample<State,Score> Sample;
-	typedef TSampleSet<State,Score> SampleSet;
 
-	PSO() {}
+	template<typename State, typename Score>
+	class GlobalData;
 
-	virtual ~PSO() {}
+	template<typename State, typename Score>
+	struct ParticleData
+	{
+		typedef State state_t;
+		typedef Score score_t;
 
-	std::string name() const { return "PSO"; }
+		ParticleData() {}
 
-	PSOSettings settings;
-
-	template<class Space, class Function, typename Compare>
-	Sample Optimize(const Space& space, const Function& function, Compare cmp) {
-		globals.set(settings);
-		// generate start samples
-		std::vector<State> initial_states = this->pickMany(space, settings.particleCount);
-		particles.reserve(initial_states.size());
-		for(typename std::vector<State>::const_iterator it=initial_states.begin(); it!=initial_states.end(); ++it) {
-			//LOG_DEBUG << "PSO: Picked initial state: " << *it;
-			particles.push_back(ParticleData(*it));
+		ParticleData(State x) {
+			last = x;
+			current_state_ = x;
+			best_state_ = x;
 		}
-		// iterate
-		while(true) {
-			// construct sample set
-			LOG_DEBUG << "PSO: getting current states";
-			SampleSet samples = currentSamples();
-			// evaluate samples
-			LOG_DEBUG << "PSO: evaluate states";
-			compute_likelihood(samples, function);
-			// update global best
-			LOG_DEBUG << "PSO: update global best";
-			auto best_id = find_best_by_score(samples, cmp);
-			if(!globals.isSet() || cmp(get_score(samples, best_id), globals.best_score())) {
-				globals.set(get_sample(samples, best_id));
-			}
-			// update personal best and particle
-			LOG_DEBUG << "PSO: update personal best and particle";
-			for(size_t i = 0; i < particles.size(); i++) {
-				Score s = get_score(samples, i);
-				ParticleData& p = particles[i];
-				if(cmp(s, p.best_score_)) {
-					p.best_state_ = get_state(samples, i);
-					p.best_score_ = s;
-				}
-				p.Update(space, globals);
-			}
-			// notify about new samples
-			LOG_DEBUG << "PSO: notify about new samples";
-			this->NotifySamples(bestSamples(), cmp);
-			// check if break condition is satisfied
-			LOG_DEBUG << "PSO: check break condition";
-			if(this->IsTargetReached(globals.best_score(), cmp)) {
-				break;
-			}
-		}
-		LOG_DEBUG << "PSO: picking result";
-		return this->template take(space, bestSamples(), cmp);
-	}
 
-private:
+		State last;
+
+		State current_state_;
+		Score current_score_;
+
+		State best_state_;
+		Score best_score_;
+	};
+
+	template<typename State, typename Score>
+	const State& get_state(const ParticleData<State,Score>& x) { return x.current_state_; }
+
+	template<typename State, typename Score>
+	State& get_state(ParticleData<State,Score>& x) { return x.current_state_; }
+
+	template<typename State, typename Score>
+	const Score& get_score(const ParticleData<State,Score>& x) { return x.current_score_; }
+
+	template<typename State, typename Score>
+	Score& get_score(ParticleData<State,Score>& x) { return x.current_score_; }
+
+	template<typename State, typename Score>
 	class GlobalData
 	{
 	public:
-		GlobalData()
-		: is_best_set(false) {}
+		typedef TSample<State,Score> Sample;
 
 		void set(const PSOSettings& x) {
 			omega_ = x.factor_velocity;
@@ -133,16 +96,28 @@ private:
 
 		double psi_global() const { return psi_global_; }
 
-		bool isSet() const { return is_best_set; }
-
 		Score best_score() const { return best_score_; }
 
 		const State& best_state() const { return best_state_; }
 
-		void set(const Sample& s) {
-			best_state_ = s.state;
-			best_score_ = s.score;
-			is_best_set = true;
+		void set(const ParticleData<State,Score>& s) {
+			best_state_ = s.current_state_;
+			best_score_ = s.current_score_;
+		}
+
+		template<class Space>
+		void Update(const Space& space, ParticleData<State,Score>& u) {
+			// TODO double or float?
+			double fl = omega();
+			double fp = psi_personal() * RandomNumbers::Uniform<double>();
+			double fg = psi_global() * RandomNumbers::Uniform<double>();
+			State dl = space.difference(u.current_state_, u.last);
+			State dp = space.difference(u.best_state_, u.current_state_);
+			State dg = space.difference(best_state(), u.current_state_);
+			u.last = u.current_state_;
+			State delta = space.weightedSum(fl, dl, fp, dp, fg, dg);
+			// FIXME we should bound the "velocity" i.e. the maximal distance made in a step
+			u.current_state_ = space.project(space.compose(delta, u.current_state_));
 		}
 
 	private:
@@ -158,67 +133,86 @@ private:
 		double omega_;
 		double psi_personal_;
 		double psi_global_;
-		bool is_best_set;
 		State best_state_;
 		Score best_score_;
 	};
 
-	struct ParticleData
-	{
-		ParticleData(State x) {
-			last = x;
-			current = x;
-			best_state_ = x;
-			best_score_ = 1e12;
-		}
+}
 
-		State last;
-		State current;
-		State best_state_;
-		Score best_score_;
+/// <summary>
+/// The particle swarm algorithm
+/// See http://en.wikipedia.org/wiki/Particle_swarm_optimization
+/// See http://www.hvass-labs.org/projects/swarmops/
+/// See Particle Swarm Optimization: Developments, Application and Ressources, Eberhart, R. and Shi, Y.
+/// </summary>
+template<typename State, typename Score,
+	typename ExitPolicy,
+	typename InitializePolicy
+>
+struct PSO
+: public ExitPolicy,
+  public InitializePolicy
+{
+	typedef detail::ParticleData<State,Score> Particle;
+	typedef std::vector<Particle> ParticleSet;
 
-		template<class Space>
-		void Update(const Space& space, const GlobalData& globals) {
-			// TODO double or float?
-			double fl = globals.omega();
-			double fp = globals.psi_personal() * RandomNumbers::Uniform<double>();
-			double fg = globals.psi_global() * RandomNumbers::Uniform<double>();
-			State dl = space.difference(current, last);
-			State dp = space.difference(best_state_, current);
-			State dg = space.difference(globals.best_state(), current);
-			last = current;
-			State delta = space.weightedSum(fl, dl, fp, dp, fg, dg);
-			// FIXME we should bound the "velocity" i.e. the maximal distance made in a step
-			current = space.project(space.compose(delta, current));
+	std::string name() const { return "PSO"; }
+
+	PSOSettings settings;
+
+	template<class Space, class Function, typename Compare, typename Visitor>
+	TSample<State,Score> Optimize(const Space& space, const Function& function, Compare cmp, Visitor vis) {
+		globals.set(settings);
+		// generate start samples
+		this->PickInitial(particles, space, settings.particleCount);
+		// compute particle score
+		compute_likelihood(particles, function);
+		// initialize personal best
+		for(Particle& p : particles) {
+			p.best_state_ = p.current_state_;
+			p.best_score_ = p.current_score_;
 		}
-	};
+		// initialize global best
+		auto best_id = find_best_by_score(particles, cmp);
+		globals.set(get_sample(particles, best_id));
+		// iterate
+		while(true) {
+			// evaluate samples
+			LOG_DEBUG << "PSO: evaluate states";
+			compute_likelihood(particles, function);
+			// notify about new samples
+			LOG_DEBUG << "PSO: notify new samples";
+			vis.NotifySamples(particles);
+			// find best sample
+			auto best_id = find_best_by_score(particles, cmp);
+			// check if break condition is satisfied
+			LOG_DEBUG << "PSO: check exit condition";
+			if(this->IsTargetReached(globals.best_score(), cmp)) {
+				Particle best = get_sample(particles, best_id);
+				return { get_state(best), get_score(best) };
+			}
+			// update global best
+			LOG_DEBUG << "PSO: update global best";
+			if(cmp(get_score(particles, best_id), globals.best_score())) {
+				globals.set(get_sample(particles, best_id));
+			}
+			// update personal best and particle
+			LOG_DEBUG << "PSO: update personal best";
+			for(size_t i = 0; i < particles.size(); i++) {
+				Particle& p = particles[i];
+				if(cmp(p.current_score_, p.best_score_)) {
+					p.best_state_ = p.current_state_;
+					p.best_score_ = p.current_score_;
+				}
+				globals.Update(space, p);
+			}
+		}
+	}
 
 private:
-	std::vector<ParticleData> particles;
+	ParticleSet particles;
 
-	GlobalData globals;
-
-	std::vector<State> currentStates() const {
-		std::vector<State> states;
-		states.reserve(particles.size());
-		for(typename std::vector<ParticleData>::const_iterator it=particles.begin(); it!=particles.end(); ++it) {
-			states.push_back(it->current);
-		}
-		return states;
-	}
-
-	SampleSet currentSamples() const {
-		return SampleSet(currentStates());
-	}
-
-	SampleSet bestSamples() const {
-		SampleSet samples;
-		give_size_hint(samples, particles.size());
-		for(typename std::vector<ParticleData>::const_iterator it=particles.begin(); it!=particles.end(); ++it) {
-			add_sample(samples, it->best_state_, it->best_score_);
-		}
-		return samples;
-	}
+	detail::GlobalData<State,Score> globals;
 
 };
 //---------------------------------------------------------------------------

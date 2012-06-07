@@ -9,7 +9,7 @@
 #define ALGORITHMS_RND_H
 //---------------------------------------------------------------------------
 #include "QuestZero/Common/Sample.h"
-#include "QuestZero/Common/SampleSet.h"
+#include "QuestZero/Common/DefaultSampleList.h"
 #include <string>
 #include <vector>
 //---------------------------------------------------------------------------
@@ -17,24 +17,20 @@ namespace Q0 {
 //---------------------------------------------------------------------------
 
 /// <summary>
-/// A optimization algorithm which tries to find the minimum of a function with stupid randomness
+/// A optimization algorithm which tries to find the optimum of a function with stupid randomness
 /// </summary>
-template<
-	typename State,
-	class Score,
-	class Target,
-	class StartingStates,
-	class Take,
-	class NotifySamples
+template<typename State, typename Score,
+	typename ExitPolicy,
+	typename InitializePolicy
 >
 struct RND
-: public Target,
-  public StartingStates,
-  public Take,
-  public NotifySamples
+: public ExitPolicy,
+  public InitializePolicy
 {
-	typedef TSample<State,Score> Sample;
-	typedef TSampleSet<State,Score> SampleSet;
+	typedef State state_t;
+	typedef Score score_t;
+	typedef TSample<state_t,score_t> sample_t;
+	typedef TSampleSet<state_t,score_t> sample_set_t;
 
 	RND() {
 		particleCount = 100;
@@ -46,33 +42,37 @@ struct RND
 
 	unsigned int particleCount;
 
-	template<typename Space, typename Function, typename Compare>
-	Sample Optimize(const Space& space, const Function& function, Compare cmp) {
-		SampleSet open(this->template pickMany(space, particleCount));
+	template<typename Space, typename Function, typename Compare, typename Visitor>
+	sample_t Optimize(const Space& space, const Function& function, Compare cmp, Visitor vis) {
+		sample_set_t open;
+		this->PickInitial(open, space, particleCount);
+		assert(num_samples(open) == particleCount);
 		// evaluate initial samples
 		compute_likelihood(open, function);
-		// update progress bar
-		this->NotifySamples(open, cmp);
+		// notify sample set observer
+		vis.NotifySamples(open);
 		// in every iteration add new particles, delete the worst particles
 		// iterate until a given condition is fulfilled
-		auto best_id = find_best_by_score(open, cmp);
-		while(!this->IsTargetReached(get_score(open, best_id), cmp)) {
-			// add new samples by randomly selecting points
-			assert(num_samples(open) == particleCount);
-			// generate new chunk of states
-			SampleSet new_samples(space.template randomMany(particleCount));
-//			SampleSet new_samples(this->template pickMany(space, particleCount));
-			// evaluate the chunk
+		while(true) {
+			// find best particle
+			auto best_id = find_best_by_score(open, cmp);
+			// check if it is good enough
+			if(this->IsTargetReached(get_score(open, best_id), cmp)) {
+				// return best sample
+				return get_sample(open, best_id);
+			}
+			// randomly generate new states
+			sample_set_t new_samples(space.template randomMany(particleCount));
+			// evaluate new states
 			compute_likelihood(new_samples, function);
-			// add to open samples
+			// add new samples
 			add_samples(open, new_samples);
-			// pick the best
+			// pick n best particles
 			open = pick_best(open, particleCount, cmp);
-			// update progress bar
-			this->NotifySamples(open, cmp);
+			assert(num_samples(open) == particleCount);
+			// notify sample set observer
+			vis.NotifySamples(open);
 		}
-		// return last best samples
-		return this->template take(space, open, cmp);
 	}
 };
 

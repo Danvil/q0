@@ -14,21 +14,8 @@
 namespace Q0 {
 //---------------------------------------------------------------------------
 
-namespace TargetPolicy
+namespace ExitPolicy
 {
-	template<typename Traits, typename A, typename B>
-	struct FullThingy {};
-
-	template<typename A, typename B>
-	struct FullThingy_Resolver {
-		template<typename Traits>
-		struct resolver {
-			typedef FullThingy<Traits,A,B> result_type;
-		};
-	};
-
-	FullThingy_Resolver<int,int>::resolver<int>::result_type X;
-
 	/** Breaks after a given number of iterations */
 	template<typename ScoreType, bool Console=true>
 	struct FixedChecks
@@ -45,10 +32,10 @@ namespace TargetPolicy
 		size_t GetCurrentIterationCount() const { return current_; }
 
 		template<typename Compare>
-		bool IsTargetReached(ScoreType, Compare) {
+		bool IsTargetReached(ScoreType score, Compare) {
 			++current_;
 			if(Console) {
-				std::cout << "Iteration " << current_ << "/" << max_ << std::endl;
+				std::cout << "Iteration " << current_ << "/" << max_ << ": Current Score=" << score << std::endl;
 			}
 			return current_ >= max_;
 		}
@@ -57,6 +44,12 @@ namespace TargetPolicy
 		size_t current_;
 		size_t max_;
 	};
+
+	/** Checks abs(score - last_score) <= target */
+	template<typename Score, bool Console>
+	void set_fixed_exit_policy(FixedChecks<Score,Console>& obj, size_t num_iterations) {
+		obj.SetMaximumIterationCount(num_iterations);
+	}
 
 	/** Breaks when the score is smaller than a given value
 	 * Attention: This may result in an infinite loop. Better use ScoreTargetWithMaxChecks!
@@ -177,7 +170,7 @@ namespace TargetPolicy
 
 	/** Checks abs(score - last_score) <= target */
 	template<typename Score, bool Console>
-	void set_absdiff_score_change_target(ScoreChangeTarget<Score,Console>& obj, double target) {
+	void set_score_change_exit_policy(ScoreChangeTarget<Score,Console>& obj, double target) {
 		obj.SetTargetDelta(target);
 		obj.SetTargetDeltaFunctor([](Score x, Score y) { return std::abs(x - y); });
 	}

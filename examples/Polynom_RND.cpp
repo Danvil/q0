@@ -6,7 +6,7 @@
  */
 
 #include <QuestZero/Spaces/Cartesian.h>
-#include <QuestZero/Optimization/Algorithms/PSO.h>
+#include <QuestZero/Optimization/Algorithms/RND.h>
 #include <QuestZero/Optimization/Optimization.h>
 #include <QuestZero/Common/DefaultSampleList.h>
 #include <QuestZero/Policies.hpp>
@@ -25,18 +25,17 @@ int main()
 
 	Q0::Spaces::InfiniteCartesianSpace<state_t> space;
 
-	std::cout << "Using Particle Swarm Optimization (PSO)" << std::endl;
+	std::cout << "Using Monte Carlo Random Sampling (RND)" << std::endl;
 
 	Q0::Optimization<state_t, score_t,
-			Q0::PSO,
-			Q0::TargetPolicy::ScoreChangeTarget<score_t>,
-			Q0::InitialStatesPolicy::Fuser<Q0::InitialStatesPolicy::RandomPicker>::Result,
-			Q0::TakePolicy::TakeBest,
-			Q0::TracePolicy::Samples::None<state_t,score_t> > algoPso;
-	Q0::TargetPolicy::set_absdiff_score_change_target(algoPso, 1e-5);
-	algoPso.settings.particleCount = 100;
+			Q0::RND,
+			Q0::InitializePolicy::ManyPicker<state_t,Q0::InitializePolicy::RandomPicker>,
+			Q0::ExitPolicy::FixedChecks<score_t>
+	> algo;
+	Q0::ExitPolicy::set_fixed_exit_policy(algo, 5);
+	algo.particleCount = 100;
 
-	Q0::TSample<state_t, score_t> best = algoPso.Minimize(space, &polynom);
+	Q0::TSample<state_t, score_t> best = algo.Minimize(space, &polynom, Q0::TracePolicy::None());
 
 	std::cout << "Optimization result:" << std::endl;
 	std::cout << "x_min = " << best.state << std::endl;
