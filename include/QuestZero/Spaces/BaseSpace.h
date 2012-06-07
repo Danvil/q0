@@ -8,7 +8,7 @@
 #ifndef SPACE_H_
 #define SPACE_H_
 //---------------------------------------------------------------------------
-#include "QuestZero/Policies/OperationFinalPolicy.h"
+#include "OperationFinalPolicy.h"
 #include <QuestZero/Common/IPrintable.h>
 #include <vector>
 #include <cstddef>
