@@ -30,13 +30,23 @@ struct Optimization
 	typedef Score_ Score;
 	typedef TSample<State,Score> Sample;
 
+	template<typename Space, typename Function>
+	Sample Minimize(const Space& space, const Function& function) {
+		return this->template Optimize(space, function, std::less<Score>(), TracePolicy::None());
+	}
+
+	template<typename Space, typename Function>
+	Sample Maximize(const Space& space, const Function& function) {
+		return this->template Optimize(space, function, std::greater<Score>(), TracePolicy::None());
+	}
+
 	template<typename Space, typename Function, typename Visitor>
-	Sample Minimize(const Space& space, const Function& function, Visitor vis=TracePolicy::None()) {
+	Sample Minimize(const Space& space, const Function& function, Visitor vis) {
 		return this->template Optimize(space, function, std::less<Score>(), vis);
 	}
 
 	template<typename Space, typename Function, typename Visitor>
-	Sample Maximize(const Space& space, const Function& function, Visitor vis=TracePolicy::None()) {
+	Sample Maximize(const Space& space, const Function& function, Visitor vis) {
 		return this->template Optimize(space, function, std::greater<Score>(), vis);
 	}
 };
