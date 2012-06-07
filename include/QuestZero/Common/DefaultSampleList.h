@@ -8,7 +8,6 @@
 #ifndef Q0_DEFAULTSAMPLELIST_H_
 #define Q0_DEFAULTSAMPLELIST_H_
 
-#include "range.hpp"
 #include "Sample.h"
 #include "SampleSet.h"
 #include <boost/assert.hpp>

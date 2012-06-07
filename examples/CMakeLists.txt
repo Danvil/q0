@@ -6,7 +6,7 @@
 add_executable(Polynom_PSO Polynom_PSO.cpp)
 add_executable(Polynom_RND Polynom_RND.cpp)
 
-#add_executable(MinAngle optimization/MinAngle.cpp)
+add_executable(MinAngle optimization/MinAngle.cpp)
 
 #add_executable(PointCloudRegistration_Rot optimization/PointCloudRegistration_Rot.cpp)
 
