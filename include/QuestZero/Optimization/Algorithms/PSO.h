@@ -79,6 +79,12 @@ namespace detail
 	public:
 		typedef TSample<State,Score> Sample;
 
+		GlobalData()
+		: omega_(1.0),
+		  psi_personal_(2.05),
+		  psi_global_(2.00)
+		{}
+
 		void set(const PSOSettings& x) {
 			omega_ = x.factor_velocity;
 			psi_personal_ = x.factor_personal;

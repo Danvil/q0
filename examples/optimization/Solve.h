@@ -57,8 +57,8 @@ AlgoTestResult<typename ALGO::State, typename ALGO::Score> TestAlgo(ALGO algo, c
 	return AlgoTestResult<typename ALGO::State, typename ALGO::Score>{"", best.state, best.score, timer.getElapsedTimeInMilliSec()};
 }
 
-const unsigned int cIterationCount = 16;
-const double cScoreGoal = 1e-3;
+const unsigned int cIterationCount = 10;
+//const double cScoreGoal = 1e-3;
 
 template<typename State>
 void printState(const State& x) {
@@ -75,22 +75,16 @@ void TestProblem(const Space& space, const Function& function, unsigned int num_
 {
 	printHeader(std::cout);
 
-#ifdef DEBUG
-	typedef TargetPolicy::ScoreTargetWithMaxChecks<typename Function::Score,true> TargetChecker;
-#else
-	typedef TargetPolicy::ScoreTargetWithMaxChecks<typename Function::Score,false> TargetChecker;
-#endif
+	typedef typename Function::Score score_t;
+	typedef typename Space::State state_t;
 
 	{
-		Optimization<typename Space::State, typename Function::Score,
+		Optimization<state_t, score_t,
 				RND,
-				TargetChecker,
-				InitialStatesPolicy::Fuser<InitialStatesPolicy::RandomPicker>::Result,
-				TakePolicy::TakeBest,
-				TracePolicy::Samples::None<typename Space::State, typename Function::Score>
+				Q0::InitializePolicy::ManyPicker<state_t,Q0::InitializePolicy::RandomPicker>,
+				Q0::ExitPolicy::FixedChecks<score_t>
 		> algoRnd;
-		algoRnd.SetMaximumIterationCount(cIterationCount);
-		algoRnd.SetTargetScore(cScoreGoal);
+		Q0::ExitPolicy::set_fixed_exit_policy(algoRnd, cIterationCount);
 		algoRnd.particleCount = num_particles / cIterationCount;
 		auto tr = TestAlgo(algoRnd, space, function);
 		tr.name = "RND";
@@ -101,42 +95,33 @@ void TestProblem(const Space& space, const Function& function, unsigned int num_
 		}
 	}
 
-	{
-		Optimization<typename Space::State, typename Function::Score,
-				NelderMead,
-				TargetChecker,
-				InitialStatesPolicy::Fuser<InitialStatesPolicy::RandomPicker>::Result,
-				TakePolicy::TakeBest,
-				TracePolicy::Samples::None<typename Space::State, typename Function::Score>
-		> algoNM;
-	//	algoRnd.SetMaximumIterationCount(cIterationCount);
-	//	algoRnd.SetTargetScore(cScoreGoal);
-	//	algoRnd.particleCount = cParticleCount;
-		algoNM.SetTargetScore(1e-08);
-		algoNM.SetMaximumIterationCount(num_particles / 4); // evaluates 4 particles per iteration
-		algoNM.p_simplex_size = 0.5;
-		algoNM.p_alpha = 1.0;
-		algoNM.p_beta = 0.4;
-		algoNM.p_gamma = 3.0;
-		auto tr = TestAlgo(algoNM, space, function);
-		tr.name = "Nelder Mead";
-		std::cout << tr << std::endl;
-		if(print_result_state) {
-			std::cout << "Result: ";
-			printState(tr.state);
-		}
-	}
+//	{
+//		Optimization<state_t, score_t,
+//				NelderMead,
+//				Q0::InitializePolicy::ManyPicker<state_t,Q0::InitializePolicy::RandomPicker>,
+//				Q0::ExitPolicy::FixedChecks<score_t>
+//		> algoNM;
+//		Q0::ExitPolicy::set_fixed_exit_policy(algoNM, num_particles / 4); // evaluates 4 particles per iteration
+//		algoNM.p_simplex_size = 0.5;
+//		algoNM.p_alpha = 1.0;
+//		algoNM.p_beta = 0.4;
+//		algoNM.p_gamma = 3.0;
+//		auto tr = TestAlgo(algoNM, space, function);
+//		tr.name = "Nelder Mead";
+//		std::cout << tr << std::endl;
+//		if(print_result_state) {
+//			std::cout << "Result: ";
+//			printState(tr.state);
+//		}
+//	}
 
 	{
-		Optimization<typename Space::State, typename Function::Score,
+		Optimization<state_t, score_t,
 				PSO,
-				TargetChecker,
-				InitialStatesPolicy::Fuser<InitialStatesPolicy::RandomPicker>::Result,
-				TakePolicy::TakeBest,
-				TracePolicy::Samples::None<typename Space::State, typename Function::Score>
+				Q0::InitializePolicy::ManyPicker<state_t,Q0::InitializePolicy::RandomPicker>,
+				Q0::ExitPolicy::FixedChecks<score_t>
 		> algoPso;
-		algoPso.SetMaximumIterationCount(cIterationCount);
-		algoPso.SetTargetScore(cScoreGoal);
+		Q0::ExitPolicy::set_fixed_exit_policy(algoPso, cIterationCount);
 		algoPso.settings.particleCount = num_particles / cIterationCount;
 		auto tr = TestAlgo(algoPso, space, function);
 		tr.name = "PSO";

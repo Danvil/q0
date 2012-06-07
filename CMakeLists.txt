@@ -7,6 +7,7 @@ add_definitions(
 	-DBOOST_DISABLE_ASSERTS
 	-Wall
 	-Werror
+	-Wno-error=uninitialized # carfule here!
 )
 
 include_directories(

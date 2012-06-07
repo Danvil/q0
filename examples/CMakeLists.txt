@@ -8,7 +8,7 @@ add_executable(Polynom_RND Polynom_RND.cpp)
 
 add_executable(MinAngle optimization/MinAngle.cpp)
 
-#add_executable(PointCloudRegistration_Rot optimization/PointCloudRegistration_Rot.cpp)
+add_executable(PointCloudRegistration_Rot optimization/PointCloudRegistration_Rot.cpp)
 
 #add_executable(PointCloudRegistration_LocRot optimization/PointCloudRegistration_LocRot.cpp)
 
@@ -18,14 +18,14 @@ add_executable(MinAngle optimization/MinAngle.cpp)
 
 #add_executable(Problem07 optimization/Problem07.cpp)
 
-#add_executable(SpecialFunctions_2 optimization/SpecialFunctions_2.cpp)
-#target_link_libraries(SpecialFunctions_2 boost_program_options)
+add_executable(SpecialFunctions_2 optimization/SpecialFunctions_2.cpp)
+target_link_libraries(SpecialFunctions_2 boost_program_options)
 
-#add_executable(SpecialFunctions_31 optimization/SpecialFunctions_31.cpp)
-#target_link_libraries(SpecialFunctions_31 boost_program_options)
+add_executable(SpecialFunctions_31 optimization/SpecialFunctions_31.cpp)
+target_link_libraries(SpecialFunctions_31 boost_program_options)
 
-#add_executable(SpecialFunctions_dyn optimization/SpecialFunctions_dyn.cpp)
-#target_link_libraries(SpecialFunctions_dyn boost_program_options)
+add_executable(SpecialFunctions_dyn optimization/SpecialFunctions_dyn.cpp)
+target_link_libraries(SpecialFunctions_dyn boost_program_options)
 
 #add_executable(Problem09 tracking/Problem09.cpp)
 

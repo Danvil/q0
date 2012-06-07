@@ -17,7 +17,7 @@ typedef double real_t;
 
 typedef Eigen::Quaternion<real_t> state_t;
 
-typedef Q0::Spaces::SO3::FullSO3Space<real_t> space_t;
+typedef Q0::Spaces::FullSO3Space<real_t> space_t;
 
 struct RegistrationFunction
 : public Benchmarks::PointCloudRegistration<real_t>
@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
 	Q0::Functions::AddParallel<state_t,RegistrationFunction> f;
 	f.createRandomProblem(100);
 
-	TestProblem(space, f);
+	TestProblem(space, f, 100, true);
 
 	return 1;
 }
