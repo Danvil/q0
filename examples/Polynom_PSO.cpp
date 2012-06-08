@@ -43,7 +43,7 @@ int main()
 	> algo;
 
 	// setup algorithm to do 5 iterations
-	Q0::ExitPolicy::set_fixed_exit_policy(algo, 5);
+	algo.SetIterationCount(5);
 	// setup algorithm to use 100 particles
 	algo.settings.particleCount = 100;
 

@@ -84,7 +84,7 @@ void TestProblem(const Space& space, const Function& function, unsigned int num_
 				Q0::InitializePolicy::ManyPicker<state_t,Q0::InitializePolicy::RandomPicker>,
 				Q0::ExitPolicy::FixedChecks<score_t>
 		> algoRnd;
-		Q0::ExitPolicy::set_fixed_exit_policy(algoRnd, cIterationCount);
+		algoRnd.SetIterationCount(cIterationCount);
 		algoRnd.particleCount = num_particles / cIterationCount;
 		auto tr = TestAlgo(algoRnd, space, function);
 		tr.name = "RND";
@@ -121,7 +121,7 @@ void TestProblem(const Space& space, const Function& function, unsigned int num_
 				Q0::InitializePolicy::ManyPicker<state_t,Q0::InitializePolicy::RandomPicker>,
 				Q0::ExitPolicy::FixedChecks<score_t>
 		> algoPso;
-		Q0::ExitPolicy::set_fixed_exit_policy(algoPso, cIterationCount);
+		algoPso.SetIterationCount(cIterationCount);
 		algoPso.settings.particleCount = num_particles / cIterationCount;
 		auto tr = TestAlgo(algoPso, space, function);
 		tr.name = "PSO";

@@ -41,7 +41,7 @@ int main()
 			Q0::ExitPolicy::FixedChecks<score_t,true>
 	> algo;
 	// setup algorithm to do 5 iterations
-	Q0::ExitPolicy::set_fixed_exit_policy(algo, 5);
+	algo.SetIterationCount(5);
 	// setup algorithm to use 100 particles per iteration
 	algo.particleCount = 100;
 
