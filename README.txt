@@ -62,7 +62,7 @@ http://eigen.tuxfamily.org
 GCC 4.6.3
 
 
-~~~~~ Instructions ~~~~
+~~~~~ Build instructions ~~~~
 
 This builds examples and tests. The main library is headers only.
 
@@ -70,3 +70,7 @@ mkdir build
 cd build
 ccmake ..
 make
+
+~~~~~ Usage ~~~~~
+
+Have a look at the examples. For example optimization/Polynom_PSO.cpp is easy to understand.
