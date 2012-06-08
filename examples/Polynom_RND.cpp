@@ -8,13 +8,15 @@
 #include <QuestZero/Spaces/Cartesian.h>
 #include <QuestZero/Optimization/Algorithms/RND.h>
 #include <QuestZero/Optimization/Optimization.h>
-#include <QuestZero/Common/DefaultSampleList.h>
-#include <QuestZero/Policies.hpp>
 #include <iostream>
 
+// the domain of the function to optimize
 typedef float state_t;
+
+// the co-domain of the function to optimize
 typedef float score_t;
 
+// the function to optimize
 score_t polynom(state_t x) {
 	return x*x*x*x - 2*x*x*x - 1;
 }
@@ -27,6 +29,7 @@ int main()
 	// The whole infinite 1-dim Cartesian space is used to search for a minimum.
 	// Per default random space samples are picked using a normal distribution.
 	Q0::Spaces::InfiniteCartesianSpace<state_t> space;
+	space.SetRandomStateNormalDistribution(0, 1);
 
 	// the algorithm class is constructed using several template parameters
 	Q0::Optimization<state_t, score_t,
@@ -34,7 +37,7 @@ int main()
 			Q0::RND,
 			// initial samples are also picked randomly
 			Q0::InitializePolicy::ManyPicker<state_t,Q0::InitializePolicy::RandomPicker>,
-			// algorithm runs for a fixed numer of iterations and plots progress to console
+			// algorithm runs for a fixed number of iterations and plots progress to console
 			Q0::ExitPolicy::FixedChecks<score_t,true>
 	> algo;
 	// setup algorithm to do 5 iterations
