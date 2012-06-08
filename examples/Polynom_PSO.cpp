@@ -22,25 +22,35 @@ score_t polynom(state_t x) {
 int main()
 {
 	std::cout << "Computing minimum of polynom f(x) = x^4 - 2 x^3 - 1" << std::endl;
-
-	Q0::Spaces::InfiniteCartesianSpace<state_t> space;
-
 	std::cout << "Using Particle Swarm Optimization (PSO)" << std::endl;
 
+	// The whole infinite 1-dim Cartesian space is used to search for a minimum.
+	// Per default random space samples are picked using a normal distribution.
+	// Further down we specify that the algorithm picks initial samples randomly.
+	Q0::Spaces::InfiniteCartesianSpace<state_t> space;
+
+	// the algorithm class is constructed using several template parameters
 	Q0::Optimization<state_t, score_t,
+			// PSO algorithm
 			Q0::PSO,
+			// initial samples are picked randomly
 			Q0::InitializePolicy::ManyPicker<state_t,Q0::InitializePolicy::RandomPicker>,
-			Q0::ExitPolicy::FixedChecks<score_t>
+			// algorithm runs for a fixed numer of iterations and plots progress to console
+			Q0::ExitPolicy::FixedChecks<score_t,true>
 	> algo;
+
+	// setup algorithm to do 5 iterations
 	Q0::ExitPolicy::set_fixed_exit_policy(algo, 5);
+	// setup algorithm to use 100 particles
 	algo.settings.particleCount = 100;
 
-	Q0::TSample<state_t, score_t> best = algo.Minimize(space, &polynom, Q0::TracePolicy::None());
+	// find minimum
+	Q0::TSample<state_t, score_t> best = algo.Minimize(space, &polynom);
 
+	// print results
 	std::cout << "Optimization result:" << std::endl;
 	std::cout << "x_min = " << best.state << std::endl;
 	std::cout << "f(x_min) = " << best.score << std::endl;
-
 	std::cout << "Expected result:" << std::endl;
 	std::cout << "x_min = " << 3.0/2.0 << std::endl;
 	std::cout << "f(x_min) = " << -43.0/16.0 << std::endl;

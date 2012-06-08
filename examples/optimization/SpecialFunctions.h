@@ -17,7 +17,7 @@ namespace Q0 {
 template<typename V>
 struct SpecialFunctions
 {
-	typedef Q0::Spaces::Cartesian::VectorTraits<V> traits_t;
+	typedef VectorTraits<V> traits_t;
 	typedef typename traits_t::scalar_t K;
 
 	/// <summary>

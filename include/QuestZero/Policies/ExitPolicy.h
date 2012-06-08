@@ -17,7 +17,7 @@ namespace Q0 {
 namespace ExitPolicy
 {
 	/** Breaks after a given number of iterations */
-	template<typename ScoreType, bool Console=true>
+	template<typename ScoreType, bool Console=false>
 	struct FixedChecks
 	{
 		FixedChecks(size_t max=10)
@@ -54,7 +54,7 @@ namespace ExitPolicy
 	/** Breaks when the score is smaller than a given value
 	 * Attention: This may result in an infinite loop. Better use ScoreTargetWithMaxChecks!
 	 */
-	template<typename ScoreType, bool Console=true>
+	template<typename ScoreType, bool Console=false>
 	struct ScoreTarget
 	{
 		ScoreTarget(ScoreType t=1e-3)
@@ -92,7 +92,7 @@ namespace ExitPolicy
 	};
 
 	/** Breaks if a score goal has been reached or after a maximum number of iterations */
-	template<typename ScoreType, bool Console=true>
+	template<typename ScoreType, bool Console=false>
 	struct ScoreTargetWithMaxChecks
 	: public FixedChecks<ScoreType,false>,
 	  public ScoreTarget<ScoreType,false>
@@ -122,7 +122,7 @@ namespace ExitPolicy
 
 	};
 
-	template<typename Score, bool Console=true>
+	template<typename Score, bool Console=false>
 	struct ScoreChangeTarget
 	{
 		typedef std::function<double(Score,Score)> DeltaFunctor;
