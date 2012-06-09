@@ -9,7 +9,6 @@
 #define Q0_ALGORITHMS_HILLCLIMBING_H_
 //---------------------------------------------------------------------------
 #include "QuestZero/Common/SampleSet.h"
-#include "QuestZero/Common/ScoreComparer.h"
 #include <QuestZero/Common/Log.h>
 #include <vector>
 #include <cassert>
