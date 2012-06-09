@@ -122,6 +122,19 @@ struct SpecialFunctions
 		return sum;
 	}
 
+	/** Himmelblau test function
+	 * See http://en.wikipedia.org/wiki/Himmelblau%27s_function
+	 * See http://www.wolframalpha.com/input/?i=%28x^2+%2B+y+-+11%29^2+%2B+%28x+%2B+y^2+-+7%29^2
+	 */
+	static K Himmelblau(const V& v) {
+		assert(traits_t::dim(v) == 2);
+		K x = traits_t::at(v, 0);
+		K y = traits_t::at(v, 1);
+		K p = (x*x + y - 11);
+		K q = (x + y*y - 7);
+		return p*p + q*q;
+	}
+
 	/// <summary>
 	/// For n=2: A function with lots of local minima and one global at (0,0)
 	/// http://www.wolframalpha.com/input/?i=x^2+%2B+10+-+10+Cos%282+Pi+x%29+%2B+y^2+%2B+10+-+10+Cos%282+Pi+y%29

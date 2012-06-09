@@ -73,6 +73,11 @@ int main(int argc, char* argv[])
 	Solve(space, &Q0::SpecialFunctions<state_t>::Rosenbrock, p_num_particles, p_print_result_state);
 
 	std::cout << std::endl;
+	std::cout << "----- Himmelblau --- Expected result: (3,2), (-2.805118,3.131312), (-3.779310,-3.283186), (3.584428,-1.848126) -----" << std::endl;
+	std::cout << std::endl;
+	Solve(space, &Q0::SpecialFunctions<state_t>::Himmelblau, p_num_particles, p_print_result_state);
+
+	std::cout << std::endl;
 	std::cout << "----- Rastrigin --- Expected result: (0,0) -----" << std::endl;
 	std::cout << std::endl;
 	Solve(space, &Q0::SpecialFunctions<state_t>::Rastrigin, p_num_particles, p_print_result_state);
