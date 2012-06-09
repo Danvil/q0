@@ -8,8 +8,13 @@
 #ifndef POLICIES_TARGETPOLICY_H_
 #define POLICIES_TARGETPOLICY_H_
 //---------------------------------------------------------------------------
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/variance.hpp>
 #include <iostream>
 #include <cfloat>
+#include <cmath>
 //---------------------------------------------------------------------------
 namespace Q0 {
 //---------------------------------------------------------------------------
@@ -80,16 +85,6 @@ namespace ExitPolicy
 			return cmp(current_, goal_);
 		}
 
-		// FIXME this is specific for Nelder-Mead - remove it
-		template<typename Compare>
-		bool IsTargetReached(ScoreType score, ScoreType test, Compare cmp) {
-			current_ = score;
-			if(Console) {
-				std::cout << "Current Score=" << score << ", Test=" << test << " (Target=" << goal_ << ")" << std::endl;
-			}
-			return cmp(test, goal_);
-		}
-
 	private:
 		ScoreType current_;
 		ScoreType goal_;
@@ -108,18 +103,6 @@ namespace ExitPolicy
 			if(Console) {
 				std::cout << "Iteration " << this->GetCurrentIterationCount() << "/" << this->GetMaximumIterationCount() << ": "
 						<< "Current Score=" << this->GetCurrentScore() << " (Target=" << this->GetTargetScore() << ")" << std::endl;
-			}
-			return check_iters || check_score;
-		}
-
-		// FIXME this is specific for Nelder-Mead - remove it
-		template<typename Compare>
-		bool IsTargetReached(ScoreType score, ScoreType test, Compare cmp) {
-			bool check_iters = ((FixedChecks<ScoreType,false>*)this)->IsTargetReached(score, cmp); // must be first, so it gets evaluated every time!
-			bool check_score = ((ScoreTarget<ScoreType,false>*)this)->IsTargetReached(score, test, cmp);
-			if(Console) {
-				std::cout << "Iteration " << this->GetCurrentIterationCount() << "/" << this->GetMaximumIterationCount() << ": "
-						<< "Current Score=" << this->GetCurrentScore() << ", Test=" << test << " (Target=" << this->GetTargetScore() << ")" << std::endl;
 			}
 			return check_iters || check_score;
 		}
@@ -179,6 +162,30 @@ namespace ExitPolicy
 		obj.SetTargetDeltaFunctor([](Score x, Score y) { return std::abs(x - y); });
 	}
 
+	template<typename Score, bool Console=false>
+	struct StdDevExitPolicy
+	{
+		template<typename SampleSet>
+		bool IsTargetReached(const SampleSet& sample_list) {
+			using namespace boost::accumulators;
+			accumulator_set<double, stats<tag::variance>> score_acc;
+			for(auto id : samples(sample_list)) {
+				score_acc(get_score(sample_list, id));
+			}
+			double stddev = std::sqrt(variance(score_acc));
+			if(Console) {
+				std::cout << "Current std. dev. =" << stddev << ", Target =" << target_ << std::endl;
+			}
+			return stddev < target_;
+		}
+
+		void SetExitStdDevTarget(double target) {
+			target_ = target;
+		}
+
+	private:
+		double target_;
+	};
 
 }
 
