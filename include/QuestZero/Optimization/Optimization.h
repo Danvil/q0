@@ -26,29 +26,70 @@ template<
 struct Optimization
 : public Algorithm<State_, Score_, InitializePolicy, ExitPolicy>
 {
-	typedef State_ State;
-	typedef Score_ Score;
-	typedef TSample<State,Score> Sample;
+	typedef Algorithm<State_, Score_, InitializePolicy, ExitPolicy> base_t;
+	typedef State_ state_t;
+	typedef Score_ score_t;
+	typedef TSample<state_t,score_t> sample_t;
 
+	/** Finds the optimum of a function over the given space
+	 * @param space the space over which to optimize
+	 * @param function the function to optimize
+	 * @param compare compare functor used to compare scores
+	 */
+	template<typename Space, typename Function, typename Compare>
+	sample_t Optimize(const Space& space, const Function& function, Compare compare) {
+		return base_t::Optimize(space, function, compare, TracePolicy::None());
+	}
+
+	/** Finds the optimum of a function over the given space
+	 * @param space the space over which to optimize
+	 * @param function the function to optimize
+	 * @param compare compare functor used to compare scores
+	 * @param visitor used to trace evaluated particles
+	 */
+	template<class Space, class Function, typename Compare, typename Visitor>
+	sample_t Optimize(const Space& space, const Function& function, Compare compare, Visitor visitor) {
+		return base_t::Optimize(space, function, compare, visitor);
+	}
+
+	/** Finds the minimum of a function over the given space using std::less for score comparison
+	 * @param space the space over which to optimize
+	 * @param function the function to optimize
+	 */
 	template<typename Space, typename Function>
-	Sample Minimize(const Space& space, const Function& function) {
-		return this->template Optimize(space, function, std::less<Score>(), TracePolicy::None());
+	sample_t Minimize(const Space& space, const Function& function) {
+		return base_t::Optimize(space, function, std::less<score_t>(), TracePolicy::None());
 	}
 
+	/** Finds the maximum of a function over the given space using std::greater for score comparison
+	 * @param space the space over which to optimize
+	 * @param function the function to optimize
+	 */
 	template<typename Space, typename Function>
-	Sample Maximize(const Space& space, const Function& function) {
-		return this->template Optimize(space, function, std::greater<Score>(), TracePolicy::None());
+	sample_t Maximize(const Space& space, const Function& function) {
+		return base_t::Optimize(space, function, std::greater<score_t>(), TracePolicy::None());
 	}
 
+	/** Finds the minimum of a function over the given space using std::less for score comparison
+	 * @param space the space over which to optimize
+	 * @param function the function to optimize
+	 * @param visitor used to trace evaluated particles
+	 */
 	template<typename Space, typename Function, typename Visitor>
-	Sample Minimize(const Space& space, const Function& function, Visitor vis) {
-		return this->template Optimize(space, function, std::less<Score>(), vis);
+	sample_t Minimize(const Space& space, const Function& function, Visitor visitor) {
+		return base_t::Optimize(space, function, std::less<score_t>(), visitor);
 	}
 
+	/** Finds the minimum of a function over the given space using std::less for score comparison
+	 * @param space the space over which to optimize
+	 * @param function the function to optimize
+	 * @param visitor used to trace evaluated particles
+	 */
 	template<typename Space, typename Function, typename Visitor>
-	Sample Maximize(const Space& space, const Function& function, Visitor vis) {
-		return this->template Optimize(space, function, std::greater<Score>(), vis);
+	sample_t Maximize(const Space& space, const Function& function, Visitor visitor) {
+		return base_t::Optimize(space, function, std::greater<score_t>(), visitor);
 	}
+
 };
 
 //---------------------------------------------------------------------------

@@ -48,13 +48,13 @@ std::ostream& operator<<(std::ostream& os, const AlgoTestResult<State,Score>& x)
 //}
 
 template<typename ALGO, class Space, class Function>
-AlgoTestResult<typename ALGO::State, typename ALGO::Score> TestAlgo(ALGO algo, const Space& space, const Function& function)
+AlgoTestResult<typename ALGO::state_t, typename ALGO::score_t> TestAlgo(ALGO algo, const Space& space, const Function& function)
 {
 	Danvil::Timer timer;
 	timer.start();
-	TSample<typename ALGO::State, typename ALGO::Score> best = algo.Minimize(space, function);
+	TSample<typename ALGO::state_t, typename ALGO::score_t> best = algo.Minimize(space, function);
 	timer.stop();
-	return AlgoTestResult<typename ALGO::State, typename ALGO::Score>{"", best.state, best.score, timer.getElapsedTimeInMilliSec()};
+	return AlgoTestResult<typename ALGO::state_t, typename ALGO::score_t>{"", best.state, best.score, timer.getElapsedTimeInMilliSec()};
 }
 
 const unsigned int cIterationCount = 10;
