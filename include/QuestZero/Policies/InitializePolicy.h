@@ -16,29 +16,6 @@ namespace Q0 {
 namespace InitializePolicy
 {
 
-	template<typename State, template<typename> class SinglePicker>
-	struct ManyPicker
-	: public SinglePicker<State>
-	{
-		template<typename SampleSet, typename Space>
-		void PickInitial(SampleSet& samples, const Space& space, size_t n) {
-			for(size_t i=0; i<n; i++) {
-				auto id = add_sample(samples);
-				set_state(samples, id, SinglePicker<State>::pick(space));
-			}
-		}
-
-	protected:
-		~ManyPicker() {}
-	};
-
-	/** Helper to convert a single picker to a multi picker */
-	template<template<typename> class SP>
-	struct Fuser
-	{
-		template<typename State> struct Result : public ManyPicker<State, SP> {};
-	};
-
 	/** Picks a random state each time using the random function of the space */
 	template<typename State>
 	struct RandomPicker

@@ -20,7 +20,7 @@ template<
 	typename State_,
 	typename Score_,
 	template<typename,typename,typename,typename> class Algorithm,
-	typename InitializePolicy = InitializePolicy::ManyPicker<State_,InitializePolicy::RandomPicker>,
+	typename InitializePolicy = InitializePolicy::RandomPicker<State_>,
 	typename ExitPolicy = ExitPolicy::FixedChecks<State_>
 >
 struct Optimization

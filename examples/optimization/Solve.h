@@ -81,7 +81,7 @@ void TestProblem(const Space& space, const Function& function, unsigned int num_
 	{
 		Optimization<state_t, score_t,
 				RND,
-				Q0::InitializePolicy::ManyPicker<state_t,Q0::InitializePolicy::RandomPicker>,
+				Q0::InitializePolicy::RandomPicker<state_t>,
 				Q0::ExitPolicy::FixedChecks<score_t>
 		> algoRnd;
 		algoRnd.SetIterationCount(cIterationCount);
@@ -118,7 +118,7 @@ void TestProblem(const Space& space, const Function& function, unsigned int num_
 	{
 		Optimization<state_t, score_t,
 				PSO,
-				Q0::InitializePolicy::ManyPicker<state_t,Q0::InitializePolicy::RandomPicker>,
+				Q0::InitializePolicy::RandomPicker<state_t>,
 				Q0::ExitPolicy::FixedChecks<score_t>
 		> algoPso;
 		algoPso.SetIterationCount(cIterationCount);
