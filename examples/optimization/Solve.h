@@ -95,25 +95,25 @@ void TestProblem(const Space& space, const Function& function, unsigned int num_
 		}
 	}
 
-//	{
-//		Optimization<state_t, score_t,
-//				NelderMead,
-//				Q0::InitializePolicy::ManyPicker<state_t,Q0::InitializePolicy::RandomPicker>,
-//				Q0::ExitPolicy::FixedChecks<score_t>
-//		> algoNM;
-//		Q0::ExitPolicy::set_fixed_exit_policy(algoNM, num_particles / 4); // evaluates 4 particles per iteration
-//		algoNM.p_simplex_size = 0.5;
-//		algoNM.p_alpha = 1.0;
-//		algoNM.p_beta = 0.4;
-//		algoNM.p_gamma = 3.0;
-//		auto tr = TestAlgo(algoNM, space, function);
-//		tr.name = "Nelder Mead";
-//		std::cout << tr << std::endl;
-//		if(print_result_state) {
-//			std::cout << "Result: ";
-//			printState(tr.state);
-//		}
-//	}
+	{
+		Optimization<state_t, score_t,
+				NelderMead,
+				Q0::InitializePolicy::RandomPicker<state_t>,
+				Q0::ExitPolicy::FixedChecks<score_t>
+		> algoNM;
+		algoNM.SetIterationCount(num_particles / 4); // evaluates 4 particles per iteration
+		algoNM.p_simplex_size = 0.5;
+		algoNM.p_alpha = 1.0;
+		algoNM.p_beta = 0.4;
+		algoNM.p_gamma = 3.0;
+		auto tr = TestAlgo(algoNM, space, function);
+		tr.name = "Nelder Mead";
+		std::cout << tr << std::endl;
+		if(print_result_state) {
+			std::cout << "Result: ";
+			printState(tr.state);
+		}
+	}
 
 	{
 		Optimization<state_t, score_t,

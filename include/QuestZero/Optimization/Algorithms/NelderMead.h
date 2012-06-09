@@ -16,25 +16,21 @@
 namespace Q0 {
 //----------------------------------------------------------------------------//
 
-/// <summary>
-/// Nelder Mead Downhill Simplex Optimization Algorithm
-/// </summary>
-template<typename State_, typename Score_,
-class Target,
-class StartingStates,
-class Take,
-class NotifySamples
+/** Nelder Mead Downhill Simplex Optimization Algorithm
+ * This is a uni-modal local optimization algorithm for smooth functions.
+ */
+template<typename State, typename Score,
+	typename ExitPolicy,
+	typename InitializePolicy
 >
 struct NelderMead
-: public Target,
-  public StartingStates, // FIXME use
-  public Take, // FIXME use
-  public NotifySamples
+: public ExitPolicy,
+  public InitializePolicy
 {
-	typedef State_ State;
-	typedef Score_ Score;
-	typedef TSample<State,Score> Sample;
-	typedef TSampleSet<State,Score> SampleSet;
+	typedef State state_t;
+	typedef Score score_t;
+	typedef TSample<state_t,score_t> sample_t;
+	typedef TSampleSet<state_t,score_t> sample_set_t;
 
 	NelderMead() {
 		p_simplex_size = 1.0;
@@ -43,8 +39,6 @@ struct NelderMead
 		p_gamma = 3.0;
 	}
 
-	virtual ~NelderMead() {}
-
 	std::string name() const { return "NelderMead"; }
 
 	double p_simplex_size;
@@ -52,38 +46,15 @@ struct NelderMead
 	double p_beta;
 	double p_gamma;
 
-	/** Computes mean of all simplex points except 'i_worst' */
-	template<class Space>
-	State ComputeMean(const Space& space, const SampleSet& simplex, size_t i_worst) {
-		std::vector<double> weights(num_samples(simplex));
-		double w = 1.0 / double(weights.size() - 1);
-		for(size_t i=0; i<weights.size(); i++) {
-			weights[i] = (i == i_worst) ? 0.0 : w;
-		}
-		return space.weightedSum(weights, get_state_list(simplex));
-	}
-
-	/** Computes f*(u - pivot) + pivot */
-	template<class Space>
-	State Mirror(const Space& space, const State& pivot, const State& u, double f) {
-		return space.compose(
-				space.scale(
-						space.difference(u, pivot),
-						f
-				),
-				pivot
-		);
-	}
-
-	template<class Space, class Function, typename Compare>
-	Sample Optimize(const Space& space, const Function& function, Compare cmp) {
+	template<class Space, class Function, typename Compare, typename Visitor>
+	sample_t Optimize(const Space& space, const Function& function, Compare compare, Visitor visitor) {
 
 		// FIXME find starting point
 		State initial = space.random();
 
 		// the algorithm maintains a simplex of n+1 points
 		size_t n = space.dimension();
-		SampleSet simplex;
+		sample_set_t simplex;
 
 		// FIXME find initial simplex points
 		// current method:
@@ -98,18 +69,18 @@ struct NelderMead
 		}
 		// evaluate score for simplex points
 		compute_likelihood(simplex, function); // TODO correct function?
-		this->NotifySamples(simplex, cmp);
+		visitor.NotifySamples(simplex);
 
 		// the algorithm requires us to compute at most 4 points
 		// from which it selects a new candidate with which the
 		// current worst simplex point is replaced
-		SampleSet extension;
+		sample_set_t extension;
 		add_samples(extension, 4);
 
 		while(true) {
 			// determine best and worst simplex points
-			auto i_best = find_best_by_score(simplex, cmp);
-			auto i_worst = find_worst_by_score(simplex, cmp);
+			auto i_best = find_best_by_score(simplex, compare);
+			auto i_worst = find_worst_by_score(simplex, compare);
 			Score y_l = get_score(simplex, i_best);
 			Score y_h = get_score(simplex, i_worst);
 
@@ -158,7 +129,7 @@ struct NelderMead
 
 			// compute score of all candidates
 			compute_likelihood(extension, function); // TODO correct function?
-			this->NotifySamples(extension, cmp);
+			visitor.NotifySamples(extension);
 			Score y_a = get_score(extension, 0);
 			Score y_b = get_score(extension, 1);
 			Score y_c = get_score(extension, 2);
@@ -169,8 +140,8 @@ struct NelderMead
 			// 4 at once to make use of parallel evaluation
 			// TODO is this really faster ?
 
-			if(cmp(y_a, y_l)) {
-				if(cmp(y_b, y_l)) {
+			if(compare(y_a, y_l)) {
+				if(compare(y_b, y_l)) {
 					set_state(simplex, i_worst, p_b);
 					set_score(simplex, i_worst, y_b);
 					y_l = y_b;
@@ -189,7 +160,7 @@ struct NelderMead
 					if(i == i_worst) {
 						continue;
 					}
-					if(cmp(y_a, get_score(simplex, i))) {
+					if(compare(y_a, get_score(simplex, i))) {
 						new_worst = false;
 						break;
 					}
@@ -197,7 +168,7 @@ struct NelderMead
 				if(new_worst) {
 					State* pu;
 					Score yu;
-					if(cmp(y_h, y_a)) {
+					if(compare(y_h, y_a)) {
 						// yes case
 						pu = &p_c;
 						yu = y_c;
@@ -207,13 +178,13 @@ struct NelderMead
 						pu = &p_d;
 						yu = y_d;
 					}
-					if(cmp(y_h, yu)) {
+					if(compare(y_h, yu)) {
 						// reset the simplex
 						for(size_t i=0; i<n+1; i++) {
 							set_state(simplex, i, space.weightedSum(0.5, get_state(simplex, i), 0.5, get_state(simplex, i_best)));
 						}
 						compute_likelihood(simplex, function); // TODO correct function?
-						this->NotifySamples(simplex, cmp);
+						visitor.NotifySamples(simplex);
 					}
 					else {
 						set_state(simplex, i_worst, *pu);
@@ -226,25 +197,34 @@ struct NelderMead
 				}
 			}
 
-			this->NotifySamples(simplex, cmp);
+			visitor.NotifySamples(simplex);
 
 			// check break condition
-			double y_mean = 0;
-			for(size_t i=0; i<n; i++) {
-				y_mean += get_score(simplex, i);
-			}
-			y_mean /= double(n);
-			double criterion = 0;
-			for(size_t i=0; i<n; i++) {
-				double x = get_score(simplex, i) - y_mean;
-				criterion += x * x;
-			}
-			criterion /= double(n);
-			if(this->IsTargetReached(y_l, std::sqrt(criterion), cmp)) {
+			if(this->IsTargetReached(get_score(simplex, i_best), compare)) {
 				return get_sample(simplex, i_best);
 			}
+
 		}
 	}
+
+private:
+	/** Computes mean of all simplex points except 'i_worst' */
+	template<typename Space>
+	State ComputeMean(const Space& space, const sample_set_t& simplex, size_t i_worst) {
+		std::vector<double> weights(num_samples(simplex));
+		double w = 1.0 / double(weights.size() - 1);
+		for(size_t i=0; i<weights.size(); i++) {
+			weights[i] = (i == i_worst) ? 0.0 : w;
+		}
+		return space.weightedSum(weights, get_state_list(simplex));
+	}
+
+	/** Computes pivot + f*(u - pivot) */
+	template<typename Space>
+	State Mirror(const Space& space, const State& pivot, const State& u, double f) {
+		return space.compose(pivot, space.scale(space.difference(u, pivot), f));
+	}
+
 };
 
 //----------------------------------------------------------------------------//
