@@ -239,20 +239,14 @@ SampleList pick_best(const SampleList& list, std::size_t num, ScoreComparer c) {
 template<typename SampleList>
 void print(const SampleList& sample_list, std::ostream& os, bool in_lines=false) {
 	os << "[Samples = {";
-	auto state_range = states(sample_list);
-	auto score_range = scores(sample_list);
-	auto state_it = state_range.begin();
-	auto score_it = score_range.begin();
-	while(state_it != state_range.end()) {
-		os << "[state=" << *state_it << ", score=" << *score_it << "]";
+	for(auto id : samples(sample_list)) {
+		os << "[state=" << get_state(sample_list, id) << ", score=" << get_score(sample_list, id) << "]";
 		if(in_lines) {
 			os << std::endl;
 		}
 		else {
 			os << ", ";
 		}
-		++state_it;
-		++score_it;
 	}
 	os << "}]" << std::endl;
 }
@@ -260,8 +254,8 @@ void print(const SampleList& sample_list, std::ostream& os, bool in_lines=false)
 template<typename SampleList>
 void print_scores(const SampleList& sample_list, std::ostream& os) {
 	os << "[Samples Scores = {";
-	for(auto& x : scores(sample_list)) {
-		os << x << ", ";
+	for(auto id : samples(sample_list)) {
+		os << get_score(sample_list, id) << ", ";
 	}
 	os << "}]" << std::endl;
 }
@@ -270,12 +264,31 @@ template<typename SampleList>
 void print_score_info(const SampleList& sample_list, std::ostream& os) {
 	using namespace boost::accumulators;
 	accumulator_set<double, stats<tag::min, tag::max, tag::mean, tag::variance>> score_acc;
-	auto range = scores(sample_list);
-	score_acc = std::for_each(range.begin(), range.end(), score_acc);
+	for(auto id : samples(sample_list)) {
+		score_acc(get_score(sample_list, id));
+	}
 	os << "Sample Scores: Min=" << min(score_acc)
 			<< " / Mean=" << mean(score_acc)
 			<< " / Max=" << max(score_acc)
 			<< " / Dev=" << std::sqrt(variance(score_acc)) << std::endl;
+}
+
+/** Adds random samples to the sample set */
+template<typename SampleSet, typename PickPolicy, typename Space>
+void add_random_samples(SampleSet& samples, PickPolicy& policy, const Space& space, size_t num_states) {
+	for(size_t i=0; i<num_states; i++) {
+		auto id = add_sample(samples);
+		set_state(samples, id, policy.pick(space));
+	}
+}
+
+/** Adds random samples to the sample set */
+template<typename SampleSet, typename PickPolicy, typename Space>
+void add_random_samples(SampleSet& samples, const PickPolicy& policy, const Space& space, size_t num_states) {
+	for(size_t i=0; i<num_states; i++) {
+		auto id = add_sample(samples);
+		set_state(samples, id, policy.pick(space));
+	}
 }
 
 //---------------------------------------------------------------------------
