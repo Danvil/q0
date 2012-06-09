@@ -37,7 +37,7 @@ int main()
 			// PSO algorithm
 			Q0::PSO,
 			// initial samples are picked randomly
-			Q0::InitializePolicy::ManyPicker<state_t,Q0::InitializePolicy::RandomPicker>,
+			Q0::InitializePolicy::RandomPicker<state_t>,
 			// algorithm runs for a fixed number of iterations and plots progress to console
 			Q0::ExitPolicy::FixedChecks<score_t,true>
 	> algo;

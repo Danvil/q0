@@ -170,7 +170,7 @@ struct PSO
 	TSample<State,Score> Optimize(const Space& space, const Function& function, Compare cmp, Visitor vis) {
 		globals.set(settings);
 		// generate start samples
-		this->PickInitial(particles, space, settings.particleCount);
+		add_random_samples(particles, *this, space, settings.particleCount);
 		// compute particle score
 		compute_likelihood(particles, function);
 		// initialize personal best

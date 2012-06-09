@@ -45,7 +45,7 @@ struct RND
 	template<typename Space, typename Function, typename Compare, typename Visitor>
 	sample_t Optimize(const Space& space, const Function& function, Compare cmp, Visitor vis) {
 		sample_set_t open;
-		this->PickInitial(open, space, particleCount);
+		add_random_samples(open, *this, space, particleCount);
 		assert(num_samples(open) == particleCount);
 		// evaluate initial samples
 		compute_likelihood(open, function);
