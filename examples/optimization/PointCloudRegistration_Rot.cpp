@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
 	RegistrationFunction f;
 	f.createRandomProblem(100);
 
-	TestProblem(space, f, 100, true);
+	Solve(space, f, 100, true);
 
 	return 1;
 }

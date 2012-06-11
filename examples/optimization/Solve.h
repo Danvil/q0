@@ -70,7 +70,7 @@ void printState(const Eigen::Matrix<K,N,1,_Options,_MaxRows,_MaxCols>& x) {
 }
 
 template<class Space, class Function>
-void TestProblem(const Space& space, const Function& function, unsigned int num_particles, bool print_result_state)
+void Solve(const Space& space, const Function& function, unsigned int num_particles, bool print_result_state)
 {
 	printHeader(std::cout);
 
@@ -131,12 +131,6 @@ void TestProblem(const Space& space, const Function& function, unsigned int num_
 		}
 	}
 
-}
-
-template<typename Space, typename Function>
-void Solve(const Space& space, const Function& function, unsigned int num_particles, bool verbose)
-{
-	TestProblem(space, function, num_particles, verbose);
 }
 
 #endif

@@ -12,10 +12,11 @@
 #include <iostream>
 using namespace Q0;
 
-typedef double real;
+typedef double state_t;
+typedef double score_t;
 
-double function(real a) {
-	double q = 0.63 * boost::math::constants::pi<real>() - a;
+score_t function(state_t a) {
+	state_t q = 0.63 * boost::math::constants::pi<state_t>() - a;
 	return q * q;
 }
 
@@ -26,35 +27,35 @@ int main(int argc, char* argv[])
 	bool p_verbose = true;
 
 	std::cout << "----- Find optimal angle (full interval) -----" << std::endl;
-	std::cout << "Optimum is: " << 0.63 * boost::math::constants::pi<real>() << std::endl;
+	std::cout << "Optimum is: " << 0.63 * boost::math::constants::pi<state_t>() << std::endl;
 	std::cout << std::endl;
 
 	{
 		std::cout << "----- full interval -----" << std::endl;
 
-		Spaces::FullAngularSpace<real> space;
+		Spaces::FullAngularSpace<state_t> space;
 
-		TestProblem(space, &function, p_num_particles, p_verbose);
+		Solve(space, &function, p_num_particles, p_verbose);
 	}
 
 	{
 		std::cout << "----- interval = [1/4 pi | 3/4 pi] -----" << std::endl;
 
-		Spaces::IntervalAngularSpace<real> space;
-		space.set_lower(0.25 * boost::math::constants::pi<real>());
-		space.set_upper(0.75 * boost::math::constants::pi<real>());
+		Spaces::IntervalAngularSpace<state_t> space;
+		space.set_lower(0.25 * boost::math::constants::pi<state_t>());
+		space.set_upper(0.75 * boost::math::constants::pi<state_t>());
 
-		TestProblem(space, &function, p_num_particles, p_verbose);
+		Solve(space, &function, p_num_particles, p_verbose);
 	}
 
 	{
 		std::cout << "----- interval = [1/4 pi | 1/2 pi] -----" << std::endl;
 
-		Spaces::IntervalAngularSpace<real> space;
-		space.set_lower(0.25 * boost::math::constants::pi<real>());
-		space.set_upper(0.50 * boost::math::constants::pi<real>());
+		Spaces::IntervalAngularSpace<state_t> space;
+		space.set_lower(0.25 * boost::math::constants::pi<state_t>());
+		space.set_upper(0.50 * boost::math::constants::pi<state_t>());
 
-		TestProblem(space, &function, p_num_particles, p_verbose);
+		Solve(space, &function, p_num_particles, p_verbose);
 	}
 
 	return 1;
