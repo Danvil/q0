@@ -6,7 +6,7 @@
  */
 
 #include <QuestZero/Spaces/Cartesian.h>
-#include <QuestZero/Optimization/Algorithms/PSO.h>
+#include <QuestZero/Optimization/PSO.h>
 #include <QuestZero/Optimization/Optimization.h>
 #include <iostream>
 

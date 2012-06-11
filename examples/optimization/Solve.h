@@ -9,9 +9,9 @@
 #define Q0_SOLVE_H_
 
 #include <QuestZero/Policies/TracePolicy.h>
-#include <QuestZero/Optimization/Algorithms/RND.h>
-#include <QuestZero/Optimization/Algorithms/PSO.h>
-#include <QuestZero/Optimization/Algorithms/NelderMead.h>
+#include <QuestZero/Optimization/RND.h>
+#include <QuestZero/Optimization/PSO.h>
+#include <QuestZero/Optimization/NelderMead.h>
 #include <QuestZero/Optimization/Functions.h>
 #include <QuestZero/Optimization/Optimization.h>
 #include "../Timer.h"

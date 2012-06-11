@@ -6,7 +6,7 @@
  */
 
 #include <QuestZero/Spaces/Cartesian.h>
-#include <QuestZero/Optimization/Algorithms/RND.h>
+#include <QuestZero/Optimization/RND.h>
 #include <QuestZero/Optimization/Optimization.h>
 #include <iostream>
 
