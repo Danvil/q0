@@ -12,7 +12,6 @@
 #include <QuestZero/Optimization/RND.h>
 #include <QuestZero/Optimization/PSO.h>
 #include <QuestZero/Optimization/NelderMead.h>
-#include <QuestZero/Optimization/Functions.h>
 #include <QuestZero/Optimization/Optimization.h>
 #include "../Timer.h"
 #include <Eigen/Dense>
@@ -75,8 +74,8 @@ void TestProblem(const Space& space, const Function& function, unsigned int num_
 {
 	printHeader(std::cout);
 
-	typedef typename Function::Score score_t;
 	typedef typename Space::State state_t;
+	typedef decltype(function(state_t())) score_t;
 
 	{
 		Optimization<state_t, score_t,
@@ -137,10 +136,7 @@ void TestProblem(const Space& space, const Function& function, unsigned int num_
 template<typename Space, typename Function>
 void Solve(const Space& space, const Function& function, unsigned int num_particles, bool verbose)
 {
-	typedef typename Space::State state_t;
-	Q0::Functions::BoostFunctionSingleWrapper<state_t,double> f;
-	f.set_functor([function](const state_t& x) { return function(x); });
-	TestProblem(space, f, num_particles, verbose);
+	TestProblem(space, function, num_particles, verbose);
 }
 
 #endif

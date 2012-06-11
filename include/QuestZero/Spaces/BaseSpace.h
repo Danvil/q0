@@ -9,7 +9,7 @@
 #define SPACE_H_
 //---------------------------------------------------------------------------
 #include "OperationFinalPolicy.h"
-#include <QuestZero/Common/IPrintable.h>
+#include <ostream>
 #include <vector>
 #include <cstddef>
 //---------------------------------------------------------------------------
@@ -26,8 +26,7 @@ template<
 struct BaseSpace
 : public Operator,
   public Domain,
-  public OperationFinal,
-  public IPrintable
+  public OperationFinal
 {
 	typedef State_ State;
 
@@ -94,7 +93,8 @@ struct BaseSpace
 		return states;
 	}
 
-
+protected:
+	~BaseSpace() {}
 };
 
 template<typename State, class Operator, class Domain, class OperationFinal>

@@ -5,7 +5,6 @@
 #include "Sample.h"
 #include "Sampling.h"
 #include "range.hpp"
-#include <QuestZero/Common/IPrintable.h>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/covariance.hpp>
 #include <boost/accumulators/statistics/mean.hpp>

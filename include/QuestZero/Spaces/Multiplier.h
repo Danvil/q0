@@ -55,7 +55,6 @@ namespace MultiplierSizePolicies
 
 template<typename BaseState_, class SizePolicy_=MultiplierSizePolicies::DynamicSize>
 struct MultiplierState
-: public IPrintable
 {
 	typedef SizePolicy_ SizePolicy;
 
@@ -139,9 +138,15 @@ private:
 
 };
 
+template<typename BaseState_, class SizePolicy_>
+std::ostream& operator<<(std::ostream& os, const MultiplierState<BaseState_,SizePolicy_>& state) {
+	state.print(os);
+	return os;
+}
+
+
 template<typename BaseSpace, typename State_, typename BT=typename State_::BaseState>
 struct MultiplierSpace
-: public IPrintable
 {
 	typedef State_ State;
 
@@ -370,12 +375,6 @@ private:
 	boost::shared_array<BaseSpace> spaces_;
 
 };
-
-template<typename BaseState, class SizePolicy>
-std::ostream& operator<<(std::ostream& os, const MultiplierState<BaseState,SizePolicy>& state) {
-	state.print(os);
-	return os;
-}
 
 template<typename BaseSpace, typename State_, typename BT>
 std::ostream& operator<<(std::ostream& os, const MultiplierSpace<BaseSpace,State_,BT>& state) {

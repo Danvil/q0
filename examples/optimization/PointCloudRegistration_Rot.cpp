@@ -8,7 +8,6 @@
 #include "Solve.h"
 #include "PointCloudRegistration.h"
 #include <QuestZero/Optimization/Optimization.h>
-#include <QuestZero/Optimization/Functions.h>
 #include <QuestZero/Spaces/SO3.h>
 #include <boost/bind.hpp>
 #include <iostream>
@@ -34,7 +33,7 @@ int main(int argc, char* argv[])
 
 	space_t space;
 
-	Q0::Functions::AddParallel<state_t,RegistrationFunction> f;
+	RegistrationFunction f;
 	f.createRandomProblem(100);
 
 	TestProblem(space, f, 100, true);

@@ -7,7 +7,6 @@
 
 #include "Solve.h"
 #include <QuestZero/Optimization/Optimization.h>
-#include <QuestZero/Optimization/Functions.h>
 #include <QuestZero/Spaces/Angular.h>
 #include <boost/bind.hpp>
 #include <iostream>
@@ -35,10 +34,7 @@ int main(int argc, char* argv[])
 
 		Spaces::FullAngularSpace<real> space;
 
-		Functions::BoostFunctionSingleWrapper<real,real> f;
-		f.set_functor(boost::bind(&function, _1));
-
-		TestProblem(space, f, p_num_particles, p_verbose);
+		TestProblem(space, &function, p_num_particles, p_verbose);
 	}
 
 	{
@@ -48,10 +44,7 @@ int main(int argc, char* argv[])
 		space.set_lower(0.25 * boost::math::constants::pi<real>());
 		space.set_upper(0.75 * boost::math::constants::pi<real>());
 
-		Functions::BoostFunctionSingleWrapper<real,real> f;
-		f.set_functor(boost::bind(&function, _1));
-
-		TestProblem(space, f, p_num_particles, p_verbose);
+		TestProblem(space, &function, p_num_particles, p_verbose);
 	}
 
 	{
@@ -61,10 +54,7 @@ int main(int argc, char* argv[])
 		space.set_lower(0.25 * boost::math::constants::pi<real>());
 		space.set_upper(0.50 * boost::math::constants::pi<real>());
 
-		Functions::BoostFunctionSingleWrapper<real,real> f;
-		f.set_functor(boost::bind(&function, _1));
-
-		TestProblem(space, f, p_num_particles, p_verbose);
+		TestProblem(space, &function, p_num_particles, p_verbose);
 	}
 
 	return 1;

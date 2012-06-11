@@ -33,8 +33,7 @@ namespace Spaces {
 
 template<class Typelist_>
 struct TypelistState
-: public Loki::Tuple<Typelist_>,
-  public IPrintable
+: public Loki::Tuple<Typelist_>
 {
 	typedef Typelist_ Typelist;
 
@@ -131,10 +130,16 @@ private:
 
 };
 
+template<typename Typelist>
+std::ostream& operator<<(std::ostream& os, const TypelistState<Typelist>& state) {
+	state.print(os);
+	return os;
+}
+
+
 template<class Typelist_, class State_>
 struct TypelistSpace
-: public Loki::Tuple<Typelist_>,
-  public IPrintable
+: public Loki::Tuple<Typelist_>
 {
 	typedef State_ State;
 	typedef Typelist_ Typelist;
@@ -428,7 +433,7 @@ private:
 };
 
 template<typename Typelist>
-std::ostream& operator<<(std::ostream& os, const TypelistState<Typelist>& state) {
+std::ostream& operator<<(std::ostream& os, const TypelistSpace<Typelist>& state) {
 	state.print(os);
 	return os;
 }

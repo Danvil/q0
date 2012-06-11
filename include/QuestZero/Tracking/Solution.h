@@ -10,7 +10,7 @@
 //---------------------------------------------------------------------------
 #include "QuestZero/Common/Sample.h"
 #include "QuestZero/Tracking/TimeRange.h"
-#include <QuestZero/Common/IPrintable.h>
+#include <ostream>
 #include <vector>
 //---------------------------------------------------------------------------
 namespace Q0 {
@@ -18,7 +18,6 @@ namespace Q0 {
 
 template<typename Time, typename State, typename Score>
 struct TSolution
-: public IPrintable
 {
 	struct EmptySolutionException {};
 
@@ -452,6 +451,12 @@ private:
 private:
 	std::vector<Item> items_;
 };
+
+template<typename Time, typename State, typename Score>
+std::ostream& operator<<(std::ostream& os, const TSolution<Time, State, Score>& solution) {
+	solution.print(os);
+	return os;
+}
 
 //---------------------------------------------------------------------------
 
