@@ -9,7 +9,7 @@
 #define ALGORITHMS_RND_H
 //---------------------------------------------------------------------------
 #include "QuestZero/Common/Sample.h"
-#include "QuestZero/Common/DefaultSampleList.h"
+#include "QuestZero/Common/StateScoreVector.h"
 #include <string>
 #include <vector>
 //---------------------------------------------------------------------------
@@ -29,8 +29,8 @@ struct RND
 {
 	typedef State state_t;
 	typedef Score score_t;
-	typedef TSample<state_t,score_t> sample_t;
-	typedef TSampleSet<state_t,score_t> sample_set_t;
+	typedef Sample<state_t,score_t> sample_t;
+	typedef StateScoreVector<state_t,score_t> sample_set_t;
 
 	RND() {
 		particleCount = 100;

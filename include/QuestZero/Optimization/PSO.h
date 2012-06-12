@@ -10,7 +10,7 @@
 //---------------------------------------------------------------------------
 #include "QuestZero/Common/RandomNumbers.h"
 #include "QuestZero/Common/Sample.h"
-#include "QuestZero/Common/CombinedSampleList.h"
+#include "QuestZero/Common/SampleVector.h"
 #include "QuestZero/Common/Log.h"
 #include <vector>
 #include <string>
@@ -65,20 +65,18 @@ namespace detail
 	const State& get_state(const ParticleData<State,Score>& x) { return x.current_state_; }
 
 	template<typename State, typename Score>
-	State& get_state(ParticleData<State,Score>& x) { return x.current_state_; }
+	void set_state(ParticleData<State,Score>& x, const State& state) { x.current_state_ = state; }
 
 	template<typename State, typename Score>
 	const Score& get_score(const ParticleData<State,Score>& x) { return x.current_score_; }
 
 	template<typename State, typename Score>
-	Score& get_score(ParticleData<State,Score>& x) { return x.current_score_; }
+	void set_score(ParticleData<State,Score>& x, const Score& score) { x.current_score_ = score; }
 
 	template<typename State, typename Score>
 	class GlobalData
 	{
 	public:
-		typedef TSample<State,Score> Sample;
-
 		GlobalData()
 		: omega_(1.0),
 		  psi_personal_(2.05),
@@ -106,9 +104,9 @@ namespace detail
 
 		const State& best_state() const { return best_state_; }
 
-		void set(const ParticleData<State,Score>& s) {
-			best_state_ = s.current_state_;
-			best_score_ = s.current_score_;
+		void set_best(const State& state, const Score& score) {
+			best_state_ = state;
+			best_score_ = score;
 		}
 
 		template<class Space>
@@ -167,7 +165,7 @@ struct PSO
 	PSOSettings settings;
 
 	template<class Space, class Function, typename Compare, typename Visitor>
-	TSample<State,Score> Optimize(const Space& space, const Function& function, Compare cmp, Visitor vis) {
+	Sample<State,Score> Optimize(const Space& space, const Function& function, Compare cmp, Visitor vis) {
 		globals.set(settings);
 		// generate start samples
 		add_random_samples(particles, *this, space, settings.particleCount);
@@ -180,7 +178,7 @@ struct PSO
 		}
 		// initialize global best
 		auto best_id = find_best_by_score(particles, cmp);
-		globals.set(get_sample(particles, best_id));
+		globals.set_best(get_state(particles, best_id), get_score(particles, best_id));
 		// iterate
 		while(true) {
 			// evaluate samples
@@ -194,13 +192,13 @@ struct PSO
 			// check if break condition is satisfied
 			LOG_DEBUG << "PSO: check exit condition";
 			if(this->IsTargetReached(globals.best_score(), cmp)) {
-				Particle best = get_sample(particles, best_id);
-				return { get_state(best), get_score(best) };
+				// return best particle found so far
+				return { globals.best_state(), globals.best_score() };
 			}
 			// update global best
 			LOG_DEBUG << "PSO: update global best";
 			if(cmp(get_score(particles, best_id), globals.best_score())) {
-				globals.set(get_sample(particles, best_id));
+				globals.set_best(get_state(particles, best_id), get_score(particles, best_id));
 			}
 			// update personal best and particle
 			LOG_DEBUG << "PSO: update personal best";

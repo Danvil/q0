@@ -51,7 +51,7 @@ AlgoTestResult<typename ALGO::state_t, typename ALGO::score_t> TestAlgo(ALGO alg
 {
 	Danvil::Timer timer;
 	timer.start();
-	TSample<typename ALGO::state_t, typename ALGO::score_t> best = algo.Minimize(space, function);
+	Sample<typename ALGO::state_t, typename ALGO::score_t> best = algo.Minimize(space, function);
 	timer.stop();
 	return AlgoTestResult<typename ALGO::state_t, typename ALGO::score_t>{"", best.state, best.score, timer.getElapsedTimeInMilliSec()};
 }

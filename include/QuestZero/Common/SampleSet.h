@@ -26,56 +26,79 @@ namespace Q0 {
 // basic functionality
 
 template<typename SampleList>
-struct SampleSetTraits;
+struct SampleSetTraits {
+	typedef typename SampleList::state_t state_t;
+	typedef typename SampleList::score_t score_t;
+	typedef std::size_t sample_descriptor;
+};
 
 /** Gives a hint about how many samples are to be expected. Does not actually add samples! */
 template<typename SampleList>
 void give_size_hint(SampleList& list, std::size_t num) {}
 
+///** Returns the number of samples */
 //template<typename SampleList>
 //std::size_t num_samples(const SampleList& list);
 //
-//template<typename SampleList>
-//typename SampleList::sample_descriptor add_sample(SampleList& list);
-//
-//template<typename SampleList>
-//typename SampleList::sample_descriptor add_sample(SampleList& list, const typename SampleList::state_t& state, const typename SampleList::score_t& score);
-//
+///** Adds n samples */
 //template<typename SampleList>
 //void add_samples(SampleList& list, unsigned int num);
 //
+///** Adds all samples from src */
 //template<typename SampleList>
 //void add_samples(SampleList& list, const SampleList& src);
 //
+///** Adds one sample and returns its identifier */
 //template<typename SampleList>
-//const TSample<typename SampleList::state_t, typename SampleList::score_t>& get_sample(const SampleList& list, typename SampleList::sample_descriptor id);
+//typename SampleSetTraits<SampleList>::sample_descriptor add_sample(SampleList& list);
 //
+///** Gets the state of a sample via its identifier */
 //template<typename SampleList>
-//const typename SampleList::state_t& get_state(const SampleList& list, typename SampleList::sample_descriptor id);
+//const typename SampleSetTraits<SampleList>::state_t& get_state(const SampleList& list, typename SampleSetTraits<SampleList>::sample_descriptor id);
 //
+///** Gets the score of a sample via its identifier */
 //template<typename SampleList>
-//const typename SampleList::score_t& get_score(const SampleList& list, typename SampleList::sample_descriptor id);
+//const typename SampleSetTraits<SampleList>::score_t& get_score(const SampleList& list, typename SampleSetTraits<SampleList>::sample_descriptor id);
 //
+///** Sets the state of a sample via its identifier */
 //template<typename SampleList>
-//void set_state(SampleList& list, typename SampleList::sample_descriptor, const typename SampleList::state_t& state);
+//void set_state(SampleList& list, typename SampleSetTraits<SampleList>::sample_descriptor, const typename SampleSetTraits<SampleList>::state_t& state);
 //
+///** Sets the score of a sample via its identifier */
 //template<typename SampleList>
-//void set_score(SampleList& list, typename SampleList::sample_descriptor, const typename SampleList::score_t& score_list);
+//void set_score(SampleList& list, typename SampleSetTraits<SampleList>::sample_descriptor, const typename SampleSetTraits<SampleList>::score_t& score_list);
 
+/** Gets state and score of a sample */
 template<typename SampleList>
-typename detail::range<boost::counting_iterator<std::size_t>> samples(SampleList& list) {
-	return std::make_pair(
-			boost::counting_iterator<std::size_t>(0),
-			boost::counting_iterator<std::size_t>(num_samples(list)));
+Sample<typename SampleSetTraits<SampleList>::state_t,typename SampleSetTraits<SampleList>::score_t> get_sample(const SampleList& list, typename SampleSetTraits<SampleList>::sample_descriptor id) {
+	return { get_state(list, id), get_score(list, id) };
 }
 
+///** Sets state and score of a sample */
+//template<typename SampleList>
+//void set_sample(const SampleList& list, typename SampleSetTraits<SampleList>::sample_descriptor id, const TSample<typename SampleSetTraits<SampleList>::state_t,typename SampleSetTraits<SampleList>::score_t>& sample) {
+//	set_state(list, id, sample.state);
+//	set_score(list, id, sample.score);
+//}
+
+///** Adds a sample and returns its identifier */
+//template<typename SampleList>
+//typename SampleSetTraits<SampleList>::sample_descriptor add_sample(SampleList& list, const TSample<typename SampleSetTraits<SampleList>::state_t,typename SampleSetTraits<SampleList>::score_t>& sample) {
+//	auto id = add_sample(list);
+//	set_sample(list, id, sample);
+//}
+
+/** Returns an iterator range for sample identifiers */
 template<typename SampleList>
-typename detail::range<boost::counting_iterator<std::size_t>> samples(const SampleList& list) {
+typename detail::range<boost::counting_iterator<typename SampleSetTraits<SampleList>::sample_descriptor>> samples(const SampleList& list) {
 	return std::make_pair(
-			boost::counting_iterator<std::size_t>(0),
-			boost::counting_iterator<std::size_t>(num_samples(list)));
+			boost::counting_iterator<typename SampleSetTraits<SampleList>::sample_descriptor>(0),
+			boost::counting_iterator<typename SampleSetTraits<SampleList>::sample_descriptor>(num_samples(list)));
 }
 
+/** Returns a std::vector of states in the sample set
+ * States ordering is induced by the range returned by function samples().
+ */
 template<typename SampleList>
 std::vector<typename SampleSetTraits<SampleList>::state_t> get_state_list(const SampleList& list) {
 	// default implementation using states iterator range
@@ -87,6 +110,9 @@ std::vector<typename SampleSetTraits<SampleList>::state_t> get_state_list(const 
 	return state_list;
 }
 
+/** Returns a std::vector of scores in the sample set
+ * Scores ordering is induced by the range returned by function samples().
+ */
 template<typename SampleList>
 std::vector<typename SampleSetTraits<SampleList>::score_t> get_score_list(const SampleList& list) {
 	// default implementation using scores iterator range
@@ -98,6 +124,9 @@ std::vector<typename SampleSetTraits<SampleList>::score_t> get_score_list(const 
 	return score_list;
 }
 
+/** Sets the states in the sample set using a std::vector
+ * States ordering is induced by the range returned by function samples().
+ */
 template<typename SampleList>
 void set_state_list(SampleList& list, const std::vector<typename SampleSetTraits<SampleList>::state_t>& state_list) {
 	// default implementation using states iterator range
@@ -109,6 +138,9 @@ void set_state_list(SampleList& list, const std::vector<typename SampleSetTraits
 	}
 }
 
+/** Sets the scores in the sample set using a std::vector
+ * Scores ordering is induced by the range returned by function samples().
+ */
 template<typename SampleList>
 void set_score_list(SampleList& list, const std::vector<typename SampleSetTraits<SampleList>::score_t>& score_list) {
 	// default implementation using scores iterator range
@@ -120,8 +152,7 @@ void set_score_list(SampleList& list, const std::vector<typename SampleSetTraits
 	}
 }
 
-// now the sampling functionality
-
+/** Applies f to all states and returns a std::vector with the result */
 template<typename SampleList, typename Function>
 std::vector<typename SampleSetTraits<SampleList>::score_t> evaluate(const SampleList& list, Function f) {
 	std::vector<typename SampleSetTraits<SampleList>::score_t> score_list;
@@ -132,6 +163,10 @@ std::vector<typename SampleSetTraits<SampleList>::score_t> evaluate(const Sample
 	return score_list;
 }
 
+/** Applies f to all states and returns a std::vector with the result
+ * Uses parallel evaluation.
+ * EXPERIMENTAL
+ */
 template<typename SampleList, typename Function>
 std::vector<typename SampleSetTraits<SampleList>::score_t> evaluate_parallel(const SampleList& list, Function f) {
 	return f(get_state_list(list));
@@ -162,6 +197,7 @@ void importance_scoring(SampleList& list, ImportanceFunction importance_function
 	}
 }
 
+/** Uses a function to update the scores of all samples */
 template<typename SampleList, typename Function>
 void compute_likelihood(SampleList& list, const Function& f) {
 	set_score_list(list, evaluate(list, f));
@@ -170,16 +206,16 @@ void compute_likelihood(SampleList& list, const Function& f) {
 /** Transforms all states by a function */
 template<typename SampleList, typename Function>
 void transform_states(SampleList& list, const Function& f) {
-	for(auto& x : states(list)) {
-		x = f(x);
+	for(auto id : samples(list)) {
+		set_state(list, id, f(get_state(list, id)));
 	}
 }
 
-/** Transforms all scores with a function */
+/** Transforms all scores by a function */
 template<typename SampleList, typename Function>
 void transform_scores(SampleList& list, const Function& f) {
-	for(auto& x : scores(list)) {
-		x = f(x);
+	for(auto id : samples(list)) {
+		set_score(list, id, f(get_score(list, id)));
 	}
 }
 
@@ -194,15 +230,17 @@ void randomize_states(SampleList& list, const Space& space, const std::vector<K>
 /** Returns the best element defined by being smallest under the given comparer applied on the sample score */
 template<typename SampleList, typename ScoreComparer>
 typename SampleSetTraits<SampleList>::sample_descriptor find_best_by_score(const SampleList& list, ScoreComparer c) {
+	typedef typename SampleSetTraits<SampleList>::sample_descriptor id_t;
 	auto range = samples(list);
-	auto it = std::min_element(range.begin(), range.end(), [&list, &c](std::size_t x, std::size_t y) { return c(get_score(list, x), get_score(list, y)); } );
+	auto it = std::min_element(range.begin(), range.end(), [&list, &c](id_t x, id_t y) { return c(get_score(list, x), get_score(list, y)); } );
 	return *it;
 }
 
 template<typename SampleList, typename ScoreComparer>
 typename SampleSetTraits<SampleList>::sample_descriptor find_worst_by_score(const SampleList& list, ScoreComparer c) {
+	typedef typename SampleSetTraits<SampleList>::sample_descriptor id_t;
 	auto range = samples(list);
-	auto it = std::max_element(range.begin(), range.end(), [&list, &c](std::size_t x, std::size_t y) { return c(get_score(list, x), get_score(list, y)); } );
+	auto it = std::max_element(range.begin(), range.end(), [&list, &c](id_t x, id_t y) { return c(get_score(list, x), get_score(list, y)); } );
 	return *it;
 }
 

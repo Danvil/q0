@@ -14,14 +14,16 @@ namespace Q0 {
 //---------------------------------------------------------------------------
 
 template<typename State, typename Score>
-struct TSample
+struct Sample
 {
+	typedef State state_t;
+	typedef Score score_t;
 	State state;
 	Score score;
 };
 
 template<typename State, typename Score>
-std::ostream& operator<<(std::ostream& os, const TSample<State,Score>& sample) {
+std::ostream& operator<<(std::ostream& os, const Sample<State,Score>& sample) {
 	os << "[Sample: state=" << sample.state << ", score=" << sample.score << "]";
 	return os;
 }

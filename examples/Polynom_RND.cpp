@@ -46,7 +46,7 @@ int main()
 	algo.particleCount = 100;
 
 	// find minimum
-	Q0::TSample<state_t, score_t> best = algo.Minimize(space, &polynom);
+	Q0::Sample<state_t, score_t> best = algo.Minimize(space, &polynom);
 
 	// print results
 	std::cout << "Optimization result:" << std::endl;

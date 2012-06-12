@@ -29,7 +29,7 @@ struct Optimization
 	typedef Algorithm<State_, Score_, InitializePolicy, ExitPolicy> base_t;
 	typedef State_ state_t;
 	typedef Score_ score_t;
-	typedef TSample<state_t,score_t> sample_t;
+	typedef Sample<state_t,score_t> sample_t;
 
 	/** Finds the optimum of a function over the given space
 	 * @param space the space over which to optimize

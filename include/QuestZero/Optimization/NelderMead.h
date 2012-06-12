@@ -29,8 +29,8 @@ struct NelderMead
 {
 	typedef State state_t;
 	typedef Score score_t;
-	typedef TSample<state_t,score_t> sample_t;
-	typedef TSampleSet<state_t,score_t> sample_set_t;
+	typedef Sample<state_t,score_t> sample_t;
+	typedef StateScoreVector<state_t,score_t> sample_set_t;
 
 	NelderMead() {
 		p_simplex_size = 1.0;

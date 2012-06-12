@@ -44,7 +44,7 @@ namespace TracePolicy
 	{
 		Compare compare;
 
-		typedef boost::function<void(const State&, Score)> Functor;
+		typedef boost::function<void(const Sample<State, Score>&)> Functor;
 
 		void SetNotifySamplesFunctor(const Functor& f) {
 			samples_functor_ = f;
@@ -53,8 +53,7 @@ namespace TracePolicy
 		template<typename SampleSet>
 		void NotifySamples(const SampleSet& samples) {
 			if(samples_functor_) {
-				TSample<State,Score> best = get_sample(samples, find_best_by_score(samples, compare));
-				samples_functor_(best.state(), best.score());
+				samples_functor_(get_sample(samples, find_best_by_score(samples, compare)));
 			}
 		}
 
