@@ -113,7 +113,6 @@ namespace Cartesian {
 				}
 			}
 
-			// TODO: allow states with variable dimension?
 			size_t dimension() const {
 				return dimension_;
 			}
