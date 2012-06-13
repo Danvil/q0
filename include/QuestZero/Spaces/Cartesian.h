@@ -101,9 +101,7 @@ namespace Cartesian {
 			typedef typename traits_t::scalar_t S;
 
 			Infinite(unsigned int dim=traits_t::dimension)
-			: dimension_(dim),
-			  noise_scale_(S(1)),
-			  noise_sigma_(S(1))
+			: dimension_(dim)
 			{}
 
 			void setDimension(unsigned int dim) {
@@ -113,12 +111,6 @@ namespace Cartesian {
 				else {
 					dimension_ = dim;
 				}
-			}
-
-			/** Sets the normal distribution sigma used in unconstrained random sampling */
-			void SetNoiseVariables(S scale, S sigma=S(1)) {
-				noise_scale_ = scale;
-				noise_sigma_ = sigma;
 			}
 
 			// TODO: allow states with variable dimension?
@@ -174,8 +166,6 @@ namespace Cartesian {
 
 		private:
 			unsigned int dimension_;
-			S noise_scale_;
-			S noise_sigma_;
 
 		protected:
 			~Infinite() {}
