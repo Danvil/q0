@@ -36,12 +36,14 @@ struct HarmonySearch
 		Parameters()
 		: hms(30),
 		  hmcr(0.9),
-		  par(0.3)
+		  par(0.3),
+		  fw(0.01)
 		{}
 
 		unsigned int hms;
 		double hmcr;
 		double par;
+		double fw;
 	};
 
 	Parameters parameters_;
@@ -54,7 +56,7 @@ struct HarmonySearch
 		// evaluate initial samples
 		compute_likelihood(hm, function);
 		// notify sample set observer
-		vis.NotifySamples(open);
+		vis.NotifySamples(hm);
 		// run
 		while(true) {
 			// initialize a new state with random values
@@ -67,11 +69,11 @@ struct HarmonySearch
 							RandomNumbers::Uniform<double>() * static_cast<double>(parameters_.hms));
 					if(p == parameters_.hms) p--;
 					// use value from harmony memory
-					x[i] = get_state(hm, p)[i]; // FIXME p to id! // FIXME operator[] ???
+					space.component_copy(x, i, get_state(hm, p));
 					// do more
 					if(RandomNumbers::Uniform<double>() < parameters_.par) {
 						// add a small randomness to x
-						x[i] += 1/0; // FIXME add small randomness!!!
+						space.component_add_noise(x, i, parameters_.fw * RandomNumbers::Uniform<double>(-1,+1));
 					}
 				}
 			}
@@ -88,7 +90,7 @@ struct HarmonySearch
 			// check if it is good enough
 			if(this->IsTargetReached(get_score(hm, best_id), cmp)) {
 				// return best sample
-				return get_sample(open, best_id);
+				return get_sample(hm, best_id);
 			}
 		}
 	}
