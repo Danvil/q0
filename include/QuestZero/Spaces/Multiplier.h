@@ -9,10 +9,11 @@
 #define MULTIPLIER_H_
 //---------------------------------------------------------------------------
 #include "QuestZero/Common/Exceptions.h"
-#include <QuestZero/Common/IPrintable.h>
 #include <boost/shared_array.hpp>
 #include <boost/assert.hpp>
 #include <vector>
+#include <cassert>
+#include <ostream>
 //---------------------------------------------------------------------------
 namespace Q0 {
 namespace Spaces {
@@ -368,6 +369,28 @@ struct MultiplierSpace
 			states.push_back(this->random());
 		}
 		return states;
+	}
+
+	void component_copy(State& dst, unsigned int cid, const State& src) const {
+		for(unsigned int i=0; i<count(); i++) {
+			const unsigned int dim = spaces_[i].dimension();
+			if(cid < dim) {
+				spaces_[i].component_copy(dst[i], cid, src[i]);
+				return;
+			}
+			cid -= dim;
+		}
+	}
+
+	void component_add_noise(State& dst, unsigned int cid, double noise) const {
+		for(unsigned int i=0; i<count(); i++) {
+			const unsigned int dim = spaces_[i].dimension();
+			if(cid < dim) {
+				spaces_[i].component_add_noise(dst[i], cid, noise);
+				return;
+			}
+			cid -= dim;
+		}
 	}
 
 private:

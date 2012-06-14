@@ -280,6 +280,14 @@ struct TypelistSpace
 		return s;
 	}
 
+	void component_copy(State& dst, unsigned int cid, const State& src) const {
+		component_copy_impl(Loki::Int2Type<0>(), dst, cid, src);
+	}
+
+	void component_add_noise(State& dst, unsigned int cid, double noise) const {
+		component_add_noise_impl(Loki::Int2Type<0>(), dst, cid, noise);
+	}
+
 private:
 	template<int i>
 	void printImpl(Loki::Int2Type<i>, std::ostream& os) const {
@@ -429,6 +437,34 @@ private:
 	}
 
 	void projectImpl(Loki::Int2Type<N>, State&, const State&) const {}
+
+	template<int P>
+	void component_copy_impl(Loki::Int2Type<P>, State& dst, unsigned int cid, const State& src) const {
+		unsigned int dim = dst.space<P>().dimension();
+		if(cid < dim) {
+			// delegate to sup space
+			dst.space<P>().component_copy(dst.part<P>(), cid, src.part<P>());
+		}
+		else {
+			component_copy_impl(Loki::Int2Type<P+1>(), dst, cid-dim, src);
+		}
+	}
+
+	void component_copy_impl(Loki::Int2Type<N>, State&, unsigned int, const State&) const {}
+
+	template<int P>
+	void component_add_noise_impl(Loki::Int2Type<P>, State& dst, unsigned int cid, double noise) const {
+		unsigned int dim = dst.space<P>().dimension();
+		if(cid < dim) {
+			// delegate to sup space
+			dst.space<P>().component_add_noise(dst.part<P>(), cid, noise);
+		}
+		else {
+			component_add_noise_impl(Loki::Int2Type<P+1>(), dst, cid-dim, src);
+		}
+	}
+
+	void component_add_noise_impl(Loki::Int2Type<N>, State&, unsigned int, double) const {}
 
 };
 

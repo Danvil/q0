@@ -163,6 +163,14 @@ namespace Cartesian {
 				return v;
 			}
 
+			void component_copy(State& dst, unsigned int cid, const State& src) const {
+				traits_t::at(dst, cid) = traits_t::at(src, cid);
+			}
+
+			void component_add_noise(State& dst, unsigned int cid, double noise) const {
+				traits_t::at(dst, cid) += RandomNumbers::Uniform(-noise, +noise);
+			}
+
 		private:
 			unsigned int dimension_;
 
@@ -267,6 +275,14 @@ namespace Cartesian {
 					traits_t::at(v, i) = RandomNumbers::Uniform(c_min, c_max);
 				}
 				return v;
+			}
+
+			void component_copy(State& dst, unsigned int cid, const State& src) const {
+				traits_t::at(dst, cid) = traits_t::at(src, cid);
+			}
+
+			void component_add_noise(State& dst, unsigned int cid, double noise) const {
+				traits_t::at(dst, cid) += RandomNumbers::Uniform(-noise, +noise);
 			}
 
 		private:
