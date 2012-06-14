@@ -32,3 +32,4 @@ target_link_libraries(SpecialFunctions_dyn boost_program_options)
 #add_executable(Problem10 tracking/Problem10.cpp)
 
 add_executable(Music music/music.cpp)
+target_link_libraries(Music boost_program_options)

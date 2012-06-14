@@ -7,17 +7,17 @@
 
 #include <QuestZero/Spaces/Multiplier.h>
 #include <QuestZero/Optimization/experimental/HarmonySearch.h>
+#include <QuestZero/Optimization/RND.h>
 #include <QuestZero/Optimization/PSO.h>
 #include <QuestZero/Optimization/Optimization.h>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int.hpp>
 #include <boost/random/variate_generator.hpp>
+#include <boost/program_options.hpp>
 #include <iostream>
 #include <fstream>
 #include <ctime>
 #include <cstdlib>
-
-boost::mt19937 gen;
 
 struct NoteState
 {
@@ -41,6 +41,8 @@ std::ostream& operator<<(std::ostream& os, const NoteState& note) {
 	note.print(os);
 	return os;
 }
+
+boost::mt19937 gen;
 
 struct NoteSpace
 {
@@ -90,6 +92,7 @@ struct NoteSpace
 		assert(cid == 0);
 		dst.value += static_cast<int>(std::floor(Q0::RandomNumbers::Uniform(-noise, +noise) + 0.5));
 	}
+
 };
 
 typedef Q0::Spaces::MultiplierState<NoteState> state_t;
@@ -97,8 +100,6 @@ typedef Q0::Spaces::MultiplierState<NoteState> state_t;
 typedef Q0::Spaces::MultiplierSpace<NoteSpace, state_t> space_t;
 
 typedef double score_t;
-
-void write_midi(const std::string& fn, const state_t& music);
 
 int harmony_pair_objective(int ta, int tb) {
 	int d = std::abs(ta - tb);
@@ -122,55 +123,109 @@ score_t harmony_objective(state_t x)
 	return total;
 }
 
-struct HarmonyVisitor
+/** Prints samples for debug purposes */
+struct DebugVisitor
 {
-	void NotifySamples(const Q0::StateScoreVector<state_t,score_t>& samples) {
-//		auto id_best = Q0::find_best_by_score(samples, std::less<score_t>());
-//		std::cout << "Best = " << Q0::get_state(samples, id_best) << std::endl;
-//		std::cout << "Harmony memory" << std::endl;
-//		for(auto id : Q0::samples(samples)) {
-//			std::cout << Q0::get_score(samples, id) << " : " << Q0::get_state(samples, id) << std::endl;
-//		}
+	DebugVisitor(int verbose=0)
+	: verbose_(verbose) {}
+
+	template<typename SampleSet>
+	void NotifySamples(const SampleSet& samples) {
+		if(verbose_ >= 1) {
+			auto id_best = Q0::find_best_by_score(samples, std::less<score_t>());
+			std::cout << "Current Best = " << Q0::get_state(samples, id_best) << std::endl;
+			if(verbose_ >= 2) {
+				std::cout << "Current samples" << std::endl;
+				for(auto id : Q0::samples(samples)) {
+					std::cout << Q0::get_score(samples, id) << " : " << Q0::get_state(samples, id) << std::endl;
+				}
+			}
+		}
 	}
+
+private:
+	int verbose_;
 };
+
+/** Write simple midi file */
+void write_midi(const std::string& fn, const state_t& music);
 
 int main(int argc, char** argv)
 {
+	std::string p_algo_name = "HarmonySearch";
+	int p_verbose = 0;
+	unsigned int p_total_evaluations = 100000;
+
+	// read parameters from command line
+	{
+		using namespace std;
+		namespace po = boost::program_options;
+		po::options_description desc("Allowed options");
+		desc.add_options()
+		    ("help", "produce help message")
+		    ("algo", po::value<std::string>(&p_algo_name), "optimization algorithm")
+		    ("verbosity", po::value<int>(&p_verbose), "verbosity 0-2")
+		    ("evaluations", po::value<unsigned int>(&p_total_evaluations), "number of evaluations")
+		;
+
+		po::variables_map vm;
+		po::store(po::parse_command_line(argc, argv, desc), vm);
+		po::notify(vm);
+
+		if (vm.count("help")) {
+		    cout << desc << "\n";
+		    return 1;
+		}
+	}
+
+	// create score space
+	space_t space(Q0::Spaces::MultiplierSizePolicies::DynamicSize(12));
 	gen.seed(time(NULL));
 
-	space_t space(Q0::Spaces::MultiplierSizePolicies::DynamicSize(12));
-
-//	Q0::Optimization<state_t, score_t,
-//			Q0::PSO,
-//			Q0::InitializePolicy::RandomPicker<state_t>,
-//			Q0::ExitPolicy::FixedChecks<score_t,true>
-//	> algo;
-
-	Q0::Optimization<state_t, score_t,
-			Q0::HarmonySearch,
-			Q0::InitializePolicy::RandomPicker<state_t>,
-			Q0::ExitPolicy::FixedChecks<score_t,true>
-	> algo;
-
-	// setup algorithm to do 5 iterations
-	algo.SetIterationCount(100000);
-
-//	// setup algorithm to use 100 particles
-//	algo.settings.particleCount = 100;
-	algo.parameters_.fw = 1.4;
-
-	// find minimum
-	Q0::Sample<state_t, score_t> best = algo.Minimize(space, &harmony_objective, HarmonyVisitor());
+	// prepare and run optimization
+	Q0::Sample<state_t, score_t> best;
+	if(p_algo_name == "RND") {
+		Q0::Optimization<state_t, score_t,
+				Q0::RND,
+				Q0::InitializePolicy::RandomPicker<state_t>,
+				Q0::ExitPolicy::FixedChecks<score_t,true>
+		> algo;
+		algo.SetIterationCount(p_total_evaluations / 100);
+		algo.particleCount = 100;
+		best = algo.Minimize(space, &harmony_objective, DebugVisitor(p_verbose));
+	}
+	else if(p_algo_name == "HarmonySearch") {
+		Q0::Optimization<state_t, score_t,
+				Q0::HarmonySearch,
+				Q0::InitializePolicy::RandomPicker<state_t>,
+				Q0::ExitPolicy::FixedChecks<score_t,true>
+		> algo;
+		algo.SetIterationCount(p_total_evaluations);
+		algo.parameters_.fw = 1.4;
+		best = algo.Minimize(space, &harmony_objective, DebugVisitor(p_verbose));
+	}
+	else if(p_algo_name == "PSO") {
+//		Q0::Optimization<state_t, score_t,
+//				Q0::PSO,
+//				Q0::InitializePolicy::RandomPicker<state_t>,
+//				Q0::ExitPolicy::FixedChecks<score_t,true>
+//		> algo;
+//		algo.SetIterationCount(p_total_evaluations / 30);
+//		algo.settings.particleCount = 30;
+//		best = algo.Minimize(space, &harmony_objective, DebugVisitor(p_verbose));
+	}
+	else {
+		std::cerr << "Invalid algorithm '" << p_algo_name << "'" << std::endl;
+	}
 
 	// print results
 	std::cout << "Optimization result:" << std::endl;
 	std::cout << "x_min = " << best.state << std::endl;
 	std::cout << "f(x_min) = " << best.score << std::endl;
 
+	// save and play midi
 	write_midi("result.mid", best.state);
-
-	int i = system("totem result.mid");
-	return i;
+	return system("totem result.mid");
 }
 
 void write_midi(const std::string& fn, const state_t& music) {
