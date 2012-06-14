@@ -81,10 +81,12 @@ struct HarmonySearch
 			score_t s = function(x);
 			// if it is better than the worst in of the harmony memory -> replace
 			auto worst_id = find_worst_by_score(hm, cmp);
-			if(cmp(s, worst_id)) {
+			if(cmp(s, get_score(hm, worst_id))) {
 				set_state(hm, worst_id, x);
 				set_score(hm, worst_id, s);
 			}
+			// notify sample set observer
+			vis.NotifySamples(hm);
 			// find best particle
 			auto best_id = find_best_by_score(hm, cmp);
 			// check if it is good enough
