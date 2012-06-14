@@ -1,8 +1,14 @@
 /*
  * music.cpp
  *
+ * This example generates a random melody by optimizing
+ * a shady harmony objective function.
+ *
+ * See for example http://tones.wolfram.com/generate/
+ * for more fun with random music.
+ *
  *  Created on: Jun 14, 2012
- *      Author: david
+ *      Author: David Weikersdorfer
  */
 
 #include <QuestZero/Spaces/Multiplier.h>
@@ -117,8 +123,8 @@ score_t harmony_objective(state_t x)
 	int total = 0;
 	for(unsigned int i=0; i<x.count(); i++) {
 		total += harmony_pair_objective(x[i].value, x[(i+1)%x.count()].value);
-		total += harmony_pair_objective(x[i].value, x[(i+2)%x.count()].value);
-//		total += harmony_pair_objective(x[i].value, x[(i+3)%x.count()].value);
+		total += harmony_pair_objective(x[i].value, x[(i+2)%x.count()].value) / 2;
+		total += harmony_pair_objective(x[i].value, x[(i+7)%x.count()].value) / 4;
 	}
 	return total;
 }
