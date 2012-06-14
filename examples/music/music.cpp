@@ -99,7 +99,16 @@ void write_midi(const std::string& fn, const state_t& music);
 
 // the function to optimize
 score_t harmony_objection(state_t x) {
-	return 0;
+	int total = 0;
+	for(unsigned int i=0; i<x.count()-1; i++) {
+		int fa = x[i].value;
+		int fb = x[i+1].value;
+		int d = std::abs(fa - fb);
+		int q[] = { std::abs(d - 0), std::abs(d - 4), std::abs(d - 7), std::abs(d - 12) };
+		int q_min = *std::min_element(q, q+4);
+		total += q_min * q_min;
+	}
+	return total;
 }
 
 int main(int argc, char** argv)
