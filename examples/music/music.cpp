@@ -24,13 +24,16 @@ struct NoteState
 	unsigned int value;
 
 	int frequency() const {
-		static int frq[12] = { 264, 275, 297, 317, 330, 352, 367, 396, 422, 440, 475, 495 };
-		return frq[value % 12];
+		static int frq[12] = {264, 275, 297, 317, 330, 352, 367, 396, 422, 440, 475, 495 };
+		return frq[value % 12] * (value < 12 ? 1 : 2);
 	}
 
 	void print(std::ostream& os) const {
-		static const char* names[12] = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "H" };
-		os << names[value % 12];
+		static const char* names[24] = {
+				"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "H",
+				"c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "h"
+		};
+		os << names[value % 24];
 	}
 };
 
@@ -46,7 +49,7 @@ struct NoteSpace
 	}
 
 	NoteState random() {
-		boost::uniform_int<> dist(0, 12);
+		boost::uniform_int<> dist(0, 24);
 		boost::variate_generator<boost::mt19937&, boost::uniform_int<> > die(gen, dist);
 		return { die() };
 	}
@@ -85,7 +88,7 @@ struct NoteSpace
 
 	void component_add_noise(NoteState& dst, unsigned int cid, double noise) const {
 		assert(cid == 0);
-		dst.value += static_cast<int>(Q0::RandomNumbers::Uniform(-noise, +noise));
+		dst.value += static_cast<int>(std::floor(Q0::RandomNumbers::Uniform(-noise, +noise) + 0.5));
 	}
 };
 
@@ -97,19 +100,39 @@ typedef double score_t;
 
 void write_midi(const std::string& fn, const state_t& music);
 
+int harmony_pair_objective(int ta, int tb) {
+	int d = std::abs(ta - tb);
+	int d_h = d % 12;
+	d_h = std::min(d_h, 12 - d_h);
+	int q[] = { std::abs(d_h - 4), std::abs(d_h - 7) };
+	int q_min = *std::min_element(q, q+2);
+	int t = std::max(d - 12, 0);
+	return q_min * q_min + t * t;
+}
+
 // the function to optimize
-score_t harmony_objection(state_t x) {
+score_t harmony_objective(state_t x)
+{
 	int total = 0;
-	for(unsigned int i=0; i<x.count()-1; i++) {
-		int fa = x[i].value;
-		int fb = x[i+1].value;
-		int d = std::abs(fa - fb);
-		int q[] = { std::abs(d - 0), std::abs(d - 4), std::abs(d - 7), std::abs(d - 12) };
-		int q_min = *std::min_element(q, q+4);
-		total += q_min * q_min;
+	for(unsigned int i=0; i<x.count(); i++) {
+		total += harmony_pair_objective(x[i].value, x[(i+1)%x.count()].value);
+		total += harmony_pair_objective(x[i].value, x[(i+2)%x.count()].value);
+//		total += harmony_pair_objective(x[i].value, x[(i+3)%x.count()].value);
 	}
 	return total;
 }
+
+struct HarmonyVisitor
+{
+	void NotifySamples(const Q0::StateScoreVector<state_t,score_t>& samples) {
+//		auto id_best = Q0::find_best_by_score(samples, std::less<score_t>());
+//		std::cout << "Best = " << Q0::get_state(samples, id_best) << std::endl;
+//		std::cout << "Harmony memory" << std::endl;
+//		for(auto id : Q0::samples(samples)) {
+//			std::cout << Q0::get_score(samples, id) << " : " << Q0::get_state(samples, id) << std::endl;
+//		}
+	}
+};
 
 int main(int argc, char** argv)
 {
@@ -130,14 +153,14 @@ int main(int argc, char** argv)
 	> algo;
 
 	// setup algorithm to do 5 iterations
-	algo.SetIterationCount(5);
+	algo.SetIterationCount(100000);
 
 //	// setup algorithm to use 100 particles
 //	algo.settings.particleCount = 100;
-	algo.parameters_.fw = 3;
+	algo.parameters_.fw = 1.4;
 
 	// find minimum
-	Q0::Sample<state_t, score_t> best = algo.Minimize(space, &harmony_objection);
+	Q0::Sample<state_t, score_t> best = algo.Minimize(space, &harmony_objective, HarmonyVisitor());
 
 	// print results
 	std::cout << "Optimization result:" << std::endl;
