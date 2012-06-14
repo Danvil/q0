@@ -12,6 +12,8 @@
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
+#include <boost/progress.hpp>
+#include <boost/shared_ptr.hpp>
 #include <iostream>
 #include <cfloat>
 #include <cmath>
@@ -33,6 +35,9 @@ namespace ExitPolicy
 		/** Sets the (maximal) number of iterations the algorithm should run */
 		void SetIterationCount(size_t num_iterations) {
 			exit_num_iterations_ = num_iterations;
+			if(Console) {
+				progress_.reset(new boost::progress_display(exit_num_iterations_));
+			}
 		}
 
 		/** Gets the (maximum) number of iterations the algorithm will run */
@@ -50,7 +55,8 @@ namespace ExitPolicy
 		bool IsTargetReached(ScoreType score, Compare) {
 			++exit_current_iteration_;
 			if(Console) {
-				std::cout << "Iteration " << exit_current_iteration_ << "/" << exit_num_iterations_ << ": Current Score=" << score << std::endl;
+				++(*progress_);
+//				std::cout << "Iteration " << exit_current_iteration_ << "/" << exit_num_iterations_ << ": Current Score=" << score << std::endl;
 			}
 			return exit_current_iteration_ >= exit_num_iterations_;
 		}
@@ -58,6 +64,7 @@ namespace ExitPolicy
 	private:
 		size_t exit_current_iteration_;
 		size_t exit_num_iterations_;
+		boost::shared_ptr<boost::progress_display> progress_;
 	};
 
 	/** Exits when the score is smaller than a given value
