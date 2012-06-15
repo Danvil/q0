@@ -62,33 +62,6 @@ struct NoteSpace
 		return { die() };
 	}
 
-//	double distance(const NoteState& x, const NoteState& y) const {
-//	}
-//
-//	NoteState scale(const NoteState& a, double s) const {
-//	}
-//
-//	NoteState inverse(const NoteState& a) const {
-//	}
-//
-//	NoteState compose(const NoteState& a, const NoteState& b) const {
-//	}
-//
-//	NoteState difference(const NoteState& a, const NoteState& b) const {
-//	}
-//
-//	template<typename K>
-//	NoteState weightedSum(K f1, const NoteState& s1, K f2, const NoteState& s2) const {
-//	}
-//
-//	template<typename K>
-//	NoteState weightedSum(K f1, const NoteState& s1, K f2, const NoteState& s2, K f3, const NoteState& s3) const {
-//	}
-//
-//	template<typename K>
-//	NoteState weightedSum(const std::vector<K>& factors, const std::vector<NoteState>& states) const {
-//	}
-
 	void component_copy(NoteState& dst, unsigned int cid, const NoteState& src) const {
 		assert(cid == 0);
 		dst = src;
