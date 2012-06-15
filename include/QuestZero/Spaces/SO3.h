@@ -136,6 +136,16 @@ namespace SO3 {
 				return delta * center;
 			}
 
+			void component_copy(State& dst, unsigned int cid, const State& src) const {
+				// FIXME let the user decide how to treat the three dimensions of SO(3) as components
+				dst = src;
+			}
+
+			void component_add_noise(State& dst, unsigned int cid, double noise) const {
+				// FIXME let the user decide how to treat the three dimensions of SO(3) as components
+				dst = random<double>(dst, {noise});
+			}
+
 		protected:
 			~Full() {}
 		};

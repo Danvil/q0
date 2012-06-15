@@ -142,6 +142,16 @@ namespace Angular {
 				return project(center + (K)r);
 			}
 
+			void component_copy(State& dst, unsigned int cid, const State& src) const {
+				assert(cid == 0);
+				dst = src;
+			}
+
+			void component_add_noise(State& dst, unsigned int cid, double noise) const {
+				assert(cid == 0);
+				dst = project(dst + Q0::RandomNumbers::Uniform(-noise, +noise));
+			}
+
 		protected:
 			~Full() {}
 		};
@@ -315,6 +325,16 @@ namespace Angular {
 			K random(K center, const std::vector<NT>& noise) const {
 				assert(noise.size() == dimension());
 				return random(center, noise[0]);
+			}
+
+			void component_copy(K& dst, unsigned int cid, K src) const {
+				assert(cid == 0);
+				dst = src;
+			}
+
+			void component_add_noise(K& dst, unsigned int cid, double noise) const {
+				assert(cid == 0);
+				dst = random(dst, noise);
 			}
 
 			K lower() const {
