@@ -12,9 +12,9 @@
  */
 
 #include <QuestZero/Spaces/Multiplier.h>
-#include <QuestZero/Optimization/experimental/HarmonySearch.h>
+#include <QuestZero/Optimization/HarmonySearch.h>
 #include <QuestZero/Optimization/RND.h>
-#include <QuestZero/Optimization/PSO.h>
+//#include <QuestZero/Optimization/PSO.h>
 #include <QuestZero/Optimization/Optimization.h>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int.hpp>
@@ -183,7 +183,7 @@ int main(int argc, char** argv)
 		algo.parameters_.fw = 1.4;
 		best = algo.Minimize(space, &harmony_objective, DebugVisitor(p_verbose));
 	}
-	else if(p_algo_name == "PSO") {
+//	else if(p_algo_name == "PSO") {
 //		Q0::Optimization<state_t, score_t,
 //				Q0::PSO,
 //				Q0::InitializePolicy::RandomPicker<state_t>,
@@ -192,7 +192,7 @@ int main(int argc, char** argv)
 //		algo.SetIterationCount(p_total_evaluations / 30);
 //		algo.settings.particleCount = 30;
 //		best = algo.Minimize(space, &harmony_objective, DebugVisitor(p_verbose));
-	}
+//	}
 	else {
 		std::cerr << "Invalid algorithm '" << p_algo_name << "'" << std::endl;
 	}

@@ -73,7 +73,7 @@ struct HarmonySearch
 					// do more
 					if(RandomNumbers::Uniform<double>() < parameters_.par) {
 						// add a small randomness to x
-						space.component_add_noise(x, i, parameters_.fw * RandomNumbers::Uniform<double>(-1,+1));
+						space.component_add_noise(x, i, parameters_.fw);
 					}
 				}
 			}
