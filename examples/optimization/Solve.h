@@ -12,6 +12,7 @@
 #include <QuestZero/Optimization/RND.h>
 #include <QuestZero/Optimization/PSO.h>
 #include <QuestZero/Optimization/NelderMead.h>
+#include <QuestZero/Optimization/HarmonySearch.h>
 #include <QuestZero/Optimization/Optimization.h>
 #include "../Timer.h"
 #include <Eigen/Dense>
@@ -38,14 +39,6 @@ std::ostream& operator<<(std::ostream& os, const AlgoTestResult<State,Score>& x)
 	return os;
 }
 
-//template<typename State, typename Score>
-//void PrintAlgoTestResults(const std::vector<AlgoTestResult<State,Score>>& results) {
-//	std::cout << std::setw(32) << "Algorithm" << std::setw(16) << "Score" << std::setw(16) << "Time [ms]" << std::endl;
-//	for(const AlgoTestResult<State,Score>& x : results) {
-//		std::cout << std::setw(32) << x.name << std::setw(16) << x.score << std::setw(16) << x.time_ms << std::endl;
-//	}
-//}
-
 template<typename ALGO, class Space, class Function>
 AlgoTestResult<typename ALGO::state_t, typename ALGO::score_t> TestAlgo(ALGO algo, const Space& space, const Function& function)
 {
@@ -55,9 +48,6 @@ AlgoTestResult<typename ALGO::state_t, typename ALGO::score_t> TestAlgo(ALGO alg
 	timer.stop();
 	return AlgoTestResult<typename ALGO::state_t, typename ALGO::score_t>{"", best.state, best.score, timer.getElapsedTimeInMilliSec()};
 }
-
-const unsigned int cIterationCount = 10;
-//const double cScoreGoal = 1e-3;
 
 template<typename State>
 void printState(const State& x) {
@@ -70,14 +60,16 @@ void printState(const Eigen::Matrix<K,N,1,_Options,_MaxRows,_MaxCols>& x) {
 }
 
 template<class Space, class Function>
-void Solve(const Space& space, const Function& function, unsigned int num_particles, bool print_result_state)
+void Solve(const Space& space, const Function& function, unsigned int num_particles, bool print_result_state, const std::string& algo="")
 {
+	const unsigned int cIterationCount = 10;
+
 	printHeader(std::cout);
 
 	typedef typename Space::State state_t;
 	typedef decltype(function(state_t())) score_t;
 
-	{
+	if(algo == "RND" || algo == "") {
 		Optimization<state_t, score_t,
 				RND,
 				Q0::InitializePolicy::RandomPicker<state_t>,
@@ -94,7 +86,7 @@ void Solve(const Space& space, const Function& function, unsigned int num_partic
 		}
 	}
 
-	{
+	if(algo == "NelderMead" || algo == "") {
 		Optimization<state_t, score_t,
 				NelderMead,
 				Q0::InitializePolicy::RandomPicker<state_t>,
@@ -114,7 +106,7 @@ void Solve(const Space& space, const Function& function, unsigned int num_partic
 		}
 	}
 
-	{
+	if(algo == "PSO" || algo == "") {
 		Optimization<state_t, score_t,
 				PSO,
 				Q0::InitializePolicy::RandomPicker<state_t>,
@@ -124,6 +116,22 @@ void Solve(const Space& space, const Function& function, unsigned int num_partic
 		algoPso.settings.particleCount = num_particles / cIterationCount;
 		auto tr = TestAlgo(algoPso, space, function);
 		tr.name = "PSO";
+		std::cout << tr << std::endl;
+		if(print_result_state) {
+			std::cout << "Result: ";
+			printState(tr.state);
+		}
+	}
+
+	if(algo == "HarmonySearch" || algo == "") {
+		Optimization<state_t, score_t,
+				HarmonySearch,
+				Q0::InitializePolicy::RandomPicker<state_t>,
+				Q0::ExitPolicy::FixedChecks<score_t>
+		> algo;
+		algo.SetIterationCount(num_particles);
+		auto tr = TestAlgo(algo, space, function);
+		tr.name = "HarmonySearch";
 		std::cout << tr << std::endl;
 		if(print_result_state) {
 			std::cout << "Result: ";
