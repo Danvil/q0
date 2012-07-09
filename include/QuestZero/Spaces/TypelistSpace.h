@@ -9,7 +9,6 @@
 #define TYPELISTSPACE_H_
 //---------------------------------------------------------------------------
 #include "QuestZero/Common/Exceptions.h"
-#include <QuestZero/Common/IPrintable.h>
 #include <loki/HierarchyGenerators.h>
 #include <loki/Typelist.h>
 #include <vector>
@@ -443,7 +442,7 @@ private:
 		unsigned int dim = dst.space<P>().dimension();
 		if(cid < dim) {
 			// delegate to sup space
-			dst.space<P>().component_copy(dst.part<P>(), cid, src.part<P>());
+			dst.template space<P>().component_copy(dst.template part<P>(), cid, src.template part<P>());
 		}
 		else {
 			component_copy_impl(Loki::Int2Type<P+1>(), dst, cid-dim, src);
@@ -457,10 +456,10 @@ private:
 		unsigned int dim = dst.space<P>().dimension();
 		if(cid < dim) {
 			// delegate to sup space
-			dst.space<P>().component_add_noise(dst.part<P>(), cid, noise);
+			dst.template space<P>().component_add_noise(dst.template part<P>(), cid, noise);
 		}
 		else {
-			component_add_noise_impl(Loki::Int2Type<P+1>(), dst, cid-dim, src);
+			component_add_noise_impl(Loki::Int2Type<P+1>(), dst, cid-dim, noise);
 		}
 	}
 
@@ -468,8 +467,8 @@ private:
 
 };
 
-template<typename Typelist>
-std::ostream& operator<<(std::ostream& os, const TypelistSpace<Typelist>& state) {
+template<typename Typelist, class State_>
+std::ostream& operator<<(std::ostream& os, const TypelistSpace<Typelist,State_>& state) {
 	state.print(os);
 	return os;
 }
