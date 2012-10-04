@@ -4,7 +4,7 @@
 #include <q0/common.hpp>
 #include <q0/domains.hpp>
 #include <q0/objective.hpp>
-#include <q0/tools.hpp>
+#include <q0/particle_vector.hpp>
 //---------------------------------------------------------------------------
 namespace q0 { namespace algorithms {
 
@@ -19,14 +19,15 @@ struct random_search
 
 	static constexpr unsigned int N = 100;
 
-	static inline particle<State,Score> apply(const Domain& domain, Objective f, Control control, Compare cmp) {
-		std::vector<State> states = domains::random(domain, N);
-		std::vector<Score> scores = objective::parallel(f, states);
-		particle<State,Score> best = tools::find_best(states, scores, cmp);
+	static inline particle<State,Score> apply(const Domain& dom, Objective f, Control control, Compare cmp) {
+		particle_vector<State,Score> particles;
+		particles.set_states(domains::random(dom, N));
+		particles.evaluate(f);
+		particle<State,Score> best = particles.find_best(cmp);
 		while(!control(best.state, best.score)) {
-			states = domains::random(domain, N);
-			scores = objective::parallel(f, states);
-			particle<State,Score> best_cur = tools::find_best(states, scores, cmp);
+			particles.set_states(domains::random(dom, N));
+			particles.evaluate(f);
+			particle<State,Score> best_cur = particles.find_best(cmp);
 			if(cmp(best_cur.score, best.score)) {
 				best = best_cur;
 			}

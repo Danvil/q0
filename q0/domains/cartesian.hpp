@@ -1,7 +1,6 @@
 #ifndef Q0_DOMAINS_CARTESIAN_H_
 #define Q0_DOMAINS_CARTESIAN_H_
 #include <q0/common.hpp>
-#include <q0/tools.hpp>
 #include <q0/domains.hpp>
 #include <q0/math.hpp>
 #include <vector>
@@ -35,7 +34,7 @@ template<typename K, unsigned int N>
 typename cartesian_base<K,N>::State random(const cartesian_constraint_none<K,N>& dom) {
 	typename cartesian_base<K,N>::State x;
 	for(unsigned int i=0; i<N; i++) {
-		at(x, i) = tools::random<K>(-dom.random_range, dom.random_range);
+		at(x, i) = math::random<K>(-dom.random_range, dom.random_range);
 	}
 	return x;
 }
@@ -44,7 +43,7 @@ template<typename K, unsigned int N>
 typename cartesian_base<K,N>::State random_neighbour(const cartesian_constraint_none<K,N>&, const typename cartesian_base<K,N>::State& x, K radius) {
 	typename cartesian_base<K,N>::State y;
 	for(unsigned int i=0; i<N; i++) {
-		at(y, i) = at(x, i) + tools::random<K>(-radius, +radius);
+		at(y, i) = at(x, i) + math::random<K>(-radius, +radius);
 	}
 	return y;
 }
@@ -81,7 +80,7 @@ template<typename K, unsigned int N>
 typename cartesian_base<K,N>::State random(const cartesian_constraint_box<K,N>& dom) {
 	typename cartesian_base<K,N>::State y;
 	for(unsigned int i=0; i<N; i++) {
-		at(y,i) = tools::random<K>(at(dom.min,i), at(dom.max,i));
+		at(y,i) = math::random<K>(at(dom.min,i), at(dom.max,i));
 	}
 	return y;
 }
@@ -90,7 +89,7 @@ template<typename K, unsigned int N>
 typename cartesian_base<K,N>::State random_neighbour(const cartesian_constraint_box<K,N>& dom, const typename cartesian_base<K,N>::State& x, K radius) {
 	typename cartesian_base<K,N>::State y;
 	for(unsigned int i=0; i<N; i++) {
-		at(y, i) = tools::random<K>(
+		at(y, i) = math::random<K>(
 			std::max(at(dom.min,i), at(x,i)-radius),
 			std::min(at(dom.max,i), at(x,i)+radius));
 	}

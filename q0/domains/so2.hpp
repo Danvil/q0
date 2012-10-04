@@ -1,7 +1,6 @@
 #ifndef Q0_DOMAINS_SO2_H_
 #define Q0_DOMAINS_SO2_H_
 #include <q0/common.hpp>
-#include <q0/tools.hpp>
 #include <q0/math.hpp>
 #include <q0/domains.hpp>
 #include <boost/math/constants/constants.hpp>
@@ -63,7 +62,7 @@ typename tangent_type<so2<K>>::type log(const so2<K>&, const typename state_type
 
 template<typename K>
 typename state_type<so2<K>>::type random(const so2<K>& dom) {
-	return {tools::random<K>(0, 2*boost::math::constants::pi<K>())};
+	return {math::random<K>(0, 2*boost::math::constants::pi<K>())};
 }
 
 template<typename K>
@@ -71,7 +70,7 @@ typename state_type<so2<K>>::type random_neighbour(const so2<K>&, const typename
 	if(radius > boost::math::constants::pi<K>()) {
 		radius = boost::math::constants::pi<K>();
 	}
-	return {math::wrap(x + tools::random<K>(-radius, +radius), 2*boost::math::constants::pi<K>())};
+	return {math::wrap(x + math::random<K>(-radius, +radius), 2*boost::math::constants::pi<K>())};
 }
 
 template<typename K>

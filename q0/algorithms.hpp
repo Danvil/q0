@@ -2,7 +2,7 @@
 #define Q0_ALGORITHMS_HPP_
 #include <q0/domains.hpp>
 #include <q0/objective.hpp>
-#include <q0/tools.hpp>
+#include <q0/common.hpp>
 #include <functional>
 //---------------------------------------------------------------------------
 namespace q0 {
