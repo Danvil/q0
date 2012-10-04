@@ -18,6 +18,12 @@ K wrap(K x, K a) {
 	return x;
 }
 
+/** Returns max(a, min(b, x)) */
+template<typename K>
+K clamp(K x, K a, K b) {
+	return std::max(a, std::min(b, x));
+}
+
 }}
 //---------------------------------------------------------------------------
 #endif
