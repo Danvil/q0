@@ -3,52 +3,37 @@
 #include <q0/common.hpp>
 #include <q0/tools.hpp>
 #include <q0/domains.hpp>
+#include <q0/math.hpp>
 #include <vector>
 //---------------------------------------------------------------------------
 namespace q0 { namespace domains {
 
 template<typename K, unsigned int N>
-struct cartesian
+struct cartesian_base
+{
+	typedef K Scalar;
+	typedef typename vec<K,N>::type State;
+	typedef typename vec<K,N>::type Tangent;
+
+};
+
+//---------------------------------------------------------------------------
+
+template<typename K, unsigned int N>
+struct cartesian_constraint_none
 {
 	K random_range;
-
-	cartesian() : random_range(K(1000)) {}
-
+	cartesian_constraint_none() : random_range(K(1000)) {}
 };
 
 template<typename K, unsigned int N>
-struct state_type<cartesian<K,N>> {
-	typedef typename vec<K,N>::type type;
-};
-
-template<typename K, unsigned int N>
-struct tangent_type<cartesian<K,N>> {
-	typedef typename vec<K,N>::type type;
-};
-
-template<typename K, unsigned int N>
-struct scalar_type<cartesian<K,N>> {
-	typedef K type;
-};
-
-template<typename K, unsigned int N>
-unsigned int dimension(const cartesian<K,N>&) {
-	return N;
+typename cartesian_base<K,N>::State restrict(const cartesian_constraint_none<K,N>&, const typename cartesian_base<K,N>::State& x) {
+	return x;
 }
 
 template<typename K, unsigned int N>
-typename state_type<cartesian<K,N>>::type exp(const cartesian<K,N>&, const typename state_type<cartesian<K,N>>::type& x, const typename tangent_type<cartesian<K,N>>::type& y) {
-	return x + y;
-}
-
-template<typename K, unsigned int N>
-typename tangent_type<cartesian<K,N>>::type log(const cartesian<K,N>&, const typename state_type<cartesian<K,N>>::type& x, const typename state_type<cartesian<K,N>>::type& y) {
-	return y - x;
-}
-
-template<typename K, unsigned int N>
-typename state_type<cartesian<K,N>>::type random(const cartesian<K,N>& dom) {
-	typename state_type<cartesian<K,N>>::type x;
+typename cartesian_base<K,N>::State random(const cartesian_constraint_none<K,N>& dom) {
+	typename cartesian_base<K,N>::State x;
 	for(unsigned int i=0; i<N; i++) {
 		at(x, i) = tools::random<K>(-dom.random_range, dom.random_range);
 	}
@@ -56,16 +41,97 @@ typename state_type<cartesian<K,N>>::type random(const cartesian<K,N>& dom) {
 }
 
 template<typename K, unsigned int N>
-typename state_type<cartesian<K,N>>::type random_neighbour(const cartesian<K,N>&, const typename state_type<cartesian<K,N>>::type& x, K radius) {
-	typename state_type<cartesian<K,N>>::type y = x;
+typename cartesian_base<K,N>::State random_neighbour(const cartesian_constraint_none<K,N>&, const typename cartesian_base<K,N>::State& x, K radius) {
+	typename cartesian_base<K,N>::State y;
 	for(unsigned int i=0; i<N; i++) {
-		at(y, i) += tools::random<K>(-radius, +radius);
+		at(y, i) = at(x, i) + tools::random<K>(-radius, +radius);
+	}
+	return y;
+}
+
+//---------------------------------------------------------------------------
+
+template<typename K, unsigned int N>
+struct cartesian_constraint_box
+{
+	typename vec<K,N>::type min, max;
+
+	cartesian_constraint_box() {
+		set_box_extends(-1,+1);
+	}
+
+	void set_box_extends(K a, K b) {
+		for(unsigned int i=0; i<N; i++) {
+			at(min,i) = a;
+			at(max,i) = b;
+		}
+	}
+};
+
+template<typename K, unsigned int N>
+typename cartesian_base<K,N>::State restrict(const cartesian_constraint_box<K,N>& dom, const typename cartesian_base<K,N>::State& x) {
+	typename cartesian_base<K,N>::State y;
+	for(unsigned int i=0; i<N; i++) {
+		at(y,i) = math::clamp(at(x,i), at(dom.min,i), at(dom.max,i));
 	}
 	return y;
 }
 
 template<typename K, unsigned int N>
-typename state_type<cartesian<K,N>>::type mean(const cartesian<K,N>&, const std::vector<K>& weights, const std::vector<typename state_type<cartesian<K,N>>::type>& states) {
+typename cartesian_base<K,N>::State random(const cartesian_constraint_box<K,N>& dom) {
+	typename cartesian_base<K,N>::State y;
+	for(unsigned int i=0; i<N; i++) {
+		at(y,i) = tools::random<K>(at(dom.min,i), at(dom.max,i));
+	}
+	return y;
+}
+
+template<typename K, unsigned int N>
+typename cartesian_base<K,N>::State random_neighbour(const cartesian_constraint_box<K,N>& dom, const typename cartesian_base<K,N>::State& x, K radius) {
+	typename cartesian_base<K,N>::State y;
+	for(unsigned int i=0; i<N; i++) {
+		at(y, i) = tools::random<K>(
+			std::max(at(dom.min,i), at(x,i)-radius),
+			std::min(at(dom.max,i), at(x,i)+radius));
+	}
+	return y;
+}
+
+//---------------------------------------------------------------------------
+
+template<typename K, unsigned int N, template<typename,unsigned int>class Constraint=cartesian_constraint_none>
+struct cartesian
+:	cartesian_base<K,N>,
+	Constraint<K,N>
+{};
+
+template<typename K, unsigned int N, template<typename,unsigned int>class Constraint>
+struct state_type<cartesian<K,N,Constraint>> {
+	typedef typename cartesian_base<K,N>::State type;
+};
+
+template<typename K, unsigned int N, template<typename,unsigned int>class Constraint>
+struct tangent_type<cartesian<K,N,Constraint>> {
+	typedef typename cartesian_base<K,N>::Tangent type;
+};
+
+template<typename K, unsigned int N, template<typename,unsigned int>class Constraint>
+struct scalar_type<cartesian<K,N,Constraint>> {
+	typedef K type;
+};
+
+template<typename K, unsigned int N, template<typename,unsigned int>class Constraint>
+typename cartesian_base<K,N>::State exp(const cartesian<K,N,Constraint>& dom, const typename cartesian_base<K,N>::State& x, const typename cartesian_base<K,N>::Tangent& y) {
+	return restrict(dom, x + y);
+}
+
+template<typename K, unsigned int N, template<typename,unsigned int>class Constraint>
+typename cartesian_base<K,N>::Tangent log(const cartesian<K,N,Constraint>&, const typename cartesian_base<K,N>::State& x, const typename cartesian_base<K,N>::State& y) {
+	return y - x;
+}
+
+template<typename K, unsigned int N, template<typename,unsigned int>class Constraint>
+typename cartesian_base<K,N>::State mean(const cartesian<K,N,Constraint>& dom, const std::vector<K>& weights, const std::vector<typename cartesian_base<K,N>::State>& states) {
 	const std::size_t n = weights.size();
 	if(n != states.size()) {
 		// FIXME error
@@ -73,11 +139,12 @@ typename state_type<cartesian<K,N>>::type mean(const cartesian<K,N>&, const std:
 	if(n == 0) {
 		// FIXME error
 	}
-	typename state_type<cartesian<K,N>>::type x = weights[0]*states[0];
+	typename cartesian_base<K,N>::State x = weights[0]*states[0];
 	for(std::size_t i=1; i<n; i++) {
 		x += weights[i]*states[i];
 	}
-	return (K(1) / static_cast<K>(n)) * x;
+	x *= (K(1) / static_cast<K>(n));
+	return restrict(dom, x);
 }
 
 }}
