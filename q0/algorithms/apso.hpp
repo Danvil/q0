@@ -17,7 +17,7 @@ struct apso
 	typedef typename objective::result_type<Objective>::type Score;
 	typedef typename domains::scalar_type<Domain>::type Scalar;
 
-	static constexpr unsigned int N = 40;
+	static constexpr unsigned int N = 45;
 	static constexpr double p_alpha = 0.3;
 	static constexpr double p_beta = 0.7;
 

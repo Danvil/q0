@@ -62,7 +62,7 @@ typename tangent_type<so2<K>>::type log(const so2<K>&, const typename state_type
 
 template<typename K>
 typename state_type<so2<K>>::type random(const so2<K>& dom) {
-	return {math::random<K>(0, 2*boost::math::constants::pi<K>())};
+	return {math::random_uniform<K>(0, 2*boost::math::constants::pi<K>())};
 }
 
 template<typename K>
@@ -70,7 +70,8 @@ typename state_type<so2<K>>::type random_neighbour(const so2<K>&, const typename
 	if(radius > boost::math::constants::pi<K>()) {
 		radius = boost::math::constants::pi<K>();
 	}
-	return {math::wrap(x + math::random<K>(-radius, +radius), 2*boost::math::constants::pi<K>())};
+	//return {math::wrap(x + math::random<K>(-radius, +radius), 2*boost::math::constants::pi<K>())};
+	return {math::wrap(x + radius*math::random_stddev<K>(), 2*boost::math::constants::pi<K>())};
 }
 
 template<typename K>

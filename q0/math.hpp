@@ -4,17 +4,31 @@
 #include <boost/random.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
+#include <boost/random/normal_distribution.hpp>
 #include <vector>
 #include <algorithm>
 //---------------------------------------------------------------------------
 namespace q0 { namespace math {
 
+namespace detail {
+	inline boost::random::mt19937& random_engine() {
+		static boost::random::mt19937 rng;
+		return rng;
+	}
+}
+
 /** Returns a uniformly distributed number from the interval [a,b] */
 template<typename K>
-K random(K a, K b) {
-	static boost::random::mt19937 rng;
+K random_uniform(K a, K b) {
 	boost::random::uniform_real_distribution<K> dist(a,b);
-	return dist(rng);
+	return dist(detail::random_engine());
+}
+
+/** Returns a uniformly distributed number with mean 0 and standard deviation 1 */
+template<typename K>
+K random_stddev() {
+	static boost::random::normal_distribution<K> dist;
+	return dist(detail::random_engine());
 }
 
 /** Returns b which solves x = n*a + b, 0 <= b < a, n integer */
