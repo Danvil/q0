@@ -24,7 +24,7 @@ struct random_search
 		particles.set_states(domains::random(dom, N));
 		particles.evaluate(f);
 		particle<State,Score> best = particles.find_best(cmp);
-		while(!control(best.state, best.score)) {
+		while(!control(particles, best)) {
 			particles.set_states(domains::random(dom, N));
 			particles.evaluate(f);
 			particle<State,Score> best_cur = particles.find_best(cmp);

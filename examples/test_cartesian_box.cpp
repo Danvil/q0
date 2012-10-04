@@ -18,8 +18,8 @@ bool stop_condition(const Eigen::Vector2f& u, float s) {
 
 int main(int argc, char** argv)
 {
-	q0::domains::cartesian<float,2> dom;
-	dom.random_range = 1.0f;
+	q0::domains::cartesian<float,2,q0::domains::cartesian_constraint_box> dom;
+	dom.set_box_extends(+1,+2);
 
 	auto p = q0::minimize<q0::algorithms::apso>::apply(dom, &f, q0::stop_condition(&stop_condition));
 	std::cout << "{" << p.state.x() << "," << p.state.y() << "} -> " << p.score << std::endl;

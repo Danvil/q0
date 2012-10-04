@@ -4,7 +4,6 @@
 #)
 
 add_executable(test_cartesian test_cartesian.cpp)
-target_link_libraries(test_cartesian boost_program_options)
-
+add_executable(test_cartesian_box test_cartesian_box.cpp)
 add_executable(test_so2 test_so2.cpp)
-target_link_libraries(test_so2 boost_program_options)
+add_executable(test_trace test_trace.cpp)

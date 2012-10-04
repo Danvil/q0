@@ -1,6 +1,5 @@
 #ifndef Q0_ALGORITHMS_APSO_HPP_
 #define Q0_ALGORITHMS_APSO_HPP_
-#include <q0/q0.hpp>
 #include <q0/common.hpp>
 #include <q0/domains.hpp>
 #include <q0/objective.hpp>
@@ -27,7 +26,7 @@ struct apso
 		particles.set_states(domains::random(dom, N));
 		particles.evaluate(f);
 		particle<State,Score> best = particles.find_best(cmp);
-		while(!control(best.state, best.score)) {
+		while(!control(particles, best)) {
 			for(State& x : particles.states) {
 				x = domains::lerp(dom, static_cast<Scalar>(p_beta), x,
 					domains::random_neighbour(dom, best.state, static_cast<Scalar>(p_alpha)));
