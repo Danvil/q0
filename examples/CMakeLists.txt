@@ -7,3 +7,6 @@ add_executable(test_cartesian test_cartesian.cpp)
 add_executable(test_cartesian_box test_cartesian_box.cpp)
 add_executable(test_so2 test_so2.cpp)
 add_executable(test_trace test_trace.cpp)
+
+add_executable(arm arm.cpp)
+target_link_libraries(arm boost_program_options)
