@@ -26,7 +26,7 @@ struct argument_type<Y (*)(const X&)> {
 };
 
 template<typename X, typename Y>
-struct result_type<Y (*)(const X&)> {
+struct result_type<Y (*)(X)> {
 	typedef Y type;
 };
 
