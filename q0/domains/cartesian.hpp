@@ -3,6 +3,7 @@
 #include <q0/common.hpp>
 #include <q0/domains.hpp>
 #include <q0/math.hpp>
+#include <boost/assert.hpp>
 #include <vector>
 //---------------------------------------------------------------------------
 namespace q0 { namespace domains {
@@ -131,18 +132,19 @@ typename cartesian_base<K,N>::Tangent log(const cartesian<K,N,Constraint>&, cons
 
 template<typename K, unsigned int N, template<typename,unsigned int>class Constraint>
 typename cartesian_base<K,N>::State mean(const cartesian<K,N,Constraint>& dom, const std::vector<K>& weights, const std::vector<typename cartesian_base<K,N>::State>& states) {
-	const std::size_t n = weights.size();
-	if(n != states.size()) {
-		// FIXME error
-	}
-	if(n == 0) {
-		// FIXME error
-	}
+	BOOST_ASSERT(states.size() == weights.size());
+	BOOST_ASSERT(states.size() > 0);
+	K weight_sum = weights[0];
 	typename cartesian_base<K,N>::State x = weights[0]*states[0];
+	const std::size_t n = weights.size();
 	for(std::size_t i=1; i<n; i++) {
-		x += weights[i]*states[i];
+		K w = weights[i];
+		BOOST_ASSERT(w >= 0);
+		x += w*states[i];
+		weight_sum += w;
 	}
-	x *= (K(1) / static_cast<K>(n));
+	BOOST_ASSERT(weight_sum >= 0);
+	x *= (K(1) / weight_sum);
 	return restrict(dom, x);
 }
 
