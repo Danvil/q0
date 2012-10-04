@@ -261,7 +261,7 @@ int main(int argc, char* argv[])
 		for(unsigned int i=0; i<N; i++) {
 			for(unsigned int j=0; j<N; j++) {
 				float x = -R + D*static_cast<float>(j);
-				float y = -R*.5f + D*static_cast<float>(i);
+				float y = -R + D*static_cast<float>(i);
 				float s = arm_objective({x,y});
 				scores[i][j] = s;
 			}
@@ -280,7 +280,7 @@ int main(int argc, char* argv[])
 		for(unsigned int i=0; i<N; i++) {
 			for(unsigned int j=0; j<N; j++) {
 				float x = -R + D*static_cast<float>(j);
-				float y = -R*.5f + D*static_cast<float>(i);
+				float y = -R + D*static_cast<float>(i);
 				ofs << x << "\t" << y << "\t" << scores[i][j] << std::endl;
 			}
 		}
