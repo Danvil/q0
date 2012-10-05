@@ -7,7 +7,8 @@
 
 #include <q0/q0.hpp>
 #include <q0/algorithms.hpp>
-#include <q0/domains/cartesian.hpp>
+#include <q0/domains/tuple.hpp>
+#include <q0/domains/so2.hpp>
 #include <q0/algorithms/apso.hpp>
 #include <q0/algorithms/random_search.hpp>
 #include <Eigen/Dense>
@@ -26,7 +27,9 @@ BOOST_GEOMETRY_REGISTER_C_ARRAY_CS(cs::cartesian)
 #include <iostream>
 #include <fstream>
 
-typedef Eigen::Matrix<float, 2, 1> state_t;
+typedef q0::domains::tuple<q0::domains::so2<float>,q0::domains::so2<float>> domain_t;
+
+typedef typename q0::domains::state_type<domain_t>::type state_t;
 
 typedef float score_t;
 
@@ -100,8 +103,8 @@ polygon_t arm(const state_t& u)
 {
 	constexpr float cLength = 3;
 	constexpr float cWidth = 1;
-	const float alpha = u.x();
-	const float beta = u.y();
+	const float alpha = std::get<0>(u);
+	const float beta = std::get<1>(u);
 
 	const polygon_t p1 = create(
 		{0,0},
@@ -178,7 +181,7 @@ unsigned int f_eval_count = 0;
 score_t arm_objective(const state_t& u)
 {
 	f_eval_count ++;
-	const polygon_t ref = arm({-0.3f, 0.5f});
+	const polygon_t ref = arm(state_t(q0::domains::angle<float>(-0.3f), q0::domains::angle<float>(0.5f)));
 	const polygon_t cur = arm(u);
 	return score(ref, cur);
 }
@@ -199,11 +202,15 @@ void tracer(const q0::particle_vector<state_t,score_t>& particles, const q0::par
 	}
 	for(unsigned int i=0; i<particles.size(); i++) {
 		if(i>0) ofs << ", ";
-		ofs << "{" << particles.states[i].x() << ", " << particles.states[i].y() << "}";
-		std::cout << "{" << particles.states[i].x() << ", " << particles.states[i].y() << "} -> " << particles.scores[i] << std::endl;
+		float a, b;
+		std::tie(a,b) = particles.states[i];
+		ofs << "{" << a << ", " << b << "}";
+		std::cout << "{" << a << ", " << b << "} -> " << particles.scores[i] << std::endl;
 	}
 	ofs << "}";
-	std::cout << "Iteration " << iter << ": " << particles.size() << " particles, best = {" << best.state.x() << "," << best.state.y() << "} -> " << best.score << std::endl;
+	float a, b;
+	std::tie(a,b) = best.state;
+	std::cout << "Iteration " << iter << ": " << particles.size() << " particles, best = {" << a << "," << b << "} -> " << best.score << std::endl;
 	iter++;
 }
 
@@ -231,13 +238,12 @@ int main(int argc, char* argv[])
 
 	if(p_mode.empty() || p_mode == "optimize") {
 		std::cout << "Optimizing in space [-pi|+pi]^2" << std::endl;
-		q0::domains::cartesian<float,2,q0::domains::cartesian_constraint_box> dom;
-		dom.set_box_extends(-3.1415,+3.1415);
+		domain_t dom;
 		q0::control::TestAndTrace<state_t, score_t> control;
 		control.tester = &stop_condition;
 		control.tracer = &tracer;
 		auto p = q0::minimize<q0::algorithms::apso>::apply(dom, &arm_objective, control);
-		std::cout << "{" << p.state.x() << "," << p.state.y() << "} -> " << p.score << std::endl;
+		std::cout << "{" << std::get<0>(p.state) << "," << std::get<1>(p.state) << "} -> " << p.score << std::endl;
 		std::cout << "Number of evaluations: " << f_eval_count << std::endl;
 	}
 	else if(p_mode == "test") {
@@ -248,9 +254,9 @@ int main(int argc, char* argv[])
 		constexpr unsigned int N = 200;
 		constexpr float R = 0.7854f;
 		constexpr float D = 2.0f * R / static_cast<float>(N);
-		float x = -R + D*static_cast<float>(148);
-		float y = -R + D*static_cast<float>(148);
-		float s = arm_objective({x,y});
+		q0::domains::angle<float> x = -R + D*static_cast<float>(148);
+		q0::domains::angle<float> y = -R + D*static_cast<float>(148);
+		float s = arm_objective(state_t(x,y));
 		std::cout << s << std::endl;
 	}
 	else if(p_mode == "evaluation") {
@@ -260,9 +266,9 @@ int main(int argc, char* argv[])
 		std::vector<std::vector<float>> scores(N, std::vector<float>(N));
 		for(unsigned int i=0; i<N; i++) {
 			for(unsigned int j=0; j<N; j++) {
-				float x = -R + D*static_cast<float>(j);
-				float y = -R + D*static_cast<float>(i);
-				float s = arm_objective({x,y});
+				q0::domains::angle<float> x = -R + D*static_cast<float>(j);
+				q0::domains::angle<float> y = -R + D*static_cast<float>(i);
+				float s = arm_objective(state_t(x,y));
 				scores[i][j] = s;
 			}
 		}

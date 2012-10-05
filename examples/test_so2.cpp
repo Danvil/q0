@@ -12,7 +12,8 @@ float f(const q0::domains::angle<float>& u) {
 	return 2 + std::sin(u) + std::cos(10*u);
 }
 
-bool stop_condition(const q0::domains::angle<float>&, float s) {
+bool stop_condition(const q0::domains::angle<float>& u, float s) {
+//	std::cout << "{" << u << "} -> " << s << std::endl;
 	return f_eval_count >= 1000 || s < 0.001f;
 }
 
