@@ -9,183 +9,263 @@
 //---------------------------------------------------------------------------
 namespace q0 { namespace domains {
 
+/** The domain type is a std::tuple */
 using std::tuple;
 
-/** The domain type is a std::tuple where the first parameter 
- * is the scalar type for the tangent space.
- * Use std::tuple<K, D1, D2, ...> as the domain type.
- * First parameter is the scalar type used for tangent space.
- */
-
-template<typename K, typename... Args>
-struct state_type<tuple<K, Args...>> {
-	typedef tuple<K, typename state_type<Args>::type...> type;
-};
-
-template<typename K, typename... Args>
-struct scalar_type<tuple<K, Args...>> {
-	typedef K type;
-};
-
-/** Dimension of tangent space is not necessarily known at compile time  */
-template<typename K, typename... Args>
-struct tangent_type<std::tuple<K, Args...>> {
-	typedef typename vecX<K>::type type;
+/** State type is a tuple of the resp state types */
+template<typename... Args>
+struct state_type<tuple<Args...>> {
+	typedef tuple<typename state_type<Args>::type...> type;
 };
 
 namespace detail
 {
-	template<int N, int I=0>
-	struct dimension_impl {
-		template<typename K, typename... Args>
-		static inline unsigned int apply(const tuple<K, Args...>& dom) {
-			return dimension_impl<N,I+1>::apply(dom) + dimension(std::get<I+1>(dom)); // first is scalar type
-		}
-	};
-	template<int N>
-	struct dimension_impl<N,N> {
-		template<typename K, typename... Args>
-		static inline unsigned int apply(const tuple<K, Args...>& dom) {
-			return 0;
-		}
-	};
+	template<unsigned int>
+	struct int_ {};
 
-	template<int N, int I=0>
-	struct get_part_dimensions_impl {
-		template<typename K, typename... Args>
-		static inline void apply(const tuple<K, Args...>& dom) {
-			return dimension_impl<N,I+1>::apply(dom) + dimension(std::get<I+1>(dom)); // first is scalar type
-		}
-	};
-	template<int N>
-	struct get_part_dimensions_impl<N,N> {
-		template<typename K, typename... Args>
-		static inline void apply(const tuple<K, Args...>& dom) {}
-	};
-
-	template<typename K, typename... Args>
-	std::vector<unsigned int> get_part_dimensions(const tuple<K, Args...>& dom) {
-		std::vector<unsigned int> dims(std::tuple_size<decltype(dom)>::value);
-
-		return dims;
-	}
-}
-
-template<typename K, typename... Args>
-unsigned int dimension(const tuple<K, Args...>& dom) {
-	return detail::dimension_impl<std::tuple_size<decltype(dom)>::value>::apply(dom);
-}
-
-namespae detail
-{
-	template<typename K>
-	struct tangent_splitter {
-		static constexpr unsigned int C = std::tuple_size<decltype(dom)>::value;
-		std::array<std::pair<unsigned int,unsigned int>,C> parts;
-
-		template<unsigned int I>
-		vecX<K> get_tangent_part(const vecX<K>& x) const {
-			return x.segment(parts[i].first, parts[i].second);
-		}
-	};
-
-	std::vector<vecX<K>> split_tangent(const tuple<K, Args...>& dom, const vecX<K>& x) {
-		std::vector<vecX<K>> parts(std::tuple_size<decltype(dom)>::value);
-
-		return parts;
-	}
-
-	vecX<K> concatenate(const std::tuple<vecX<K>>& parts, unsigned int dim) {
-		unsigned int p = 0;
-		vecX<K> result(dim);
-		for(const vecX<K>& u : parts) {
-			result.segment(p, u.size()) = u;
-			p += u.size();
-		}
-		return result;
-	}
-}
-
-namespace detail
-{
-	template<int N, int I=0>
-	struct for_each {
-		template<typename <int> class F, typename... Args>
+	template<unsigned int N, unsigned int I, template<unsigned int> class F>
+	struct for_each_impl {
+		template<typename... Args>
 		static inline void apply(Args... args) {
-			F<I>::apply(args);
-			for_each<N,I+1>::apply<F>(args);
+			F<I>::apply(args...);
+			for_each_impl<N,I+1,F>::apply(args...);
 		}
 	};
 
-	template<int N>
-	struct for_each<N,N> {
-		template<typename <int> class F, typename... Args>
-		static inline void apply(Args...) { }
+	template<unsigned int N, template<unsigned int> class F>
+	struct for_each_impl<N,N,F> {
+		template<typename... Args>
+		static inline void apply(Args... args) { }
 	};
 
+	template<unsigned int N, template<unsigned int> class F, typename... Args>
+	static inline void for_each(Args... args) {
+		for_each_impl<N,0,F>::apply(args...);
+	}
+}
+
+namespace detail
+{
+	template<unsigned int I>
+	struct dimension_helper {
+		template<typename... Args>
+		static inline void apply(unsigned int* result, const tuple<Args...>& dom) {
+			*result += dimension(std::get<I>(dom));
+		}
+	};
+}
+
+template<typename... Args>
+unsigned int dimension(const tuple<Args...>& dom) {
+	unsigned int result = 0;
+	detail::for_each<std::tuple_size<tuple<Args...>>::value, detail::dimension_helper>(&result, dom);
+	return result;
 }
 
 namespace detail
 {
 	// template<int N, int I=0>
-	// struct exp_impl {
-	// 	template<typename K, typename... Args>
-	// 	static inline void apply(typename state_type<tuple<K, Args...>>::type& result, const tuple<K, Args...>& dom, const typename state_type<tuple<K, Args...>>::type& x, const typename tangent_type<tuple<K, Args...>>::type& y) {
-	// 		std::get<I+1>(result) = exp(std::get<I>(dom), std::get<I>(x), detail::get_tangent_part(I, y));
-	// 		return exp_impl<N,I+1>::apply(dom) + exp(std::get<I+1>(dom), std::get<I+1>(dom), std::get<I+1>(dom));
+	// struct get_part_dimensions_impl {
+	// 	template<typename... Args>
+	// 	static inline void apply(const tuple<Args...>& dom) {
+	// 		return dimension_impl<N,I+1>::apply(dom) + dimension(std::get<I+1>(dom)); // first is scalar type
 	// 	}
 	// };
 	// template<int N>
-	// struct exp_impl<N,N> {
-	// 	template<typename K, typename... Args>
-	// 	static inline void apply(typename state_type<tuple<K, Args...>>::type& result, const tuple<K, Args...>& dom, const typename state_type<tuple<K, Args...>>::type& x, const typename tangent_type<tuple<K, Args...>>::type& y) {
+	// struct get_part_dimensions_impl<N,N> {
+	// 	template<typename... Args>
+	// 	static inline void apply(const tuple<Args...>& dom) {}
+	// };
+
+	// template<typename... Args>
+	// std::vector<unsigned int> get_part_dimensions(const tuple<Args...>& dom) {
+	// 	std::vector<unsigned int> dims(std::tuple_size<decltype(dom)>::value);
+
+	// 	return dims;
+	// }
+
+	// template<typename K>
+	// struct tangent_splitter {
+	// 	static constexpr unsigned int C = std::tuple_size<decltype(dom)>::value;
+	// 	std::array<std::pair<unsigned int,unsigned int>,C> parts;
+
+	// 	template<unsigned int I>
+	// 	vecX<K> get_tangent_part(const vecX<K>& x) const {
+	// 		return x.segment(parts[i].first, parts[i].second);
 	// 	}
 	// };
 
+	// std::vector<vecX<K>> split_tangent(const tuple<Args...>& dom, const vecX<K>& x) {
+	// 	std::vector<vecX<K>> parts(std::tuple_size<decltype(dom)>::value);
+
+	// 	return parts;
+	// }
+
+	template<typename... Args>
+	unsigned int get_tangent_part_position(int_<0>, const tuple<Args...>& dom) {
+		return 0;
+	}
+
+	template<unsigned int I, typename... Args>
+	unsigned int get_tangent_part_position(int_<I>, const tuple<Args...>& dom) {
+		return get_tangent_part_position(int_<I-1>(), dom) + dimension(std::get<I-1>(dom));
+	}
+
+	template<unsigned int I, typename T, typename... Args>
+	typename tangent_type<T,typename std::tuple_element<I,tuple<Args...>>::type>::type get_tangent_part(const tuple<Args...>& dom, const typename tangent_type<T,tuple<Args...>>::type& t) {
+		const unsigned int pos = get_tangent_part_position(int_<I>(), dom);
+		constexpr int ts = tangent_size<tuple<Args...>>::value;
+		if(ts == -1) {
+			return t.segment(pos, dimension(dom));
+		}
+		else {
+			return t.segment<ts>(pos);
+		}
+	}
+
+	template<unsigned int I, typename T, typename... Args>
+	void set_tangent_part(const tuple<Args...>& dom, const typename tangent_type<T,tuple<Args...>>::type& t, const typename tangent_type<T,typename std::tuple_element<I,tuple<Args...>>::type>::type& p) {
+		const unsigned int pos = get_tangent_part_position(int_<I>(), dom);
+		constexpr int ts = tangent_size<tuple<Args...>>::value;
+		if(ts == -1) {
+			t.segment(pos, dimension(dom)) = p;
+		}
+		else {
+			t.segment<ts>(pos) = p;
+		}
+	}
+
+	// vecX<K> concatenate(const std::tuple<vecX<K>>& parts, unsigned int dim) {
+	// 	unsigned int p = 0;
+	// 	vecX<K> result(dim);
+	// 	for(const vecX<K>& u : parts) {
+	// 		result.segment(p, u.size()) = u;
+	// 		p += u.size();
+	// 	}
+	// 	return result;
+	// }
+}
+
+namespace detail
+{
 	template<unsigned int I>
 	struct exp_helper {
+		template<typename T, typename... Args>
 		static inline void apply(
-			state_type<tuple<K, Args...>>::type& result,
-			const tuple<K, Args...>& dom,
-			const typename state_type<tuple<K, Args...>>::type& x,
-			const std::vector<vecX<K>>& y_parts) 
+			typename state_type<tuple<Args...>>::type* result,
+			const tuple<Args...>& dom,
+			const typename state_type<tuple<Args...>>::type& x,
+			const typename tangent_type<T,tuple<Args...>>::type& y) 
 		{
-			std::get<I>(result) = exp(std::get<I>(dom), std::get<I>(x), y_parts[I]);
+			std::get<I>(*result) = exp(std::get<I>(dom), std::get<I>(x), get_tangent_part<I,T>(dom,y));
 		}
 	};
 
 }
 
-template<typename K, typename... Args>
-typename state_type<tuple<K, Args...>>::type exp(const tuple<K, Args...>& dom, const typename state_type<tuple<K, Args...>>::type& x, const typename tangent_type<tuple<K, Args...>>::type& y) {
-	state_type<tuple<K, Args...>>::type result;
-	std::vector<vecX<K>> y_parts = details::split_tangent(dom, y);
-	detail::for_each<std::tuple_size<decltype(dom)>::value>::apply<detail::exp_helper>(result, dom, x, y_parts);
+template<typename T, typename... Args>
+typename state_type<tuple<Args...>>::type exp(const tuple<Args...>& dom, const typename state_type<tuple<Args...>>::type& x, const typename tangent_type<T,tuple<Args...>>::type& y) {
+	typename state_type<tuple<Args...>>::type result;
+	detail::for_each<std::tuple_size<tuple<Args...>>::value, detail::exp_helper>(&result, dom, x, y);
 	return result;
 }
 
-template<typename K, typename... Args>
-typename tangent_type<tuple<K, Args...>>::type exp(const tuple<K, Args...>& dom, const typename state_type<tuple<K, Args...>>::type& x, const typename state_type<tuple<K, Args...>>::type& y) {
-	// FIXME
-	throw 0;
+namespace detail
+{
+	template<unsigned int I>
+	struct log_helper {
+		template<typename T, typename... Args>
+		static inline void apply(
+			typename tangent_type<T,tuple<Args...>>::type* result,
+			const tuple<Args...>& dom,
+			const typename state_type<tuple<Args...>>::type& x,
+			const typename state_type<tuple<Args...>>::type& y) 
+		{
+			set_tangent_part<I,T>(dom, *result, log(std::get<I>(dom), std::get<I>(x), std::get<I>(y)));
+		}
+	};
+
 }
 
-template<typename K, typename... Args>
-typename state_type<tuple<K, Args...>>::type random(const tuple<K, Args...>& dom) {
-	// FIXME
-	throw 0;
+template<typename T, typename... Args>
+typename tangent_type<T,tuple<Args...>>::type log(const tuple<Args...>& dom, const typename state_type<tuple<Args...>>::type& x, const typename state_type<tuple<Args...>>::type& y) {
+	typename tangent_type<T,tuple<Args...>>::type result;
+	detail::for_each<std::tuple_size<tuple<Args...>>::value, detail::log_helper>(&result, dom, x, y);
+	return result;
 }
 
-template<typename K, typename... Args>
-typename state_type<tuple<K, Args...>>::type random_neighbour(const tuple<K, Args...>& dom, const typename state_type<tuple<K, Args...>>::type& x, K radius) {
-	// FIXME
-	throw 0;
+namespace detail
+{
+	template<unsigned int I>
+	struct random_helper {
+		template<typename... Args>
+		static inline void apply(
+			typename state_type<tuple<Args...>>::type* result,
+			const tuple<Args...>& dom) 
+		{
+			std::get<I>(*result) = random(std::get<I>(dom));
+		}
+	};
+
 }
 
-template<typename K, typename... Args>
-typename state_type<tuple<K, Args...>>::type mean(const tuple<K, Args...>& dom, const std::vector<K>& weights, const std::vector<typename state_type<tuple<K, Args...>>::type>& states) {
-	// FIXME
-	throw 0;
+template<typename... Args>
+typename state_type<tuple<Args...>>::type random(const tuple<Args...>& dom) {
+	typename state_type<tuple<Args...>>::type result;
+	detail::for_each<std::tuple_size<tuple<Args...>>::value, detail::random_helper>(&result, dom);
+	return result;
+}
+
+namespace detail
+{
+	template<unsigned int I>
+	struct random_neighbour_helper {
+		template<typename... Args>
+		static inline void apply(
+			typename state_type<tuple<Args...>>::type* result,
+			const tuple<Args...>& dom,
+			const typename state_type<tuple<Args...>>::type& x,
+			double radius) 
+		{
+			std::get<I>(*result) = random_neighbour(std::get<I>(dom), std::get<I>(x), radius);
+		}
+	};
+
+}
+
+template<typename... Args>
+typename state_type<tuple<Args...>>::type random_neighbour(const tuple<Args...>& dom, const typename state_type<tuple<Args...>>::type& x, double radius) {
+	typename state_type<tuple<Args...>>::type result;
+	detail::for_each<std::tuple_size<tuple<Args...>>::value, detail::random_neighbour_helper>(&result, dom, x, radius);
+	return result;
+}
+
+namespace detail
+{
+	template<unsigned int I>
+	struct mean_helper {
+		template<typename W, typename... Args>
+		static inline void apply(
+			typename state_type<tuple<Args...>>::type* result,
+			const tuple<Args...>& dom,
+			const std::vector<W>& weights,
+			const std::vector<typename state_type<tuple<Args...>>::type>& states) 
+		{
+			std::vector<typename std::tuple_element<I,typename state_type<tuple<Args...>>::type>::type> parts(states.size());
+			for(std::size_t i=0; i<states.size(); i++) {
+				parts[i] = std::get<I>(states[i]);
+			}
+			std::get<I>(*result) = mean(std::get<I>(dom), weights, parts);
+		}
+	};
+
+}
+
+template<typename W, typename... Args>
+typename state_type<tuple<Args...>>::type mean(const tuple<Args...>& dom, const std::vector<W>& weights, const std::vector<typename state_type<tuple<Args...>>::type>& states) {
+	typename state_type<tuple<Args...>>::type result;
+	detail::for_each<std::tuple_size<tuple<Args...>>::value, detail::mean_helper>(&result, dom, weights, states);
+	return result;
 }
 
 }}
