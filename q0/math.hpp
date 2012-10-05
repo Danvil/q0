@@ -5,6 +5,7 @@
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
 #include <boost/random/normal_distribution.hpp>
+#include <boost/assert.hpp>
 #include <vector>
 #include <algorithm>
 //---------------------------------------------------------------------------
@@ -34,9 +35,10 @@ K random_stddev() {
 /** Returns b which solves x = n*a + b, 0 <= b < a, n integer */
 template<typename K>
 K wrap(K x, K a) {
+	BOOST_ASSERT(0 < a);
 	// FIXME faster!
+	while(x < 0) x += a;
 	while(x >= a) x -= a;
-	while(x < a) x += a;
 	return x;
 }
 
