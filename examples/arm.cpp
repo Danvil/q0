@@ -205,7 +205,7 @@ void tracer(const q0::particle_vector<state_t,score_t>& particles, const q0::par
 		float a, b;
 		std::tie(a,b) = particles.states[i];
 		ofs << "{" << a << ", " << b << "}";
-		std::cout << "{" << a << ", " << b << "} -> " << particles.scores[i] << std::endl;
+//		std::cout << "{" << a << ", " << b << "} -> " << particles.scores[i] << std::endl;
 	}
 	ofs << "}";
 	float a, b;
@@ -247,22 +247,14 @@ int main(int argc, char* argv[])
 		std::cout << "Number of evaluations: " << f_eval_count << std::endl;
 	}
 	else if(p_mode == "test") {
-//		for(float x : {-0.5f, -0.3f, -0.1f, 0.0f}) {
-//			std::cout << x << " -> " << arm_objective({x,0.5f}) << std::endl;
-//		}
-
-		constexpr unsigned int N = 200;
-		constexpr float R = 0.7854f;
-		constexpr float D = 2.0f * R / static_cast<float>(N);
-		q0::domains::angle<float> x = -R + D*static_cast<float>(148);
-		q0::domains::angle<float> y = -R + D*static_cast<float>(148);
-		float s = arm_objective(state_t(x,y));
-		std::cout << s << std::endl;
+		for(float x : {-0.5f, -0.3f, -0.1f, 0.0f}) {
+			std::cout << x << " -> " << arm_objective(state_t(x,0.5f)) << std::endl;
+		}
 	}
 	else if(p_mode == "evaluation") {
 		constexpr unsigned int N = 99;
-		constexpr float R = 3.1415;
-		constexpr float D = 2.0f * R / static_cast<float>(N);
+		const float R = -boost::math::constants::pi<float>();
+		const float D = 2.0f * R / static_cast<float>(N);
 		std::vector<std::vector<float>> scores(N, std::vector<float>(N));
 		for(unsigned int i=0; i<N; i++) {
 			for(unsigned int j=0; j<N; j++) {
