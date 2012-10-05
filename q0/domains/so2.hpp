@@ -64,19 +64,20 @@ typename state_type<so2<K>>::type random_neighbour(const so2<K>&, const typename
 
 template<typename W, typename K>
 typename state_type<so2<K>>::type mean(const so2<K>&, const std::vector<W>& weights, const std::vector<typename state_type<so2<K>>::type>& states) {
-	const std::size_t n = weights.size();
-	if(n != states.size()) {
-		// FIXME error
-	}
-	if(n == 0) {
-		// FIXME error
-	}
+	BOOST_ASSERT(states.size() == weights.size());
+	BOOST_ASSERT(states.size() > 0);
+	K weight_sum = 0;
 	K x = 0;
+	const std::size_t n = weights.size();
 	for(std::size_t i=0; i<n; i++) {
-		// FIXME assert that 0 <= states[i] < 2 pi!
-		x += static_cast<K>(weights[i])*states[i];
+		K w = static_cast<K>(weights[i]);
+		BOOST_ASSERT(w >= 0);
+		x += w*states[i];
+		weight_sum += w;
 	}
-	return {(K(1) / static_cast<K>(n)) * x};
+	BOOST_ASSERT(weight_sum >= 0);
+	x *= (K(1) / weight_sum);
+	return {x};
 }
 
 }}
