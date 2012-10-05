@@ -14,6 +14,12 @@ struct vec
 };
 
 template<typename K>
+struct vec<K,1>
+{
+	typedef K type;
+};
+
+template<typename K>
 struct vec<K,-1>
 {
 	typedef Eigen::Matrix<K,Eigen::Dynamic,1> type;
@@ -33,6 +39,18 @@ K at(const Eigen::Matrix<K,N,1>& v, unsigned int i) {
 template<typename K, int N>
 K& at(Eigen::Matrix<K,N,1>& v, unsigned int i) {
 	return v[i];
+}
+
+template<typename K>
+K at(const K& v, unsigned int i) {
+	BOOST_ASSERT(i==0);
+	return v;
+}
+
+template<typename K>
+K& at(K& v, unsigned int i) {
+	BOOST_ASSERT(i==0);
+	return v;
 }
 
 template<typename State, typename Score>
