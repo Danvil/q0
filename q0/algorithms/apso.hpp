@@ -15,7 +15,6 @@ struct apso
 	typedef typename objective::argument_type<Objective>::type State2;
 	// FIXME assert that State==State2
 	typedef typename objective::result_type<Objective>::type Score;
-	typedef typename domains::scalar_type<Domain>::type Scalar;
 
 	static constexpr unsigned int N = 45;
 	static constexpr double p_alpha = 0.3;
@@ -28,8 +27,8 @@ struct apso
 		particle<State,Score> best = particles.find_best(cmp);
 		while(!control(particles, best)) {
 			for(State& x : particles.states) {
-				x = domains::lerp(dom, static_cast<Scalar>(p_beta), x,
-					domains::random_neighbour(dom, best.state, static_cast<Scalar>(p_alpha)));
+				x = domains::lerp(dom, p_beta, x,
+					domains::random_neighbour(dom, best.state, p_alpha));
 			}
 			particles.evaluate(f);
 			particle<State,Score> best_cur = particles.find_best(cmp);

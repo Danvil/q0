@@ -11,9 +11,7 @@ namespace q0 { namespace domains {
 template<typename K, unsigned int N>
 struct cartesian_base
 {
-	typedef K Scalar;
 	typedef typename vec<K,N>::type State;
-	typedef typename vec<K,N>::type Tangent;
 
 };
 
@@ -42,7 +40,7 @@ typename cartesian_base<K,N>::State random(const cartesian_constraint_none<K,N>&
 }
 
 template<typename K, unsigned int N>
-typename cartesian_base<K,N>::State random_neighbour(const cartesian_constraint_none<K,N>&, const typename cartesian_base<K,N>::State& x, K radius) {
+typename cartesian_base<K,N>::State random_neighbour(const cartesian_constraint_none<K,N>&, const typename cartesian_base<K,N>::State& x, double radius) {
 	typename cartesian_base<K,N>::State y;
 	for(unsigned int i=0; i<N; i++) {
 //		at(y, i) = at(x, i) + math::random_uniform<K>(-radius, +radius);
@@ -89,7 +87,7 @@ typename cartesian_base<K,N>::State random(const cartesian_constraint_box<K,N>& 
 }
 
 template<typename K, unsigned int N>
-typename cartesian_base<K,N>::State random_neighbour(const cartesian_constraint_box<K,N>& dom, const typename cartesian_base<K,N>::State& x, K radius) {
+typename cartesian_base<K,N>::State random_neighbour(const cartesian_constraint_box<K,N>& dom, const typename cartesian_base<K,N>::State& x, double radius) {
 	typename cartesian_base<K,N>::State y;
 	for(unsigned int i=0; i<N; i++) {
 //		at(y, i) = math::random_uniform<K>(
@@ -108,40 +106,33 @@ struct cartesian
 	Constraint<K,N>
 {};
 
+template<typename K, unsigned int N>
+struct tangent_size<cartesian<K,N>> : std::integral_constant<int,static_cast<int>(N)> {};
+
 template<typename K, unsigned int N, template<typename,unsigned int>class Constraint>
 struct state_type<cartesian<K,N,Constraint>> {
 	typedef typename cartesian_base<K,N>::State type;
 };
 
-template<typename K, unsigned int N, template<typename,unsigned int>class Constraint>
-struct tangent_type<cartesian<K,N,Constraint>> {
-	typedef typename cartesian_base<K,N>::Tangent type;
-};
-
-template<typename K, unsigned int N, template<typename,unsigned int>class Constraint>
-struct scalar_type<cartesian<K,N,Constraint>> {
-	typedef K type;
-};
-
-template<typename K, unsigned int N, template<typename,unsigned int>class Constraint>
-typename cartesian_base<K,N>::State exp(const cartesian<K,N,Constraint>& dom, const typename cartesian_base<K,N>::State& x, const typename cartesian_base<K,N>::Tangent& y) {
+template<typename T, typename K, unsigned int N, template<typename,unsigned int>class Constraint>
+typename cartesian_base<K,N>::State exp(const cartesian<K,N,Constraint>& dom, const typename cartesian_base<K,N>::State& x, const typename tangent_type<T,cartesian<K,N,Constraint>>::type& y) {
 	return restrict(dom, x + y);
 }
 
-template<typename K, unsigned int N, template<typename,unsigned int>class Constraint>
-typename cartesian_base<K,N>::Tangent log(const cartesian<K,N,Constraint>&, const typename cartesian_base<K,N>::State& x, const typename cartesian_base<K,N>::State& y) {
+template<typename T, typename K, unsigned int N, template<typename,unsigned int>class Constraint>
+typename tangent_type<T,cartesian<K,N,Constraint>>::type log(const cartesian<K,N,Constraint>&, const typename cartesian_base<K,N>::State& x, const typename cartesian_base<K,N>::State& y) {
 	return y - x;
 }
 
-template<typename K, unsigned int N, template<typename,unsigned int>class Constraint>
-typename cartesian_base<K,N>::State mean(const cartesian<K,N,Constraint>& dom, const std::vector<K>& weights, const std::vector<typename cartesian_base<K,N>::State>& states) {
+template<typename W, typename K, unsigned int N, template<typename,unsigned int>class Constraint>
+typename cartesian_base<K,N>::State mean(const cartesian<K,N,Constraint>& dom, const std::vector<W>& weights, const std::vector<typename cartesian_base<K,N>::State>& states) {
 	BOOST_ASSERT(states.size() == weights.size());
 	BOOST_ASSERT(states.size() > 0);
-	K weight_sum = weights[0];
-	typename cartesian_base<K,N>::State x = weights[0]*states[0];
+	K weight_sum = static_cast<K>(weights[0]);
+	typename cartesian_base<K,N>::State x = static_cast<K>(weights[0])*states[0];
 	const std::size_t n = weights.size();
 	for(std::size_t i=1; i<n; i++) {
-		K w = weights[i];
+		K w = static_cast<K>(weights[i]);
 		BOOST_ASSERT(w >= 0);
 		x += w*states[i];
 		weight_sum += w;

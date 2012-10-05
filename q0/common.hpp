@@ -13,6 +13,18 @@ struct vec
 	typedef Eigen::Matrix<K,N,1> type;
 };
 
+template<typename K>
+struct vec<K,-1>
+{
+	typedef Eigen::Matrix<K,Eigen::Dynamic,1> type;
+};
+
+template<typename K>
+struct vecX
+{
+	typedef typename vec<K,-1>::type type;
+};
+
 template<typename K, int N>
 K at(const Eigen::Matrix<K,N,1>& v, unsigned int i) {
 	return v[i];

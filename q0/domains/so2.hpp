@@ -12,6 +12,9 @@ template<typename K>
 struct so2 {};
 
 template<typename K>
+struct tangent_size<so2<K>> : std::integral_constant<int,1> {};
+
+template<typename K>
 struct angle {
 	K value;
 	operator K() const {
@@ -34,29 +37,14 @@ struct state_type<so2<K>> {
 	typedef angle<K> type;
 };
 
-template<typename K>
-struct tangent_type<so2<K>> {
-	typedef K type;
-};
-
-template<typename K>
-struct scalar_type<so2<K>> {
-	typedef K type;
-};
-
-template<typename K>
-unsigned int dimension(const so2<K>&) {
-	return 1;
-}
-
-template<typename K>
-typename state_type<so2<K>>::type exp(const so2<K>&, const typename state_type<so2<K>>::type&, const typename tangent_type<so2<K>>::type& y) {
+template<typename T, typename K>
+typename state_type<so2<K>>::type exp(const so2<K>&, const typename state_type<so2<K>>::type&, const typename tangent_type<T,so2<K>>::type& y) {
 	// limiting the angle is imperative!
 	return {math::wrap(y, 2*boost::math::constants::pi<K>())};
 }
 
-template<typename K>
-typename tangent_type<so2<K>>::type log(const so2<K>&, const typename state_type<so2<K>>::type&, const typename state_type<so2<K>>::type& y) {
+template<typename T, typename K>
+typename tangent_type<T,so2<K>>::type log(const so2<K>&, const typename state_type<so2<K>>::type&, const typename state_type<so2<K>>::type& y) {
 	return y;
 }
 
@@ -66,16 +54,16 @@ typename state_type<so2<K>>::type random(const so2<K>& dom) {
 }
 
 template<typename K>
-typename state_type<so2<K>>::type random_neighbour(const so2<K>&, const typename state_type<so2<K>>::type& x, K radius) {
-	if(radius > boost::math::constants::pi<K>()) {
-		radius = boost::math::constants::pi<K>();
+typename state_type<so2<K>>::type random_neighbour(const so2<K>&, const typename state_type<so2<K>>::type& x, double radius) {
+	if(radius > boost::math::constants::pi<double>()) {
+		radius = boost::math::constants::pi<double>();
 	}
 	//return {math::wrap(x + math::random<K>(-radius, +radius), 2*boost::math::constants::pi<K>())};
-	return {math::wrap(x + radius*math::random_stddev<K>(), 2*boost::math::constants::pi<K>())};
+	return {math::wrap<K>(x + radius*math::random_stddev<K>(), 2*boost::math::constants::pi<K>())};
 }
 
-template<typename K>
-typename state_type<so2<K>>::type mean(const so2<K>&, const std::vector<K>& weights, const std::vector<typename state_type<so2<K>>::type>& states) {
+template<typename W, typename K>
+typename state_type<so2<K>>::type mean(const so2<K>&, const std::vector<W>& weights, const std::vector<typename state_type<so2<K>>::type>& states) {
 	const std::size_t n = weights.size();
 	if(n != states.size()) {
 		// FIXME error
@@ -86,7 +74,7 @@ typename state_type<so2<K>>::type mean(const so2<K>&, const std::vector<K>& weig
 	K x = 0;
 	for(std::size_t i=0; i<n; i++) {
 		// FIXME assert that 0 <= states[i] < 2 pi!
-		x += weights[i]*states[i];
+		x += static_cast<K>(weights[i])*states[i];
 	}
 	return {(K(1) / static_cast<K>(n)) * x};
 }
