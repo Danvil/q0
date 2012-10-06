@@ -113,25 +113,32 @@ namespace detail
 	template<unsigned int I, typename T, typename... Args>
 	typename tangent_type<T,typename std::tuple_element<I,tuple<Args...>>::type>::type get_tangent_part(const tuple<Args...>& dom, const typename tangent_type<T,tuple<Args...>>::type& t) {
 		const unsigned int pos = get_tangent_part_position(int_<I>(), dom);
-		constexpr int ts = tangent_size<tuple<Args...>>::value;
-		if(ts == -1) {
-			return t.segment(pos, dimension(dom));
-		}
-		else {
-			return t.segment<ts>(pos);
-		}
+		BOOST_ASSERT(pos < dimension(dom));
+		const unsigned int dim = dimension(std::get<I>(dom));
+		BOOST_ASSERT(t.size() == dimension(dom));
+//		constexpr int ts = tangent_size<tuple<Args...>>::value;
+//		if(ts == -1) {
+			return t.segment(pos, dim);
+//		}
+//		else {
+//			return t.template segment<ts>(pos);
+//		}
 	}
 
 	template<unsigned int I, typename T, typename... Args>
-	void set_tangent_part(const tuple<Args...>& dom, const typename tangent_type<T,tuple<Args...>>::type& t, const typename tangent_type<T,typename std::tuple_element<I,tuple<Args...>>::type>::type& p) {
+	void set_tangent_part(const tuple<Args...>& dom, typename tangent_type<T,tuple<Args...>>::type& t, const typename tangent_type<T,typename std::tuple_element<I,tuple<Args...>>::type>::type& p) {
 		const unsigned int pos = get_tangent_part_position(int_<I>(), dom);
-		constexpr int ts = tangent_size<tuple<Args...>>::value;
-		if(ts == -1) {
-			t.segment(pos, dimension(dom)) = p;
-		}
-		else {
-			t.segment<ts>(pos) = p;
-		}
+		BOOST_ASSERT(pos < dimension(dom));
+		const unsigned int dim = dimension(std::get<I>(dom));
+		BOOST_ASSERT(dim == p.size());
+		BOOST_ASSERT(t.size() == dimension(dom));
+//		constexpr int ts = tangent_size<tuple<Args...>>::value;
+//		if(ts == -1) {
+			t.segment(pos, dim) = p;
+//		}
+//		else {
+//			t.template segment<ts>(pos) = p;
+//		}
 	}
 
 	// vecX<K> concatenate(const std::tuple<vecX<K>>& parts, unsigned int dim) {
@@ -151,21 +158,31 @@ namespace detail
 	struct exp_helper {
 		template<typename T, typename... Args>
 		static inline void apply(
+			T,
 			typename state_type<tuple<Args...>>::type* result,
 			const tuple<Args...>& dom,
 			const typename state_type<tuple<Args...>>::type& x,
 			const typename tangent_type<T,tuple<Args...>>::type& y) 
 		{
-			std::get<I>(*result) = exp(std::get<I>(dom), std::get<I>(x), get_tangent_part<I,T>(dom,y));
+			std::get<I>(*result) = domains::exp<T>(
+				std::get<I>(dom),
+				std::get<I>(x),
+				get_tangent_part<I,T>(dom, y));
 		}
 	};
-
 }
 
 template<typename T, typename... Args>
-typename state_type<tuple<Args...>>::type exp(const tuple<Args...>& dom, const typename state_type<tuple<Args...>>::type& x, const typename tangent_type<T,tuple<Args...>>::type& y) {
+typename state_type<tuple<Args...>>::type exp(
+	const tuple<Args...>& dom,
+	const typename state_type<tuple<Args...>>::type& x,
+	const typename tangent_type<T,tuple<Args...>>::type& y
+) {
 	typename state_type<tuple<Args...>>::type result;
-	detail::for_each<std::tuple_size<tuple<Args...>>::value, detail::exp_helper>(&result, dom, x, y);
+	detail::for_each<
+			std::tuple_size<tuple<Args...>>::value,
+			detail::exp_helper
+	>(T(), &result, dom, x, y);
 	return result;
 }
 
@@ -175,21 +192,31 @@ namespace detail
 	struct log_helper {
 		template<typename T, typename... Args>
 		static inline void apply(
+			T,
 			typename tangent_type<T,tuple<Args...>>::type* result,
 			const tuple<Args...>& dom,
 			const typename state_type<tuple<Args...>>::type& x,
 			const typename state_type<tuple<Args...>>::type& y) 
 		{
-			set_tangent_part<I,T>(dom, *result, log(std::get<I>(dom), std::get<I>(x), std::get<I>(y)));
+			set_tangent_part<I,T>(dom, *result, domains::log<T>(
+				std::get<I>(dom),
+				std::get<I>(x),
+				std::get<I>(y)));
 		}
 	};
-
 }
 
 template<typename T, typename... Args>
-typename tangent_type<T,tuple<Args...>>::type log(const tuple<Args...>& dom, const typename state_type<tuple<Args...>>::type& x, const typename state_type<tuple<Args...>>::type& y) {
-	typename tangent_type<T,tuple<Args...>>::type result;
-	detail::for_each<std::tuple_size<tuple<Args...>>::value, detail::log_helper>(&result, dom, x, y);
+typename tangent_type<T,tuple<Args...>>::type log(
+	const tuple<Args...>& dom,
+	const typename state_type<tuple<Args...>>::type& x,
+	const typename state_type<tuple<Args...>>::type& y
+) {
+	typename tangent_type<T,tuple<Args...>>::type result(dimension(dom));
+	detail::for_each<
+			std::tuple_size<tuple<Args...>>::value,
+			detail::log_helper
+	>(T(), &result, dom, x, y);
 	return result;
 }
 

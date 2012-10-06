@@ -13,9 +13,9 @@ using std::vector;
 template<typename X>
 unsigned int dimension(const vector<X>& dom) {
 	return std::accumulate(dom.begin(), dom.end(), 0,
-		[](unsigned int a, const X& x) {
-			return a + dimension(x);
-		});
+	 	[](unsigned int a, const X& x) {
+	 		return a + dimension(x);
+	 	});
 }
 
 template<typename X>
@@ -25,23 +25,30 @@ struct state_type<vector<X>> {
 
 namespace detail
 {
-	template<typename T, typename X>
-	typename tangent_type<T,X>::type get_tangent_part(const vector<X>& dom, const typename tangent_type<T,vector<X>>::type& t, std::size_t n) {
+	template<typename X>
+	unsigned int get_tangent_part_position(const vector<X>& dom, std::size_t n) {
 		unsigned int p = 0;
 		for(std::size_t i=0; i<n; i++) {
 			p += dimension(dom[i]);
 		}
-		return t.segment(p, dom[n]);
+		return p;
+	}
+
+	template<typename T, typename X>
+	typename tangent_type<T,X>::type get_tangent_part(const vector<X>& dom, const typename tangent_type<T,vector<X>>::type& t, std::size_t i) {
+		BOOST_ASSERT(i < dom.size());
+		const unsigned int p = get_tangent_part_position(dom, i);
+		const unsigned int dim_i = dimension(dom[i]);
+		return t.segment(p, dim_i);
 	}
 	
 	template<typename T, typename X>
-	void set_tangent_part(const vector<X>& dom, const typename tangent_type<T,vector<X>>::type& t, std::size_t n, typename tangent_type<T,X>::type& x) {
-		unsigned int p = 0;
-		for(std::size_t i=0; i<n; i++) {
-			p += dimension(dom[i]);
-		}
-		BOOST_ASSERT(dimension(dom[i]) == x.size());
-		t.segment(p, dom[n]) = x;
+	void set_tangent_part(const vector<X>& dom, typename tangent_type<T,vector<X>>::type& t, std::size_t i, const typename tangent_type<T,X>::type& x) {
+		BOOST_ASSERT(i < dom.size());
+		const unsigned int p = get_tangent_part_position(dom, i);
+		const unsigned int dim_i = dimension(dom[i]);
+		BOOST_ASSERT(dim_i == x.size());
+		t.segment(p, dim_i) = x;
 	}
 }
 
@@ -50,7 +57,7 @@ typename state_type<vector<X>>::type exp(const vector<X>& dom, const typename st
 	BOOST_ASSERT(dom.size() == x.size());
 	typename state_type<vector<X>>::type u(dom.size());
 	for(std::size_t i=0; i<dom.size(); i++) {
-		u[i] = exp(dom[i], x[i], detail::get_tangent_part(dom, t, i));
+		u[i] = domains::exp<T>(dom[i], x[i], detail::get_tangent_part<T>(dom, t, i));
 	}
 	return u;
 }
@@ -61,7 +68,7 @@ typename tangent_type<T,vector<X>>::type log(const vector<X>& dom, const typenam
 	BOOST_ASSERT(dom.size() == y.size());
 	typename tangent_type<T,vector<X>>::type t(dimension(dom));
 	for(std::size_t i=0; i<dom.size(); i++) {
-		detail::set_tangent_part(dom, t, i, log(dom[i], x[i], y[i]));
+		detail::set_tangent_part<T>(dom, t, i, domains::log<T>(dom[i], x[i], y[i]));
 	}
 	return t;
 }
