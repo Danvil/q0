@@ -3,7 +3,6 @@
 #include <q0/common.hpp>
 #include <q0/math.hpp>
 #include <q0/domains.hpp>
-#include <boost/math/constants/constants.hpp>
 #include <vector>
 #include <tuple>
 //---------------------------------------------------------------------------
