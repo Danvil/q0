@@ -32,9 +32,21 @@ int main(int argc, char** argv)
 	}
 
 	{
+		typedef q0::domains::cartesian<float,0> domain_t;
+		domain_t dom;
+		run<domain_t>(dom, "q0::domains::cartesian<float,0>");
+	}
+
+	{
 		typedef q0::domains::vector<q0::domains::so2<float>> domain_t;
 		domain_t dom(3);
-		run<domain_t>(dom, "q0::domains::vector<q0::domains::so2<float>>");
+		run<domain_t>(dom, "q0::domains::vector<q0::domains::so2<float>> (size=3)");
+	}
+
+	{
+		typedef q0::domains::vector<q0::domains::so2<float>> domain_t;
+		domain_t dom(0); // size = 0
+		run<domain_t>(dom, "q0::domains::vector<q0::domains::so2<float>> (size=0)");
 	}
 
 	{
