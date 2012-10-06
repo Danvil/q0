@@ -50,5 +50,12 @@ int main(int argc, char** argv)
 		run<domain_t>(dom, "q0::domains::tuple< q0::domains::cartesian<float,3> , q0::domains::vector<q0::domains::so2<float>> >");
 	}
 
+	{
+		typedef q0::domains::tuple< q0::domains::vector<q0::domains::so2<float>> , q0::domains::cartesian<float,3> > domain_t;
+		domain_t dom;
+		std::get<0>(dom).resize(3);
+		run<domain_t>(dom, "q0::domains::tuple< q0::domains::vector<q0::domains::so2<float>> , q0::domains::cartesian<float,3> >");
+	}
+
 	return 1;
 }
