@@ -11,6 +11,10 @@
 //---------------------------------------------------------------------------
 namespace q0 { namespace algorithms {
 
+static constexpr unsigned int differential_evolution_N = 45;
+static constexpr float differential_evolution_F = 0.5f;
+static constexpr float differential_evolution_CR = 0.1f;
+
 /** Random search */
 template<typename Domain, typename Objective, typename Control, typename Compare>
 struct differential_evolution
@@ -19,10 +23,6 @@ struct differential_evolution
 	typedef typename objective::argument_type<Objective>::type State2;
 	// FIXME assert that State==State2
 	typedef typename objective::result_type<Objective>::type Score;
-
-	static constexpr unsigned int N = 45;
-	static constexpr float F = 0.5f;
-	static constexpr float CR = 0.1f;
 
 	typedef float T;
 
@@ -54,7 +54,7 @@ struct differential_evolution
 	static inline particle<State,Score> apply(const Domain& dom, Objective f, Control control, Compare cmp) {
 		// initial particles
 		particle_vector<State,Score> particles;
-		particles.set_states(domains::random(dom, N));
+		particles.set_states(domains::random(dom, differential_evolution_N));
 		particles.evaluate(f);
 		particle<State,Score> best = particles.find_best(cmp);
 		const std::size_t n = particles.size();
@@ -66,13 +66,13 @@ struct differential_evolution
 			for(std::size_t i=0; i<n; i++) {
 				// mutation
 				std::array<std::size_t,3> indices = pick_mutation_indices<3>(i, n);
-				auto d = F*domains::log<T>(dom, particles.states[indices[1]], particles.states[indices[2]]);
+				auto d = differential_evolution_F*domains::log<T>(dom, particles.states[indices[1]], particles.states[indices[2]]);
 				auto m = domains::exp<T>(dom, particles.states[indices[0]], d);
 				auto x = domains::log<T>(dom, particles.states[i], m);
 				// crossover
 				std::size_t k = math::random_int<std::size_t>(0, n-1);
 				for(std::size_t j=0; j<dim; j++) {
-				 	if(j != k && math::random_uniform(0.f,1.f) > CR) {
+				 	if(j != k && math::random_uniform(0.f,1.f) > differential_evolution_CR) {
 				 		at(x,j) = 0;
 				 	}
 				}
