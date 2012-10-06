@@ -10,7 +10,6 @@
 #include <q0/domains/tuple.hpp>
 #include <q0/domains/so2.hpp>
 #include <q0/algorithms/apso.hpp>
-#include <q0/algorithms/random_search.hpp>
 #include <Eigen/Dense>
 #include <boost/program_options.hpp>
 #include <boost/geometry.hpp>

@@ -3,7 +3,6 @@
 #include <q0/domains/cartesian.hpp>
 #include <q0/domains/so2.hpp>
 #include <q0/domains/tuple.hpp>
-#include <q0/algorithms/random_search.hpp>
 #include <q0/algorithms/apso.hpp>
 #include <tuple>
 #include <iostream>

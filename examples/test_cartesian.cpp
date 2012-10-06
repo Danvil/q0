@@ -1,7 +1,6 @@
 #include <q0/q0.hpp>
 #include <q0/algorithms.hpp>
 #include <q0/domains/cartesian.hpp>
-#include <q0/algorithms/random_search.hpp>
 #include <q0/algorithms/apso.hpp>
 #include <iostream>
 
