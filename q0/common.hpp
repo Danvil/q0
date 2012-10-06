@@ -32,6 +32,12 @@ struct vecX
 };
 
 template<typename K, int N>
+struct tangent_vec
+{
+	typedef Eigen::Matrix<K,N,1> type;
+};
+
+template<typename K, int N>
 K at(const Eigen::Matrix<K,N,1>& v, unsigned int i) {
 	BOOST_ASSERT(i<v.size());
 	return v[i];

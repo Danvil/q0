@@ -24,8 +24,16 @@ struct state_type;
 /** The type of tangent space vectors */
 template<typename T, typename Domain>
 struct tangent_type {
-	typedef typename vec<T,tangent_size<Domain>::value>::type type;
+	typedef typename tangent_vec<T,tangent_size<Domain>::value>::type type;
 };
+
+/** Prototype for function 'exp' */
+//template<typename T, typename Domain>
+//typename state_type<Domain>::type exp(const Domain& dom, const typename state_type<Domain>::type& x, const typename tangent_type<T,Domain>::type& t);
+
+/** Prototype for function 'log' */
+//template<typename T, typename Domain>
+//typename tangent_type<T,Domain>::type log(const Domain& dom, const typename state_type<Domain>::type& x, const typename state_type<Domain>::type& y);
 
 /** Gets a vector of random states */
 template<typename Domain>
