@@ -33,11 +33,13 @@ struct vecX
 
 template<typename K, int N>
 K at(const Eigen::Matrix<K,N,1>& v, unsigned int i) {
+	BOOST_ASSERT(i<v.size());
 	return v[i];
 }
 
 template<typename K, int N>
 K& at(Eigen::Matrix<K,N,1>& v, unsigned int i) {
+	BOOST_ASSERT(i<v.size());
 	return v[i];
 }
 
