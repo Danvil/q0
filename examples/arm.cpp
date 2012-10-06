@@ -7,8 +7,8 @@
 
 #include <q0/q0.hpp>
 #include <q0/algorithms.hpp>
-#include <q0/domains/tuple.hpp>
 #include <q0/domains/so2.hpp>
+#include <q0/domains/tuple.hpp>
 #include <q0/algorithms/apso.hpp>
 #include <Eigen/Dense>
 #include <boost/program_options.hpp>
