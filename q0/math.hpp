@@ -8,6 +8,7 @@
 #include <boost/assert.hpp>
 #include <vector>
 #include <algorithm>
+#include <type_traits>
 //---------------------------------------------------------------------------
 namespace q0 { namespace math {
 
@@ -18,16 +19,26 @@ namespace detail {
 	}
 }
 
+/** Returns a uniformly distributed random integer in {a,...,b} */
+template<typename K>
+K random_int(K a, K b) {
+	static_assert(std::is_integral<K>::value, "random_int requires integral type!");
+	static boost::random::uniform_int_distribution<K> dist(a, b);
+	return dist(detail::random_engine());
+}
+
 /** Returns a uniformly distributed number from the interval [a,b] */
 template<typename K>
 K random_uniform(K a, K b) {
-	boost::random::uniform_real_distribution<K> dist(a,b);
+	static_assert(std::is_floating_point<K>::value, "random_uniform requires floating point type!");
+	boost::random::uniform_real_distribution<K> dist(a, b);
 	return dist(detail::random_engine());
 }
 
 /** Returns a uniformly distributed number with mean 0 and standard deviation 1 */
 template<typename K>
 K random_stddev() {
+	static_assert(std::is_floating_point<K>::value, "random_stddev requires floating point type!");
 	static boost::random::normal_distribution<K> dist;
 	return dist(detail::random_engine());
 }
