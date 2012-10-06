@@ -12,8 +12,8 @@
 namespace q0 { namespace algorithms {
 
 static constexpr unsigned int differential_evolution_N = 45;
-static constexpr float differential_evolution_F = 0.5f;
-static constexpr float differential_evolution_CR = 0.1f;
+static constexpr double differential_evolution_F = 0.5;
+static constexpr double differential_evolution_CR = 0.1;
 
 /** Random search */
 template<typename Domain, typename Objective, typename Control, typename Compare>

@@ -8,6 +8,8 @@
 //---------------------------------------------------------------------------
 namespace q0 { namespace algorithms {
 
+constexpr unsigned int random_search_N = 100;
+
 /** Random search */
 template<typename Domain, typename Objective, typename Control, typename Compare>
 struct random_search
@@ -17,15 +19,13 @@ struct random_search
 	// FIXME assert that State==State2
 	typedef typename objective::result_type<Objective>::type Score;
 
-	static constexpr unsigned int N = 100;
-
 	static inline particle<State,Score> apply(const Domain& dom, Objective f, Control control, Compare cmp) {
 		particle_vector<State,Score> particles;
-		particles.set_states(domains::random(dom, N));
+		particles.set_states(domains::random(dom, random_search_N));
 		particles.evaluate(f);
 		particle<State,Score> best = particles.find_best(cmp);
 		while(!control(particles, best)) {
-			particles.set_states(domains::random(dom, N));
+			particles.set_states(domains::random(dom, random_search_N));
 			particles.evaluate(f);
 			particle<State,Score> best_cur = particles.find_best(cmp);
 			if(cmp(best_cur.score, best.score)) {
