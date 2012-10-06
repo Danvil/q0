@@ -47,12 +47,15 @@ typename state_type<so2<K>>::type restrict(const so2<K>&, const typename state_t
 template<typename T, typename K>
 typename state_type<so2<K>>::type exp(const so2<K>& dom, const typename state_type<so2<K>>::type&, const typename tangent_type<T,so2<K>>::type& t) {
 	// limiting the angle is imperative!
-	return restrict(dom, t);
+	return restrict(dom, t[0]);
 }
 
 template<typename T, typename K>
 typename tangent_type<T,so2<K>>::type log(const so2<K>&, const typename state_type<so2<K>>::type&, const typename state_type<so2<K>>::type& y) {
-	return y;
+	// tangent is 1-dim vector -> need to initialize correctly;
+	typename tangent_type<T,so2<K>>::type v;
+	v[0] = y;
+	return v;
 }
 
 template<typename K>
