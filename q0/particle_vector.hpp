@@ -19,6 +19,11 @@ struct particle_vector
 		return states.size();
 	}
 
+	void resize(std::size_t n) {
+		states.resize(n);
+		scores.resize(n);
+	}
+
 	particle<State,Score> get_particle(std::size_t i) const {
 		BOOST_ASSERT(i < size());
 		return {states[i], scores[i]};
