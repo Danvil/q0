@@ -114,6 +114,18 @@ struct state_type<cartesian<K,N,Constraint>> {
 	typedef typename cartesian_base<K,N>::State type;
 };
 
+template<typename K, unsigned int N, template<typename,unsigned int>class Constraint>
+void print(std::ostream& os, const cartesian<K,N,Constraint>&, const typename state_type<cartesian<K,N,Constraint>>::type& u) {
+	os << "R^" << N << "{";
+	for(int i=0; i<u.size(); i++) {
+		if(i > 0) {
+			os << ", ";
+		}
+		os << u[i];
+	}
+	os << "}";
+}
+
 template<typename T, typename K, unsigned int N, template<typename,unsigned int>class Constraint>
 typename cartesian_base<K,N>::State exp(const cartesian<K,N,Constraint>& dom, const typename cartesian_base<K,N>::State& x, const typename tangent_type<T,cartesian<K,N,Constraint>>::type& y) {
 	return restrict(dom, x + y);

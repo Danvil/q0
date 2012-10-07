@@ -40,6 +40,11 @@ struct state_type<so2<K>> {
 };
 
 template<typename K>
+void print(std::ostream& os, const so2<K>&, const typename state_type<so2<K>>::type& u) {
+	os << "so(2){" << u << "}";
+}
+
+template<typename K>
 typename state_type<so2<K>>::type restrict(const so2<K>&, const typename state_type<so2<K>>::type& x) {
 	return math::wrap<K>(x, K(2)*boost::math::constants::pi<K>());
 }

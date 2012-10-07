@@ -12,16 +12,35 @@ using std::vector;
 
 template<typename X>
 unsigned int dimension(const vector<X>& dom) {
-	return std::accumulate(dom.begin(), dom.end(), 0,
-	 	[](unsigned int a, const X& x) {
-	 		return a + dimension(x);
-	 	});
+	// return std::accumulate(dom.begin(), dom.end(), 0,
+	//  	[](unsigned int a, const X& x) {
+	//  		return a + dimension(x);
+	//  	});
+	unsigned int a = 0;
+	for(const auto& x : dom) {
+		a += dimension(x);
+	}
+	return a;
 }
 
 template<typename X>
 struct state_type<vector<X>> {
 	typedef vector<typename state_type<X>::type> type;
 };
+
+template<typename X>
+void print(std::ostream& os, const vector<X>& dom, const typename state_type<vector<X>>::type& u) {
+	BOOST_ASSERT(dom.size() == u.size());
+	os << "vector( ";
+	for(std::size_t i=0; i<u.size(); i++) {
+		if(i > 0) {
+			os << ", ";
+		}
+		os << i << "=";
+		print(os, dom[i], u[i]);
+	}
+	os << " )";
+}
 
 namespace detail
 {

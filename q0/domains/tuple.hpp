@@ -46,6 +46,28 @@ namespace detail
 namespace detail
 {
 	template<unsigned int I>
+	struct print_helper {
+		template<typename... Args>
+		static inline void apply(std::ostream* os, const tuple<Args...>& dom, const typename state_type<tuple<Args...>>::type& u) {
+			if(I > 0) {
+				*os << ", ";
+			}
+			*os << static_cast<unsigned char>('a'+I) << "=";
+			print(*os, std::get<I>(dom), std::get<I>(u));
+		}
+	};
+}
+
+template<typename... Args>
+void print(std::ostream& os, const tuple<Args...>& dom, const typename state_type<tuple<Args...>>::type& u) {
+	os << "tuple< ";
+	detail::for_each<std::tuple_size<tuple<Args...>>::value, detail::print_helper>(&os, dom, u);
+	os << " >";
+}
+
+namespace detail
+{
+	template<unsigned int I>
 	struct dimension_helper {
 		template<typename... Args>
 		static inline void apply(unsigned int* result, const tuple<Args...>& dom) {
