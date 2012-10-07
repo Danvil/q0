@@ -123,6 +123,14 @@ typename state_type<vector<X>>::type mean(const vector<X>& dom, const std::vecto
 	return y;
 }
 
+template<typename W, typename X>
+typename state_type<vector<X>>::type lerp(const vector<X>& dom, W p, const typename state_type<vector<X>>::type& a, const typename state_type<vector<X>>::type& b) {
+	typename state_type<vector<X>>::type y(dom.size());
+	for(std::size_t i=0; i<dom.size(); i++) {
+		y[i] = lerp(dom[i], p, a[i], b[i]);
+	}
+	return y;
+}
 
 }}
 //---------------------------------------------------------------------------

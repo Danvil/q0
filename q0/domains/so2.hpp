@@ -46,20 +46,20 @@ void print(std::ostream& os, const so2<K>&, const typename state_type<so2<K>>::t
 
 template<typename K>
 typename state_type<so2<K>>::type restrict(const so2<K>&, const typename state_type<so2<K>>::type& x) {
-	return math::wrap<K>(x, K(2)*boost::math::constants::pi<K>());
+	return math::wrap_2pi<K>(x);
 }
 
 template<typename T, typename K>
-typename state_type<so2<K>>::type exp(const so2<K>& dom, const typename state_type<so2<K>>::type&, const typename tangent_type<T,so2<K>>::type& t) {
+typename state_type<so2<K>>::type exp(const so2<K>& dom, const typename state_type<so2<K>>::type& y, const typename tangent_type<T,so2<K>>::type& t) {
 	// limiting the angle is imperative!
-	return restrict(dom, t[0]);
+	return restrict(dom, y + t[0]);
 }
 
 template<typename T, typename K>
-typename tangent_type<T,so2<K>>::type log(const so2<K>&, const typename state_type<so2<K>>::type&, const typename state_type<so2<K>>::type& y) {
+typename tangent_type<T,so2<K>>::type log(const so2<K>&, const typename state_type<so2<K>>::type& y, const typename state_type<so2<K>>::type& x) {
 	// tangent is 1-dim vector -> need to initialize correctly;
 	typename tangent_type<T,so2<K>>::type v;
-	v[0] = y;
+	v[0] = x - y;
 	return v;
 }
 
@@ -74,7 +74,7 @@ typename state_type<so2<K>>::type random_neighbour(const so2<K>& dom, const type
 	//	radius = boost::math::constants::pi<double>();
 	//}
 	//return {math::wrap(x + math::random<K>(-radius, +radius), 2*boost::math::constants::pi<K>())};
-	return restrict(dom, math::wrap<K>(x + radius*math::random_stddev<K>(), K(2)*boost::math::constants::pi<K>())); // FIXME normal distribution in SO(2) ?
+	return restrict(dom, x + radius*math::random_stddev<K>()); // FIXME normal distribution in SO(2) ?
 }
 
 template<typename W, typename K>
@@ -93,6 +93,20 @@ typename state_type<so2<K>>::type mean(const so2<K>& dom, const std::vector<W>& 
 	BOOST_ASSERT(weight_sum >= 0);
 	x *= (K(1) / weight_sum);
 	return restrict(dom, x);
+}
+
+template<typename W, typename K>
+typename state_type<so2<K>>::type lerp(const so2<K>& dom, W p, const typename state_type<so2<K>>::type& u, const typename state_type<so2<K>>::type& v) {
+	K a = math::wrap_2pi<K>(u);
+	K b = math::wrap_2pi<K>(v);
+	K d = b - a;
+	if(d < -boost::math::constants::pi<K>()) {
+		b += K(2)*boost::math::constants::pi<K>();
+	}
+	if(d > +boost::math::constants::pi<K>()) {
+		b -= K(2)*boost::math::constants::pi<K>();
+	}
+	return math::wrap_2pi(a + static_cast<K>(p)*(b - a));
 }
 
 }}

@@ -316,6 +316,31 @@ typename state_type<tuple<Args...>>::type mean(const tuple<Args...>& dom, const 
 	return result;
 }
 
+namespace detail
+{
+	template<unsigned int I>
+	struct lerp_helper {
+		template<typename W, typename... Args>
+		static inline void apply(
+			typename state_type<tuple<Args...>>::type* result,
+			const tuple<Args...>& dom,
+			W p,
+			const typename state_type<tuple<Args...>>::type& a,
+			const typename state_type<tuple<Args...>>::type& b) 
+		{
+			std::get<I>(*result) = lerp(std::get<I>(dom), p, std::get<I>(a), std::get<I>(b));
+		}
+	};
+
+}
+
+template<typename W, typename... Args>
+typename state_type<tuple<Args...>>::type lerp(const tuple<Args...>& dom, W p, const typename state_type<tuple<Args...>>::type& a, const typename state_type<tuple<Args...>>::type& b) {
+	typename state_type<tuple<Args...>>::type result;
+	detail::for_each<std::tuple_size<tuple<Args...>>::value, detail::lerp_helper>(&result, dom, p, a, b);
+	return result;
+}
+
 }}
 //---------------------------------------------------------------------------
 #endif

@@ -48,10 +48,10 @@ std::vector<typename state_type<Domain>::type> random(const Domain& dom, unsigne
 /** Computes the weighted mean between two points
  * Identical to mean(dom,{1-p,p},{a,b})
  */
-template<typename W, typename Domain>
-typename state_type<Domain>::type lerp(const Domain& dom, W p, const typename state_type<Domain>::type& a, const typename state_type<Domain>::type& b) {
-	return mean(dom, std::vector<W>{static_cast<W>(1) - p, p}, {a, b});
-}
+//template<typename W, typename Domain>
+//typename state_type<Domain>::type lerp(const Domain& dom, W p, const typename state_type<Domain>::type& a, const typename state_type<Domain>::type& b) {
+//	return mean(dom, std::vector<W>{static_cast<W>(1) - p, p}, {a, b});
+//}
 
 }}
 //---------------------------------------------------------------------------
