@@ -6,10 +6,13 @@
  */
 
 #include <q0/q0.hpp>
+#include <q0/print.hpp>
 #include <q0/algorithms.hpp>
 #include <q0/domains/so2.hpp>
 #include <q0/domains/tuple.hpp>
+#include <q0/algorithms/random_search.hpp>
 #include <q0/algorithms/apso.hpp>
+#include <q0/algorithms/differential_evolution.hpp>
 #include <Eigen/Dense>
 #include <boost/program_options.hpp>
 #include <boost/geometry.hpp>
@@ -193,7 +196,7 @@ void tracer(const q0::particle_vector<state_t,score_t>& particles, const q0::par
 	static int iter = 0;
 	static std::ofstream ofs;
 	if(iter == 0) {
-		ofs.open("trace.txt");
+		ofs.open("trace_de.txt");
 		ofs << "{";
 	}
 	else {
@@ -203,6 +206,8 @@ void tracer(const q0::particle_vector<state_t,score_t>& particles, const q0::par
 		if(i>0) ofs << ", ";
 		float a, b;
 		std::tie(a,b) = particles.states[i];
+		a = q0::math::wrap(a, -boost::math::constants::pi<float>(), +boost::math::constants::pi<float>());
+		b = q0::math::wrap(b, -boost::math::constants::pi<float>(), +boost::math::constants::pi<float>());
 		ofs << "{" << a << ", " << b << "}";
 //		std::cout << "{" << a << ", " << b << "} -> " << particles.scores[i] << std::endl;
 	}
@@ -241,7 +246,7 @@ int main(int argc, char* argv[])
 		q0::control::TestAndTrace<state_t, score_t> control;
 		control.tester = &stop_condition;
 		control.tracer = &tracer;
-		auto p = q0::minimize<q0::algorithms::apso>::apply(dom, &arm_objective, control);
+		auto p = q0::minimize<q0::algorithms::differential_evolution>::apply(dom, &arm_objective, control);
 		std::cout << "{" << std::get<0>(p.state) << "," << std::get<1>(p.state) << "} -> " << p.score << std::endl;
 		std::cout << "Number of evaluations: " << f_eval_count << std::endl;
 	}
