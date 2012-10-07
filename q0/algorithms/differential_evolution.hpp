@@ -70,7 +70,7 @@ struct differential_evolution
 				auto m = domains::exp<T>(dom, particles.states[indices[0]], d);
 				auto x = domains::log<T>(dom, particles.states[i], m);
 				// crossover
-				std::size_t k = math::random_int<std::size_t>(0, n-1);
+				std::size_t k = math::random_int<std::size_t>(0, dim-1);
 				for(std::size_t j=0; j<dim; j++) {
 				 	if(j != k && math::random_uniform(0.f,1.f) > differential_evolution_CR) {
 				 		at(x,j) = 0;
