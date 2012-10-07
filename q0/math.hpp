@@ -5,6 +5,7 @@
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
 #include <boost/random/normal_distribution.hpp>
+#include <boost/math/constants/constants.hpp>
 #include <boost/assert.hpp>
 #include <vector>
 #include <algorithm>
@@ -23,7 +24,7 @@ namespace detail {
 template<typename K>
 K random_int(K a, K b) {
 	static_assert(std::is_integral<K>::value, "random_int requires integral type!");
-	static boost::random::uniform_int_distribution<K> dist(a, b);
+	boost::random::uniform_int_distribution<K> dist(a, b);
 	return dist(detail::random_engine());
 }
 
@@ -51,6 +52,18 @@ K wrap(K x, K a) {
 	while(x < 0) x += a;
 	while(x >= a) x -= a;
 	return x;
+}
+
+/** Returns a + wrap(x-a, b-a) */
+template<typename K>
+K wrap(K x, K a, K b) {
+	BOOST_ASSERT(b > a);
+	return a + wrap(x-a, b-a);
+}
+
+template<typename K>
+K wrap_2pi(K x) {
+	return wrap(x, K(2)*boost::math::constants::pi<K>());
 }
 
 /** Returns max(a, min(b, x)) */
