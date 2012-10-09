@@ -29,7 +29,6 @@ struct monte_carlo
 			particles.evaluate(f);
 			particle<State,Score> best_cur = particles.find_best(cmp);
 			if(cmp(best_cur.score, best.score)) {
-//			if(compare(best_cur, best, cmp)) {
 				best = best_cur;
 			}
 		}
@@ -54,7 +53,6 @@ struct monte_carlo_1
 			State u = domains::random(dom);
 			Score s = f(u);
 			if(cmp(best.score, s)) {
-//			if(compare(best, s, cmp)) {
 				best.state = u;
 				best.score = s;
 			}

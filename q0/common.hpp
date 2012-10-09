@@ -61,22 +61,12 @@ K& at(K& v, unsigned int i) {
 	return v;
 }
 
-template<typename State, typename Score>
+template<typename State, typename Score, typename Compare>
 struct particle
 {
 	State state;
 	Score score;
 };
-
-// template<typename State, typename Score, typename Compare>
-// bool compare(const particle<State,Score>& a, const particle<State,Score>& b, Compare cmp) {
-// 	return cmp(a.score, b.score);
-// }
-
-// template<typename State, typename Score, typename Compare>
-// bool compare(const particle<State,Score>& a, const Score& b_score, Compare cmp) {
-// 	return cmp(a.score, b_score);
-// }
 
 }
 //---------------------------------------------------------------------------
