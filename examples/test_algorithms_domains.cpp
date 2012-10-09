@@ -25,6 +25,8 @@ std::ostream& operator<<(std::ostream& os, const state_t& x) {
 	return os;
 }
 
+unsigned int seed = 0;
+
 unsigned int f_eval_count = 0;
 
 float f(const state_t& x) {
@@ -44,13 +46,15 @@ bool stop_condition(const state_t& u, float s) {
 template<template<class,class,class,class>class Algo>
 void run(const std::string& name)
 {
+	q0::math::random_seed(seed);
 	f_eval_count = 0;
 	std::cout << "" << std::endl;
 	std::cout << ">>> " << name << std::endl;
 	domain_t dom;
 	std::get<1>(dom).resize(5); // 5 times so2
 	auto p = q0::minimize<Algo>::apply(dom, &f, q0::stop_condition(&stop_condition));
-	std::cout << "{" << p.state << "} -> " << p.score << std::endl;
+//	std::cout << "{" << p.state << "}" << std::endl;
+	std::cout << "Score: " << p.score << std::endl;
 	std::cout << "Number of evaluations: " << f_eval_count << std::endl;
 }
 
@@ -58,7 +62,17 @@ void run(const std::string& name)
 
 int main(int argc, char** argv)
 {
-	RUN(q0::algorithms::random_search);
+	seed = static_cast<unsigned int>(std::time(0));
+	std::cout << "Seed = " << seed << std::endl;
+
+	RUN(q0::algorithms::monte_carlo_1);
+	RUN(q0::algorithms::monte_carlo);
+	RUN(q0::algorithms::random_walk_1);
+	RUN(q0::algorithms::random_walk);
+	RUN(q0::algorithms::local_unimodal_search_1);
+	RUN(q0::algorithms::local_unimodal_search);
+	RUN(q0::algorithms::pattern_search_1);
+	RUN(q0::algorithms::pattern_search);
 	RUN(q0::algorithms::apso);
 	RUN(q0::algorithms::differential_evolution);
 	return 1;

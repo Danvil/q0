@@ -6,7 +6,7 @@
 #include <q0/algorithms/differential_evolution.hpp>
 #include <iostream>
 
-typedef q0::domains::cartesian<float,2> domain_t;
+typedef q0::domains::cartesian<float,17> domain_t;
 typedef typename q0::domains::state_type<domain_t>::type state_t;
 
 unsigned int f_eval_count = 0;
@@ -20,7 +20,7 @@ float f(const state_t& x) {
 
 bool stop_condition(const state_t& u, float s) {
 //	std::cout << "{" << u.x() << "," << u.y() << "} -> " << s << std::endl;
-	return f_eval_count >= 1000 || s < 0.005f;
+	return f_eval_count >= 10000 || s < 0.005f;
 }
 
 template<template<class,class,class,class>class Algo>
@@ -32,7 +32,8 @@ void run(const std::string& name)
 	std::cout << ">>> " << name << std::endl;
 	domain_t dom;
 	auto p = q0::minimize<Algo>::apply(dom, &f, q0::stop_condition(&stop_condition));
-	std::cout << "{" << p.state.x() << "," << p.state.y() << "} -> " << p.score << std::endl;
+//	std::cout << "{" << p.state << "}" << std::endl;
+	std::cout << "Score: " << p.score << std::endl;
 	std::cout << "Number of evaluations: " << f_eval_count << std::endl;
 }
 
