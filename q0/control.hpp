@@ -3,6 +3,7 @@
 #include <q0/particle_vector.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
+#include <iostream>
 //---------------------------------------------------------------------------
 namespace q0 { namespace control {
 
@@ -27,6 +28,13 @@ struct TestAndTrace
 	}
 
 	bool operator()(const particle<State,Score>& best) {
+		if(tracer) {
+			particle_vector<State,Score> particles;
+			particles.resize(1);
+			particles.states[0] = best.state;
+			particles.scores[0] = best.score;
+			tracer(particles, best);
+		}
 		if(tester) {
 			return tester(best.state, best.score);
 		}
