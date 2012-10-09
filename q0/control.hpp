@@ -26,6 +26,15 @@ struct TestAndTrace
 		}
 	}
 
+	bool operator()(const particle<State,Score>& best) {
+		if(tester) {
+			return tester(best.state, best.score);
+		}
+		else {
+			return false;
+		}
+	}
+
 };
 
 }}
