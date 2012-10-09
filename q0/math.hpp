@@ -20,6 +20,10 @@ namespace detail {
 	}
 }
 
+void random_seed(unsigned int i) {
+	detail::random_engine().seed(i);
+}
+
 /** Returns a uniformly distributed random integer in {a,...,b} */
 template<typename K>
 K random_int(K a, K b) {

@@ -7,10 +7,12 @@
 #include <q0/algorithms/differential_evolution.hpp>
 #include <iostream>
 
-typedef q0::domains::cartesian<float,17> domain_t;
+typedef q0::domains::cartesian<float,2> domain_t;
 typedef typename q0::domains::state_type<domain_t>::type state_t;
 
 unsigned int f_eval_count = 0;
+
+unsigned int seed = 0;
 
 float f(const state_t& x) {
 	f_eval_count ++;
@@ -19,12 +21,13 @@ float f(const state_t& x) {
 
 bool stop_condition(const state_t& u, float s) {
 //	std::cout << "{" << u.x() << "," << u.y() << "} -> " << s << std::endl;
-	return f_eval_count >= 10000 || s < 0.005f;
+	return f_eval_count >= 1000 || s < 0.005f;
 }
 
 template<template<class,class,class,class>class Algo>
 void run(const std::string& name)
 {
+	q0::math::random_seed(seed);
 	f_eval_count = 0;
 	std::cout << "" << std::endl;
 	std::cout << ">>> " << name << std::endl;
@@ -38,9 +41,15 @@ void run(const std::string& name)
 
 int main(int argc, char** argv)
 {
+	seed = static_cast<unsigned int>(std::time(0));
+	std::cout << "Seed = " << seed << std::endl;
+
 	RUN(q0::algorithms::monte_carlo);
 	RUN(q0::algorithms::monte_carlo_1);
-	RUN(q0::algorithms::random_search);
+	RUN(q0::algorithms::random_search<q0::algorithms::detail::MonteCarlo>::impl);
+	RUN(q0::algorithms::random_search<q0::algorithms::detail::RandomWalk>::impl);
+	RUN(q0::algorithms::random_search<q0::algorithms::detail::LocalUnimodalSearch>::impl);
+	RUN(q0::algorithms::random_search<q0::algorithms::detail::PatternSearch>::impl);
 	RUN(q0::algorithms::apso);
 	RUN(q0::algorithms::differential_evolution);
 	return 1;
