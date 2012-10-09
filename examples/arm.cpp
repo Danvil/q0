@@ -179,6 +179,8 @@ float score(const polygon_t& a, const polygon_t& b)
 // }
 
 unsigned int f_eval_count = 0;
+int trace_iter = 0;
+std::ofstream trace_ofs;
 
 score_t arm_objective(const state_t& u)
 {
@@ -193,33 +195,68 @@ bool stop_condition(const state_t& u, float s) {
 }
 
 void tracer(const q0::particle_vector<state_t,score_t>& particles, const q0::particle<state_t,score_t>& best) {
-	static int iter = 0;
-	static std::ofstream ofs;
-	if(iter == 0) {
-		ofs.open("trace_de.txt");
-		ofs << "{";
+	if(trace_iter == 0) {
+		trace_ofs << "{";
 	}
 	else {
-		ofs << ", {";
+		trace_ofs << ", {";
 	}
 	for(unsigned int i=0; i<particles.size(); i++) {
-		if(i>0) ofs << ", ";
+		if(i>0) trace_ofs << ", ";
 		float a, b;
 		std::tie(a,b) = particles.states[i];
 		a = q0::math::wrap(a, -boost::math::constants::pi<float>(), +boost::math::constants::pi<float>());
 		b = q0::math::wrap(b, -boost::math::constants::pi<float>(), +boost::math::constants::pi<float>());
-		ofs << "{" << a << ", " << b << "}";
+		trace_ofs << "{" << a << ", " << b << "}";
 //		std::cout << "{" << a << ", " << b << "} -> " << particles.scores[i] << std::endl;
 	}
-	ofs << "}";
+	trace_ofs << "}";
 	float a, b;
 	std::tie(a,b) = best.state;
-	std::cout << "Iteration " << iter << ": " << particles.size() << " particles, best = {" << a << "," << b << "} -> " << best.score << std::endl;
-	iter++;
+	std::cout << "Iteration " << trace_iter << ": " << particles.size() << " particles, best = {" << a << "," << b << "} -> " << best.score << std::endl;
+	trace_iter++;
 }
+
+template<template<class,class,class,class>class Algo>
+std::tuple<float,unsigned int> run_once(const std::string& name, bool do_trace=true)
+{
+	f_eval_count = 0;
+	domain_t dom;
+	q0::control::TestAndTrace<state_t, score_t> control;
+	control.tester = &stop_condition;
+	if(do_trace) {
+		control.tracer = &tracer;
+		trace_iter = 0;
+		if(trace_ofs.is_open()) {
+			trace_ofs.close();
+		}
+		trace_ofs.open("trace_" + name + ".txt");
+		trace_ofs << "{";
+	}
+	auto p = q0::minimize<Algo>::apply(dom, &arm_objective, control);
+	trace_ofs << "}";
+	return std::tuple<float,unsigned int>(p.score, f_eval_count);
+}
+
+template<template<class,class,class,class>class Algo>
+std::tuple<float,unsigned int> run(const std::string& name)
+{
+	float score;
+	unsigned int count;
+	auto u = run_once<Algo>(name);
+	std::tie(score, count) = u;
+	std::cout << name << "\t" << score << "\t" << count << std::endl;
+	return u;
+}
+
+#define RUN(X) run<q0::algorithms::X>(#X)
 
 int main(int argc, char* argv[])
 {
+	unsigned int seed = static_cast<unsigned int>(std::time(0));
+	std::cout << "Seed = " << seed << std::endl;
+	q0::math::random_seed(seed);
+
 	unsigned int p_num_particles = 16384;
 	bool p_print_result_state = false;
 	std::string p_algo_name = "";
@@ -242,13 +279,16 @@ int main(int argc, char* argv[])
 
 	if(p_mode.empty() || p_mode == "optimize") {
 		std::cout << "Optimizing in space [-pi|+pi]^2" << std::endl;
-		domain_t dom;
-		q0::control::TestAndTrace<state_t, score_t> control;
-		control.tester = &stop_condition;
-		control.tracer = &tracer;
-		auto p = q0::minimize<q0::algorithms::differential_evolution>::apply(dom, &arm_objective, control);
-		std::cout << "{" << std::get<0>(p.state) << "," << std::get<1>(p.state) << "} -> " << p.score << std::endl;
-		std::cout << "Number of evaluations: " << f_eval_count << std::endl;
+		RUN(monte_carlo_1);
+		RUN(monte_carlo);
+		RUN(local_unimodal_search_1);
+		RUN(local_unimodal_search);
+		RUN(pattern_search_1);
+		RUN(pattern_search);
+		RUN(simulated_annealing_1);
+		RUN(simulated_annealing);
+		RUN(apso);
+		RUN(differential_evolution);
 	}
 	else if(p_mode == "test") {
 		for(float x : {-0.5f, -0.3f, -0.1f, 0.0f}) {
@@ -257,7 +297,7 @@ int main(int argc, char* argv[])
 	}
 	else if(p_mode == "evaluation") {
 		constexpr unsigned int N = 99;
-		const float R = -boost::math::constants::pi<float>();
+		const float R = boost::math::constants::pi<float>();
 		const float D = 2.0f * R / static_cast<float>(N);
 		std::vector<std::vector<float>> scores(N, std::vector<float>(N));
 		for(unsigned int i=0; i<N; i++) {
