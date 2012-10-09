@@ -52,7 +52,7 @@ struct monte_carlo_1
 		while(!control(best)) {
 			State u = domains::random(dom);
 			Score s = f(u);
-			if(cmp(best.score, s)) {
+			if(cmp(s, best.score)) {
 				best.state = u;
 				best.score = s;
 			}
