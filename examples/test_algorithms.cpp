@@ -1,7 +1,6 @@
 #include <q0/q0.hpp>
 #include <q0/algorithms.hpp>
 #include <q0/domains/cartesian.hpp>
-#include <q0/algorithms/monte_carlo.hpp>
 #include <q0/algorithms/random_search.hpp>
 #include <q0/algorithms/apso.hpp>
 #include <q0/algorithms/differential_evolution.hpp>
@@ -44,12 +43,14 @@ int main(int argc, char** argv)
 	seed = static_cast<unsigned int>(std::time(0));
 	std::cout << "Seed = " << seed << std::endl;
 
-	RUN(q0::algorithms::monte_carlo);
 	RUN(q0::algorithms::monte_carlo_1);
-	RUN(q0::algorithms::random_search<q0::algorithms::detail::MonteCarlo>::impl);
-	RUN(q0::algorithms::random_search<q0::algorithms::detail::RandomWalk>::impl);
-	RUN(q0::algorithms::random_search<q0::algorithms::detail::LocalUnimodalSearch>::impl);
-	RUN(q0::algorithms::random_search<q0::algorithms::detail::PatternSearch>::impl);
+	RUN(q0::algorithms::monte_carlo);
+	RUN(q0::algorithms::random_walk_1);
+	RUN(q0::algorithms::random_walk);
+	RUN(q0::algorithms::local_unimodal_search_1);
+	RUN(q0::algorithms::local_unimodal_search);
+	RUN(q0::algorithms::pattern_search_1);
+	RUN(q0::algorithms::pattern_search);
 	RUN(q0::algorithms::apso);
 	RUN(q0::algorithms::differential_evolution);
 	return 1;

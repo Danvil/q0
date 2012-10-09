@@ -25,19 +25,27 @@ namespace detail
 		void failure() { }
 	};
 
-	constexpr double p_RandomWalk_radius = 0.1;
+	constexpr double p_RandomWalk_radius = 1.0;
+	constexpr double p_RandomWalk_factor = 0.8;
 
 	/** Picks random state in neighbourhood */
 	template<typename Domain>
 	struct RandomWalk
 	{
 		typedef typename domains::state_type<Domain>::type State;
-		void init(const Domain& dom) {}
-		State operator()(const Domain& dom, const State& x) {
-			return domains::random_neighbour(dom, x, p_RandomWalk_radius);
+		void init(const Domain& dom) {
+			radius_ = p_RandomWalk_radius;
 		}
-		void success() { }
-		void failure() { }
+		State operator()(const Domain& dom, const State& x) {
+			return domains::random_neighbour(dom, x, radius_);
+		}
+		void success() {
+		}
+		void failure() {
+			radius_ *= p_RandomWalk_factor;
+		}
+	private:
+		double radius_;
 	};
 
 	constexpr double p_LocalUnimodalSearch_initial_radius = 1.0;
@@ -110,61 +118,129 @@ namespace detail
 		unsigned int k_;
 	};	
 
-}
+	constexpr unsigned int p_random_search_N = 100;
 
-constexpr unsigned int p_random_search_N = 100;
-
-/** Random search */
-template<template<typename> class Method>
-struct random_search
-{
-	template<typename Domain, typename Objective, typename Control, typename Compare>
-	struct impl
+	/** Random search */
+	template<template<typename> class Method>
+	struct random_search
 	{
-		typedef typename domains::state_type<Domain>::type State;
-		typedef typename objective::argument_type<Objective>::type State2;
-		// FIXME assert that State==State2
-		typedef typename objective::result_type<Objective>::type Score;
+		template<typename Domain, typename Objective, typename Control, typename Compare>
+		struct impl
+		{
+			typedef typename domains::state_type<Domain>::type State;
+			typedef typename objective::argument_type<Objective>::type State2;
+			// FIXME assert that State==State2
+			typedef typename objective::result_type<Objective>::type Score;
 
-		static inline particle<State,Score> apply(const Domain& dom, Objective f, Control control, Compare cmp) {
-			particle_vector<State,Score> particles;
-			particles.set_states(domains::random(dom, p_random_search_N));
-			particles.evaluate(f);
-			particle<State,Score> best = particles.find_best(cmp);
-			std::vector<Method<Domain>> ops(p_random_search_N);
-			for(std::size_t i=0; i<particles.size(); i++) {
-				ops[i].init(dom);
-			}
-			while(!control(particles, best)) {
-				// create next round of particles
-				particle_vector<State,Score> particles_new;
-				particles_new.resize(particles.size());
+			static inline particle<State,Score> apply(const Domain& dom, Objective f, Control control, Compare cmp) {
+				particle_vector<State,Score> particles;
+				particles.set_states(domains::random(dom, p_random_search_N));
+				particles.evaluate(f);
+				particle<State,Score> best = particles.find_best(cmp);
+				std::vector<Method<Domain>> ops(p_random_search_N);
 				for(std::size_t i=0; i<particles.size(); i++) {
-					particles_new.states[i] = ops[i](dom, particles.states[i]);
+					ops[i].init(dom);
 				}
-				// evaluate particles
-				particles_new.evaluate(f);
-				// check if new particles are an improvement
-				for(std::size_t i=0; i<particles.size(); i++) {
-					if(cmp(particles_new.scores[i], particles.scores[i])) {
-						ops[i].success();
-						particles.states[i] = particles_new.states[i];
-						particles.scores[i] = particles_new.scores[i];
-						// check if this particle is an improvement to the overall best
-						if(cmp(particles.scores[i], best.score)) {
-							best.state = particles.states[i];
-							best.score = particles.scores[i];
+				while(!control(particles, best)) {
+					// create next round of particles
+					particle_vector<State,Score> particles_new;
+					particles_new.resize(particles.size());
+					for(std::size_t i=0; i<particles.size(); i++) {
+						particles_new.states[i] = ops[i](dom, particles.states[i]);
+					}
+					// evaluate particles
+					particles_new.evaluate(f);
+					// check if new particles are an improvement
+					for(std::size_t i=0; i<particles.size(); i++) {
+						if(cmp(particles_new.scores[i], particles.scores[i])) {
+							ops[i].success();
+							particles.states[i] = particles_new.states[i];
+							particles.scores[i] = particles_new.scores[i];
+							// check if this particle is an improvement to the overall best
+							if(cmp(particles.scores[i], best.score)) {
+								best.state = particles.states[i];
+								best.score = particles.scores[i];
+							}
+						}
+						else {
+							ops[i].failure();
 						}
 					}
+				}
+				return best;
+			}
+		};
+	};
+
+	/** Random search */
+	template<template<typename> class Method>
+	struct random_search_1
+	{
+		template<typename Domain, typename Objective, typename Control, typename Compare>
+		struct impl
+		{
+			typedef typename domains::state_type<Domain>::type State;
+			typedef typename objective::argument_type<Objective>::type State2;
+			// FIXME assert that State==State2
+			typedef typename objective::result_type<Objective>::type Score;
+
+			static inline particle<State,Score> apply(const Domain& dom, Objective f, Control control, Compare cmp) {
+				particle<State,Score> best;
+				best.state = domains::random(dom);
+				best.score = f(best.state);
+				Method<Domain> op;
+				op.init(dom);
+				while(!control(best)) {
+					State u = op(dom, best.state);
+					Score s = f(u);
+					if(cmp(s, best.score)) {
+						op.success();
+						best.state = u;
+						best.score = s;
+					}
 					else {
-						ops[i].failure();
+						op.failure();
 					}
 				}
+				return best;
 			}
-			return best;
-		}
+		};
 	};
-};
+
+}
+
+template<typename Domain, typename Objective, typename Control, typename Compare>
+struct monte_carlo
+: detail::random_search<detail::MonteCarlo>::impl<Domain,Objective,Control,Compare> {};
+
+template<typename Domain, typename Objective, typename Control, typename Compare>
+struct random_walk
+: detail::random_search<detail::RandomWalk>::impl<Domain,Objective,Control,Compare> {};
+
+template<typename Domain, typename Objective, typename Control, typename Compare>
+struct local_unimodal_search
+: detail::random_search<detail::LocalUnimodalSearch>::impl<Domain,Objective,Control,Compare> {};
+
+template<typename Domain, typename Objective, typename Control, typename Compare>
+struct pattern_search
+: detail::random_search<detail::PatternSearch>::impl<Domain,Objective,Control,Compare> {};
+
+template<typename Domain, typename Objective, typename Control, typename Compare>
+struct monte_carlo_1
+: detail::random_search_1<detail::MonteCarlo>::impl<Domain,Objective,Control,Compare> {};
+
+template<typename Domain, typename Objective, typename Control, typename Compare>
+struct random_walk_1
+: detail::random_search_1<detail::RandomWalk>::impl<Domain,Objective,Control,Compare> {};
+
+template<typename Domain, typename Objective, typename Control, typename Compare>
+struct local_unimodal_search_1
+: detail::random_search_1<detail::LocalUnimodalSearch>::impl<Domain,Objective,Control,Compare> {};
+
+template<typename Domain, typename Objective, typename Control, typename Compare>
+struct pattern_search_1
+: detail::random_search_1<detail::PatternSearch>::impl<Domain,Objective,Control,Compare> {};
+
 
 }}
 //---------------------------------------------------------------------------
