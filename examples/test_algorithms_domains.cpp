@@ -67,12 +67,12 @@ int main(int argc, char** argv)
 
 	RUN(q0::algorithms::monte_carlo_1);
 	RUN(q0::algorithms::monte_carlo);
-	RUN(q0::algorithms::random_walk_1);
-	RUN(q0::algorithms::random_walk);
 	RUN(q0::algorithms::local_unimodal_search_1);
 	RUN(q0::algorithms::local_unimodal_search);
 	RUN(q0::algorithms::pattern_search_1);
 	RUN(q0::algorithms::pattern_search);
+	RUN(q0::algorithms::simulated_annealing_1);
+	RUN(q0::algorithms::simulated_annealing);
 	RUN(q0::algorithms::apso);
 	RUN(q0::algorithms::differential_evolution);
 	return 1;

@@ -15,7 +15,7 @@ unsigned int seed = 0;
 
 float f(const state_t& x) {
 	f_eval_count ++;
-	return x.squaredNorm();
+	return x.squaredNorm() / static_cast<float>(x.size());
 }
 
 bool stop_condition(const state_t& u, float s) {
@@ -46,12 +46,12 @@ int main(int argc, char** argv)
 
 	RUN(q0::algorithms::monte_carlo_1);
 	RUN(q0::algorithms::monte_carlo);
-	RUN(q0::algorithms::random_walk_1);
-	RUN(q0::algorithms::random_walk);
 	RUN(q0::algorithms::local_unimodal_search_1);
 	RUN(q0::algorithms::local_unimodal_search);
 	RUN(q0::algorithms::pattern_search_1);
 	RUN(q0::algorithms::pattern_search);
+	RUN(q0::algorithms::simulated_annealing_1);
+	RUN(q0::algorithms::simulated_annealing);
 	RUN(q0::algorithms::apso);
 	RUN(q0::algorithms::differential_evolution);
 	return 1;
