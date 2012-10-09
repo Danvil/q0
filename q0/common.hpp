@@ -61,7 +61,7 @@ K& at(K& v, unsigned int i) {
 	return v;
 }
 
-template<typename State, typename Score, typename Compare>
+template<typename State, typename Score>
 struct particle
 {
 	State state;
