@@ -12,40 +12,23 @@ namespace q0 { namespace algorithms {
 
 namespace detail
 {
+
 	/** Picks totally random state */
 	template<typename Domain>
 	struct MonteCarlo
 	{
 		typedef typename domains::state_type<Domain>::type State;
-		void init(const Domain&) {}
+
+		void init(const Domain&) { }
+		
 		State operator()(const Domain& dom, const State&) {
 			return domains::random(dom);
 		}
-		void success() { }
-		void failure() { }
-	};
-
-	constexpr double p_RandomWalk_radius = 1.0;
-	constexpr double p_RandomWalk_factor = 0.8;
-
-	/** Picks random state in neighbourhood */
-	template<typename Domain>
-	struct RandomWalk
-	{
-		typedef typename domains::state_type<Domain>::type State;
-		void init(const Domain& dom) {
-			radius_ = p_RandomWalk_radius;
+		
+		template<typename Compare, typename Score>
+		bool test(Compare cmp, Score a, Score b) {
+			return cmp(a, b);
 		}
-		State operator()(const Domain& dom, const State& x) {
-			return domains::random_neighbour(dom, x, radius_);
-		}
-		void success() {
-		}
-		void failure() {
-			radius_ *= p_RandomWalk_factor;
-		}
-	private:
-		double radius_;
 	};
 
 	constexpr double p_LocalUnimodalSearch_initial_radius = 1.0;
@@ -67,10 +50,13 @@ namespace detail
 			return domains::random_neighbour(dom, x, radius_);
 		}
 
-		void success() { }
-
-		void failure() {
-			radius_ *= decrease_factor_;
+		template<typename Compare, typename Score>
+		bool test(Compare cmp, Score a, Score b) {
+			if(!cmp(a, b)) {
+				radius_ *= decrease_factor_;
+				return false;
+			}
+			else return true;
 		}
 
 	private:
@@ -105,11 +91,14 @@ namespace detail
 			return domains::exp<T>(dom, x, t);
 		}
 
-		void success() { }
-
-		void failure() {
-			// invert search direction and decrease search radius
-			step_length_[k_] *= -p_PatternSearch_factor;
+		template<typename Compare, typename Score>
+		bool test(Compare cmp, Score a, Score b) {
+			if(!cmp(a, b)) {
+				// invert search direction and decrease search radius
+				step_length_[k_] *= -p_PatternSearch_factor;
+				return false;
+			}
+			else return true;
 		}
 
 	private:
@@ -118,7 +107,62 @@ namespace detail
 		unsigned int k_;
 	};	
 
-	constexpr unsigned int p_random_search_N = 100;
+	constexpr double p_SimulatedAnnealing_initial_radius = 1.0;
+	constexpr double p_SimulatedAnnealing_initial_temperature = 1.0;
+	constexpr double p_SimulatedAnnealing_factor = 0.85;
+
+	/** Walks into a random direction and accepts worse particles based on a probability */
+	template<typename Domain>
+	struct SimulatedAnnealing
+	{
+		typedef typename domains::state_type<Domain>::type State;
+		typedef float T;
+		typedef typename domains::tangent_type<T,Domain>::type Tangent;		
+
+		void init(const Domain& dom) {
+			radius_ = p_SimulatedAnnealing_initial_radius;
+			temperature_ = p_SimulatedAnnealing_initial_temperature;
+
+		}
+		
+		State operator()(const Domain& dom, const State& x) {
+//			std::cout << "r=" << radius_ << ", T=" << temperature_ << std::endl;
+			double radius_old = radius_;
+			radius_ *= p_SimulatedAnnealing_factor;
+			return domains::random_neighbour(dom, x, radius_old);
+		}
+
+		template<typename Compare, typename Score>
+		bool test(Compare cmp, Score a, Score b) {
+			if(temperature_ == 0) {
+				// cold as death
+				return false;
+			}
+			double temperature_old = temperature_;
+			temperature_ *= p_SimulatedAnnealing_factor;
+			double ds = a - b; // FIXME does this work?
+			if(ds < 0) {
+//				std::cout << a << " is better than " << b << std::endl;
+				return true;
+			}
+			double p = std::exp(-ds/temperature_old);
+//			std::cout << a << " / " << b <<  " -> p=" << p;
+			if(math::random_uniform<double>(0,1) < p) {
+//				std::cout << " YES" << std::endl;
+				return true;
+			}
+			else {
+//				std::cout << " NO" << std::endl;
+				return false;
+			}
+		}
+
+	private:
+		double radius_;
+		double temperature_;
+	};	
+
+	constexpr unsigned int p_random_search_N = 45;
 
 	/** Random search */
 	template<template<typename> class Method>
@@ -152,8 +196,7 @@ namespace detail
 					particles_new.evaluate(f);
 					// check if new particles are an improvement
 					for(std::size_t i=0; i<particles.size(); i++) {
-						if(cmp(particles_new.scores[i], particles.scores[i])) {
-							ops[i].success();
+						if(ops[i].test(cmp, particles_new.scores[i], particles.scores[i])) {
 							particles.states[i] = particles_new.states[i];
 							particles.scores[i] = particles_new.scores[i];
 							// check if this particle is an improvement to the overall best
@@ -161,9 +204,6 @@ namespace detail
 								best.state = particles.states[i];
 								best.score = particles.scores[i];
 							}
-						}
-						else {
-							ops[i].failure();
 						}
 					}
 				}
@@ -193,13 +233,9 @@ namespace detail
 				while(!control(best)) {
 					State u = op(dom, best.state);
 					Score s = f(u);
-					if(cmp(s, best.score)) {
-						op.success();
+					if(op.test(cmp, s, best.score)) {
 						best.state = u;
 						best.score = s;
-					}
-					else {
-						op.failure();
 					}
 				}
 				return best;
@@ -214,10 +250,6 @@ struct monte_carlo
 : detail::random_search<detail::MonteCarlo>::impl<Domain,Objective,Control,Compare> {};
 
 template<typename Domain, typename Objective, typename Control, typename Compare>
-struct random_walk
-: detail::random_search<detail::RandomWalk>::impl<Domain,Objective,Control,Compare> {};
-
-template<typename Domain, typename Objective, typename Control, typename Compare>
 struct local_unimodal_search
 : detail::random_search<detail::LocalUnimodalSearch>::impl<Domain,Objective,Control,Compare> {};
 
@@ -226,12 +258,12 @@ struct pattern_search
 : detail::random_search<detail::PatternSearch>::impl<Domain,Objective,Control,Compare> {};
 
 template<typename Domain, typename Objective, typename Control, typename Compare>
-struct monte_carlo_1
-: detail::random_search_1<detail::MonteCarlo>::impl<Domain,Objective,Control,Compare> {};
+struct simulated_annealing
+: detail::random_search<detail::SimulatedAnnealing>::impl<Domain,Objective,Control,Compare> {};
 
 template<typename Domain, typename Objective, typename Control, typename Compare>
-struct random_walk_1
-: detail::random_search_1<detail::RandomWalk>::impl<Domain,Objective,Control,Compare> {};
+struct monte_carlo_1
+: detail::random_search_1<detail::MonteCarlo>::impl<Domain,Objective,Control,Compare> {};
 
 template<typename Domain, typename Objective, typename Control, typename Compare>
 struct local_unimodal_search_1
@@ -240,6 +272,10 @@ struct local_unimodal_search_1
 template<typename Domain, typename Objective, typename Control, typename Compare>
 struct pattern_search_1
 : detail::random_search_1<detail::PatternSearch>::impl<Domain,Objective,Control,Compare> {};
+
+template<typename Domain, typename Objective, typename Control, typename Compare>
+struct simulated_annealing_1
+: detail::random_search_1<detail::SimulatedAnnealing>::impl<Domain,Objective,Control,Compare> {};
 
 
 }}
