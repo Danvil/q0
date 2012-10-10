@@ -41,36 +41,57 @@ for a in algos:
 		if not found:
 			print "ARGH"
 		else:
-			s = ("%.0f" % count)
-			if fail > 0:
-				s += " (" + str(fail) + ")"
-			q.append([("%.3f" % score), s])
+			q.append([score, count, fail, False, False])
 	vals.append(q)
 print vals
+
+for i in range(len(objectives)):
+	best_score = 100000000
+	best_score_j = -1
+	best_count = 100000000
+	best_count_j = -1
+	for j in range(len(algos)):
+		score = vals[j][i][0]
+		if score < best_score:
+			best_score_j = j
+			best_score = score
+		count = vals[j][i][1]
+		if count < best_count:
+			best_count_j = j
+			best_count = count
+	vals[best_score_j][i][3] = True
+	vals[best_count_j][i][4] = True
 
 mode = 2
 
 assert len(algos) == len(vals)
-str = ""
-str += "\\begin{tabular}{l"
+expr = ""
+expr += "\\begin{tabular}{l"
 for i in range(len(objectives)):
-	str += "l"
-str += "}\n"
-str += "\\toprule\n"
+	expr += "l"
+expr += "}\n"
+expr += "\\toprule\n"
 for i in range(len(objectives)):
-	str += " & "
-	str += objectives[i]
-str += "\\\\\n"
-str += "\\midrule\n"
+	expr += " & "
+	expr += objectives[i]
+expr += "\\\\\n"
+expr += "\\midrule\n"
 for i in range(len(algos)):
-	str += algos[i] 
+	expr += algos[i] 
 	for x in vals[i]:
+		expr += " & "
+		if x[3+mode-1]:
+			expr += "{\\bf "
 		if mode == 1:
-			str += " & " + x[0]
+			expr += ("%.3f" % x[0])
 		else:
-			str += " & " + x[1]
-	str += "\\\\\n"
-str += "\\bottomrule\n"
-str += "\end{tabular}\n"
+			expr += ("%.0f" % x[1])
+			if x[2] > 0:
+				expr += " (" + str(x[2]) + ")"
+		if x[3+mode-1]:
+			expr += "}"
+	expr += "\\\\\n"
+expr += "\\bottomrule\n"
+expr += "\end{tabular}\n"
 
-print str
+print expr

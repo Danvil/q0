@@ -76,9 +76,7 @@ void run(const std::string& name_algo, const std::string& name_f, boost::functio
 		if(*problem.eval_count_ >= 10000) {
 			sum_count_failures ++;
 		}
-		else {
-			sum_count += *problem.eval_count_;
-		}
+		sum_count += *problem.eval_count_;
 	}
 
 	for(unsigned int i=0; i<reps; i++) {
@@ -90,7 +88,7 @@ void run(const std::string& name_algo, const std::string& name_f, boost::functio
 
 	std::cout
 		<< "\t" << sum_score/static_cast<float>(reps)
-		<< "\t" << static_cast<float>(sum_count)/static_cast<float>(reps - sum_count_failures)
+		<< "\t" << static_cast<float>(sum_count)/static_cast<float>(reps)
 		<< "\t" << sum_count_failures
 		<< std::endl;
 }
