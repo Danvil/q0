@@ -31,7 +31,7 @@ struct result_type<Y (*)(X)> {
 };
 
 template<typename Objective>
-std::vector<typename result_type<Objective>::type> parallel(const Objective& f, const std::vector<typename argument_type<Objective>::type>& states) {
+std::vector<typename result_type<Objective>::type> parallel(Objective f, const std::vector<typename argument_type<Objective>::type>& states) {
 	std::vector<typename result_type<Objective>::type> scores(states.size());
 	for(std::size_t i=0; i<states.size(); i++) {
 		scores[i] = f(states[i]);
