@@ -109,7 +109,7 @@ namespace detail
 
 	constexpr double p_SimulatedAnnealing_initial_radius = 1.0;
 	constexpr double p_SimulatedAnnealing_initial_temperature = 1.0;
-	constexpr double p_SimulatedAnnealing_factor = 0.85;
+	constexpr double p_SimulatedAnnealing_factor = 0.95;
 
 	/** Walks into a random direction and accepts worse particles based on a probability */
 	template<typename Domain>
