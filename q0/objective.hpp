@@ -1,32 +1,41 @@
 #ifndef Q0_OBJECTIVE_HPP_
 #define Q0_OBJECTIVE_HPP_
 #include <vector>
+#include <boost/type_traits/function_traits.hpp>
+#include <boost/function.hpp>
+#include <functional>
 //---------------------------------------------------------------------------
 namespace q0 { namespace objective {
 
 template<typename Objective>
-struct argument_type;
+struct argument_type
+{
+	typedef typename boost::function_traits<Objective>::arg1_type type;
+};
 
 template<typename Objective>
-struct result_type;
+struct result_type
+{
+	typedef typename boost::function_traits<Objective>::result_type type;
+};
 
 template<typename X, typename Y>
-struct argument_type<Y (*)(X)> {
+struct argument_type<std::function<Y(const X&)>> {
 	typedef X type;
 };
 
 template<typename X, typename Y>
-struct argument_type<Y (*)(X&)> {
+struct argument_type<boost::function<Y(const X&)>> {
 	typedef X type;
 };
 
 template<typename X, typename Y>
-struct argument_type<Y (*)(const X&)> {
-	typedef X type;
+struct result_type<std::function<Y(const X&)>> {
+	typedef Y type;
 };
 
 template<typename X, typename Y>
-struct result_type<Y (*)(X)> {
+struct result_type<boost::function<Y(const X&)>> {
 	typedef Y type;
 };
 
