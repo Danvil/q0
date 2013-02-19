@@ -1,47 +1,21 @@
 #ifndef Q0_OBJECTIVE_HPP_
 #define Q0_OBJECTIVE_HPP_
+#include "domains.hpp"
 #include <vector>
-#include <boost/type_traits/function_traits.hpp>
-#include <boost/function.hpp>
-#include <functional>
+#include <type_traits>
 //---------------------------------------------------------------------------
 namespace q0 { namespace objective {
 
-template<typename Objective>
-struct argument_type
-{
-	typedef typename boost::function_traits<Objective>::arg1_type type;
+template<typename Domain, typename Objective>
+struct result_of {
+	typedef typename domains::state_type<Domain>::type state_t;
+	typedef typename std::result_of<Objective(state_t)>::type type;
 };
 
-template<typename Objective>
-struct result_type
-{
-	typedef typename boost::function_traits<Objective>::result_type type;
-};
-
-template<typename X, typename Y>
-struct argument_type<std::function<Y(const X&)>> {
-	typedef X type;
-};
-
-template<typename X, typename Y>
-struct argument_type<boost::function<Y(const X&)>> {
-	typedef X type;
-};
-
-template<typename X, typename Y>
-struct result_type<std::function<Y(const X&)>> {
-	typedef Y type;
-};
-
-template<typename X, typename Y>
-struct result_type<boost::function<Y(const X&)>> {
-	typedef Y type;
-};
-
-template<typename Objective>
-std::vector<typename result_type<Objective>::type> parallel(Objective f, const std::vector<typename argument_type<Objective>::type>& states) {
-	std::vector<typename result_type<Objective>::type> scores(states.size());
+template<typename Objective, typename State>
+std::vector<typename std::result_of<Objective(State)>::type> parallel(
+	Objective f, const std::vector<State>& states) {
+	std::vector<typename std::result_of<Objective(State)>::type> scores(states.size());
 	for(std::size_t i=0; i<states.size(); i++) {
 		scores[i] = f(states[i]);
 	}

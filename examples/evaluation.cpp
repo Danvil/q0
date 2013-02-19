@@ -40,16 +40,6 @@ struct Problem
 
 };
 
-namespace q0 { namespace objective {
-
-template<typename K, int N>
-struct argument_type<Problem<K,N>> { typedef typename Problem<K,N>::state_t type; };
-
-template<typename K, int N>
-struct result_type<Problem<K,N>> { typedef K type; };
-
-}}
-
 template<typename K, int N>
 Problem<K,N> BuildProblem(boost::function<K(const Eigen::Matrix<K,N,1>&)> f) {
 	Problem<K,N> x;

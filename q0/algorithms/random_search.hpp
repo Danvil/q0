@@ -172,9 +172,7 @@ namespace detail
 		struct impl
 		{
 			typedef typename domains::state_type<Domain>::type State;
-			typedef typename objective::argument_type<Objective>::type State2;
-			// FIXME assert that State==State2
-			typedef typename objective::result_type<Objective>::type Score;
+			typedef typename std::result_of<Objective(State)>::type Score;
 
 			static inline particle<State,Score> apply(const Domain& dom, Objective f, Control control, Compare cmp) {
 				particle_vector<State,Score> particles;
@@ -220,9 +218,7 @@ namespace detail
 		struct impl
 		{
 			typedef typename domains::state_type<Domain>::type State;
-			typedef typename objective::argument_type<Objective>::type State2;
-			// FIXME assert that State==State2
-			typedef typename objective::result_type<Objective>::type Score;
+			typedef typename std::result_of<Objective(State)>::type Score;
 
 			static inline particle<State,Score> apply(const Domain& dom, Objective f, Control control, Compare cmp) {
 				particle<State,Score> best;

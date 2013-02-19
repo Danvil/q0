@@ -7,28 +7,33 @@
 //---------------------------------------------------------------------------
 namespace q0 { namespace algorithms {
 
-constexpr unsigned int apso_N = 45;
-constexpr double apso_alpha = 0.3;
-constexpr double apso_beta = 0.7;
-
 /** Random search */
 template<typename Domain, typename Objective, typename Control, typename Compare>
 struct apso
 {
 	typedef typename domains::state_type<Domain>::type State;
-	typedef typename objective::argument_type<Objective>::type State2;
-	// FIXME assert that State==State2
-	typedef typename objective::result_type<Objective>::type Score;
+	typedef typename std::result_of<Objective(State)>::type Score;
+
+	struct Parameters
+	{
+		unsigned int num;
+		double alpha;
+		double beta;
+
+		Parameters()
+		: num(45), alpha(0.3), beta(0.3) {}
+	};
 
 	static inline particle<State,Score> apply(const Domain& dom, Objective f, Control control, Compare cmp) {
+		Parameters parameters;
 		particle_vector<State,Score> particles;
-		particles.set_states(domains::random(dom, apso_N));
+		particles.set_states(domains::random(dom, parameters.num));
 		particles.evaluate(f);
 		particle<State,Score> best = particles.find_best(cmp);
 		while(!control(particles, best)) {
 			for(State& x : particles.states) {
-				x = domains::lerp(dom, apso_beta, x,
-					domains::random_neighbour(dom, best.state, apso_alpha));
+				x = domains::lerp(dom, parameters.beta, x,
+					domains::random_neighbour(dom, best.state, parameters.alpha));
 			}
 			particles.evaluate(f);
 			particle<State,Score> best_cur = particles.find_best(cmp);

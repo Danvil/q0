@@ -115,7 +115,11 @@ struct state_type<cartesian<K,N,Constraint>> {
 };
 
 template<typename K, unsigned int N, template<typename,unsigned int>class Constraint>
-void print(std::ostream& os, const cartesian<K,N,Constraint>&, const typename state_type<cartesian<K,N,Constraint>>::type& u) {
+void print(
+	std::ostream& os,
+	const cartesian<K,N,Constraint>&,
+	const typename state_type<cartesian<K,N,Constraint>>::type& u
+) {
 	os << "R^" << N << "{";
 	for(int i=0; i<u.size(); i++) {
 		if(i > 0) {
@@ -127,17 +131,29 @@ void print(std::ostream& os, const cartesian<K,N,Constraint>&, const typename st
 }
 
 template<typename T, typename K, unsigned int N, template<typename,unsigned int>class Constraint>
-typename cartesian_base<K,N>::State exp(const cartesian<K,N,Constraint>& dom, const typename cartesian_base<K,N>::State& y, const typename tangent_type<T,cartesian<K,N,Constraint>>::type& t) {
+typename cartesian_base<K,N>::State exp(
+	const cartesian<K,N,Constraint>& dom,
+	const typename cartesian_base<K,N>::State& y,
+	const typename tangent_type<T,cartesian<K,N,Constraint>>::type& t
+) {
 	return restrict(dom, y + t);
 }
 
 template<typename T, typename K, unsigned int N, template<typename,unsigned int>class Constraint>
-typename tangent_type<T,cartesian<K,N,Constraint>>::type log(const cartesian<K,N,Constraint>&, const typename cartesian_base<K,N>::State& y, const typename cartesian_base<K,N>::State& x) {
+typename tangent_type<T,cartesian<K,N,Constraint>>::type log(
+	const cartesian<K,N,Constraint>&,
+	const typename cartesian_base<K,N>::State& y,
+	const typename cartesian_base<K,N>::State& x
+) {
 	return x - y;
 }
 
 template<typename W, typename K, unsigned int N, template<typename,unsigned int>class Constraint>
-typename cartesian_base<K,N>::State mean(const cartesian<K,N,Constraint>& dom, const std::vector<W>& weights, const std::vector<typename cartesian_base<K,N>::State>& states) {
+typename cartesian_base<K,N>::State mean(
+	const cartesian<K,N,Constraint>& dom,
+	const std::vector<W>& weights,
+	const std::vector<typename cartesian_base<K,N>::State>& states
+) {
 	BOOST_ASSERT(states.size() == weights.size());
 	BOOST_ASSERT(states.size() > 0);
 	K weight_sum = static_cast<K>(weights[0]);
@@ -155,9 +171,15 @@ typename cartesian_base<K,N>::State mean(const cartesian<K,N,Constraint>& dom, c
 }
 
 template<typename W, typename K, unsigned int N, template<typename,unsigned int>class Constraint>
-typename state_type<cartesian<K,N,Constraint>>::type lerp(const cartesian<K,N,Constraint>& dom, W p, const typename state_type<cartesian<K,N,Constraint>>::type& a, const typename state_type<cartesian<K,N,Constraint>>::type& b) {
+typename cartesian_base<K,N>::State lerp(
+	const cartesian<K,N,Constraint>& dom, W p,
+	const typename cartesian_base<K,N>::State& a,
+	const typename cartesian_base<K,N>::State& b
+) {
 	// FIXME faster!
-	return mean(dom, std::vector<W>{static_cast<W>(1) - p, p}, {a, b});
+	return mean(dom,
+		std::vector<W>{static_cast<W>(1) - p, p},
+		std::vector<typename cartesian_base<K,N>::State>{a, b});
 }
 
 }}

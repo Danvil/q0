@@ -20,9 +20,7 @@ template<typename Domain, typename Objective, typename Control, typename Compare
 struct differential_evolution
 {
 	typedef typename domains::state_type<Domain>::type State;
-	typedef typename objective::argument_type<Objective>::type State2;
-	// FIXME assert that State==State2
-	typedef typename objective::result_type<Objective>::type Score;
+	typedef typename std::result_of<Objective(State)>::type Score;
 
 	typedef float T;
 
