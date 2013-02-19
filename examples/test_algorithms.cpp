@@ -23,7 +23,7 @@ bool stop_condition(const state_t& u, float s) {
 	return f_eval_count >= 10000 || s < 0.005f;
 }
 
-template<template<class,class,class,class>class Algo>
+template<typename Algo>
 void run(const std::string& name)
 {
 	q0::math::random_seed(seed);
@@ -31,7 +31,8 @@ void run(const std::string& name)
 	std::cout << "" << std::endl;
 	std::cout << ">>> " << name << std::endl;
 	domain_t dom;
-	auto p = q0::minimize<Algo>::apply(dom, &f, q0::stop_condition(&stop_condition));
+	Algo alg;
+	auto p = q0::minimize(dom, f, alg, q0::stop_condition(&stop_condition));
 //	std::cout << "{" << p.state << "}" << std::endl;
 	std::cout << "Score: " << p.score << std::endl;
 	std::cout << "Number of evaluations: " << f_eval_count << std::endl;

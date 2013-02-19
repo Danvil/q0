@@ -11,18 +11,25 @@
 //---------------------------------------------------------------------------
 namespace q0 { namespace algorithms {
 
-static constexpr unsigned int differential_evolution_N = 45;
-static constexpr double differential_evolution_F = 0.5;
-static constexpr double differential_evolution_CR = 0.1;
-
 /** Random search */
-template<typename Domain, typename Objective, typename Control, typename Compare>
 struct differential_evolution
 {
-	typedef typename domains::state_type<Domain>::type State;
-	typedef typename std::result_of<Objective(State)>::type Score;
-
 	typedef float T;
+
+	struct Parameters
+	{
+		unsigned int N;
+		double F;
+		double CR;
+
+		Parameters() :
+			N(45),
+			F(0.5),
+			CR(0.1)
+		{}
+	};
+
+	Parameters parameters;
 
 	/** Picks three different indices in {0,...,n-1} \ i */
 	template<unsigned int C>
@@ -49,10 +56,16 @@ struct differential_evolution
 		return result;
 	}
 
-	static inline particle<State,Score> apply(const Domain& dom, Objective f, Control control, Compare cmp) {
+	template<typename Domain, typename Objective, typename Control, typename Compare>
+	typename problem_traits<Domain,Objective>::particle_t
+	solve(const Domain& dom, Objective f, Control control, Compare cmp)
+	{
+		typedef typename domains::state_type<Domain>::type State;
+		typedef typename std::result_of<Objective(State)>::type Score;
+
 		// initial particles
 		particle_vector<State,Score> particles;
-		particles.set_states(domains::random(dom, differential_evolution_N));
+		particles.set_states(domains::random(dom, parameters.N));
 		particles.evaluate(f);
 		particle<State,Score> best = particles.find_best(cmp);
 		const std::size_t n = particles.size();
@@ -64,13 +77,13 @@ struct differential_evolution
 			for(std::size_t i=0; i<n; i++) {
 				// mutation
 				std::array<std::size_t,3> indices = pick_mutation_indices<3>(i, n);
-				auto d = differential_evolution_F*domains::log<T>(dom, particles.states[indices[1]], particles.states[indices[2]]);
+				auto d = parameters.F*domains::log<T>(dom, particles.states[indices[1]], particles.states[indices[2]]);
 				auto m = domains::exp<T>(dom, particles.states[indices[0]], d);
 				auto x = domains::log<T>(dom, particles.states[i], m);
 				// crossover
 				std::size_t k = math::random_int<std::size_t>(0, dim-1);
 				for(std::size_t j=0; j<dim; j++) {
-				 	if(j != k && math::random_uniform(0.f,1.f) > differential_evolution_CR) {
+				 	if(j != k && math::random_uniform(0.f,1.f) > parameters.CR) {
 				 		at(x,j) = 0;
 				 	}
 				}

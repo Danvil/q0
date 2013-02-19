@@ -31,11 +31,13 @@ int main(int argc, char** argv)
 	domain_t dom;
 	dom.set_box_extends(-1,+2);
 
+	q0::algorithms::apso alg;
+
 	q0::control::TestAndTrace<state_t, score_t> control;
 	control.tester = &stop_condition;
 	control.tracer = &tracer;
 
-	auto p = q0::minimize<q0::algorithms::apso>::apply(dom, &f, control);
+	auto p = q0::minimize(dom, f, alg, control);
 
 	std::cout << "{" << p.state.x() << "," << p.state.y() << "} -> " << p.score << std::endl;
 	std::cout << "Number of evaluations: " << f_eval_count << std::endl;

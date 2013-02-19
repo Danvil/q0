@@ -39,7 +39,9 @@ int main(int argc, char** argv)
 	state_t u = q0::domains::random(dom);
 	std::cout << "random state: {" << std::get<0>(u) << "," << std::get<1>(u) << "} -> " << f(u) << std::endl;
 
-	auto p = q0::minimize<q0::algorithms::apso>::apply(dom, &f, q0::stop_condition(&check));
+	q0::algorithms::apso alg;
+
+	auto p = q0::minimize(dom, f, alg, q0::stop_condition(&check));
 	std::cout << "result: {" << std::get<0>(p.state) << "," << std::get<1>(p.state) << "} -> " << p.score << std::endl;
 	std::cout << "Number of evaluations: " << f_eval_count << std::endl;
 	return 1;

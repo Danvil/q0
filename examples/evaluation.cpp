@@ -47,7 +47,7 @@ Problem<K,N> BuildProblem(boost::function<K(const Eigen::Matrix<K,N,1>&)> f) {
 	return x;
 }
 
-template<typename K, int N, template<class,class,class,class>class Algo>
+template<typename K, int N, typename Algo>
 void run(const std::string& name_algo, const std::string& name_f, boost::function<K(const Eigen::Matrix<K,N,1>&)> f)
 {
 	typedef Problem<K,N> problem_t;
@@ -62,7 +62,8 @@ void run(const std::string& name_algo, const std::string& name_f, boost::functio
 	for(unsigned int i=0; i<reps; i++) {
 		problem_t problem = BuildProblem(f);
 		boost::function<bool(const typename problem_t::state_t&,K)> tester = boost::bind(&problem_t::stop_condition_score, problem, _1, _2);
-		q0::minimize<Algo>::apply(problem.dom_, problem, q0::stop_condition(tester));
+		Algo alg;
+		q0::minimize(problem.dom_, problem, alg, q0::stop_condition(tester));
 		if(*problem.eval_count_ >= 10000) {
 			sum_count_failures ++;
 		}
@@ -72,7 +73,8 @@ void run(const std::string& name_algo, const std::string& name_f, boost::functio
 	for(unsigned int i=0; i<reps; i++) {
 		problem_t problem = BuildProblem(f);
 		boost::function<bool(const typename problem_t::state_t&,K)> tester = boost::bind(&problem_t::stop_condition_count, problem, _1, _2);
-		auto p = q0::minimize<Algo>::apply(problem.dom_, problem, q0::stop_condition(tester));
+		Algo alg;
+		auto p = q0::minimize(problem.dom_, problem, alg, q0::stop_condition(tester));
 		sum_score += p.score;
 	}
 

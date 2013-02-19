@@ -20,7 +20,9 @@ int main(int argc, char** argv)
 {
 	q0::domains::so2<float> dom;
 
-	auto p = q0::minimize<q0::algorithms::apso>::apply(dom, &f, q0::stop_condition(&stop_condition));
+	q0::algorithms::apso alg;
+
+	auto p = q0::minimize(dom, f, alg, q0::stop_condition(&stop_condition));
 	std::cout << "{" << p.state << "} -> " << p.score << std::endl;
 	std::cout << "Number of evaluations: " << f_eval_count << std::endl;
 	return 1;

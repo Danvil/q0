@@ -217,7 +217,7 @@ void tracer(const q0::particle_vector<state_t,score_t>& particles, const q0::par
 	trace_iter++;
 }
 
-template<template<class,class,class,class>class Algo>
+template<typename Algo>
 std::tuple<float,unsigned int> run_once(const std::string& name, bool do_trace=true)
 {
 	f_eval_count = 0;
@@ -233,12 +233,13 @@ std::tuple<float,unsigned int> run_once(const std::string& name, bool do_trace=t
 		trace_ofs.open("trace_" + name + ".txt");
 		trace_ofs << "{";
 	}
-	auto p = q0::minimize<Algo>::apply(dom, &arm_objective, control);
+	Algo alg;
+	auto p = q0::minimize(dom, &arm_objective, alg, control);
 	trace_ofs << "}";
 	return std::tuple<float,unsigned int>(p.score, f_eval_count);
 }
 
-template<template<class,class,class,class>class Algo>
+template<typename Algo>
 std::tuple<float,unsigned int> run(const std::string& name)
 {
 	float score;

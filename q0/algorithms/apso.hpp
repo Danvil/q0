@@ -8,12 +8,8 @@
 namespace q0 { namespace algorithms {
 
 /** Random search */
-template<typename Domain, typename Objective, typename Control, typename Compare>
 struct apso
 {
-	typedef typename domains::state_type<Domain>::type State;
-	typedef typename std::result_of<Objective(State)>::type Score;
-
 	struct Parameters
 	{
 		unsigned int num;
@@ -24,8 +20,16 @@ struct apso
 		: num(45), alpha(0.3), beta(0.3) {}
 	};
 
-	static inline particle<State,Score> apply(const Domain& dom, Objective f, Control control, Compare cmp) {
-		Parameters parameters;
+	Parameters parameters;
+
+	template<typename Domain, typename Objective, typename Control, typename Compare>
+	typename problem_traits<Domain,Objective>::particle_t
+	solve(const Domain& dom, Objective f, Control control, Compare cmp)
+	{
+		typedef problem_traits<Domain,Objective> traits;
+		typedef typename traits::state_t State;
+		typedef typename traits::score_t Score;
+
 		particle_vector<State,Score> particles;
 		particles.set_states(domains::random(dom, parameters.num));
 		particles.evaluate(f);
