@@ -15,24 +15,18 @@ struct problem_traits
 	typedef particle<state_t, score_t> particle_t;
 };
 
-namespace objective {
-
-// template<typename Domain, typename Objective>
-// struct result_of {
-// 	typedef typename domains::state_type<Domain>::type state_t;
-// 	typedef typename std::result_of<Objective(state_t)>::type type;
-// };
-
 template<typename Objective, typename State>
-std::vector<typename std::result_of<Objective(State)>::type> parallel(
-	Objective f, const std::vector<State>& states) {
-	std::vector<typename std::result_of<Objective(State)>::type> scores(states.size());
-	for(std::size_t i=0; i<states.size(); i++) {
+std::vector<typename std::result_of<Objective(State)>::type>
+evaluate(Objective f, const std::vector<State>& states)
+{
+	const std::size_t num = states.size();
+	std::vector<typename std::result_of<Objective(State)>::type> scores(num);
+	for(std::size_t i=0; i<num; i++) {
 		scores[i] = f(states[i]);
 	}
 	return scores;
 }
 
-}}
+}
 //---------------------------------------------------------------------------
 #endif

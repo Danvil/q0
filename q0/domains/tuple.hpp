@@ -22,25 +22,35 @@ namespace detail
 	template<unsigned int>
 	struct int_ {};
 
-	template<unsigned int N, unsigned int I, template<unsigned int> class F>
-	struct for_each_impl {
-		template<typename... Args>
-		static inline void apply(Args... args) {
-			F<I>::apply(args...);
-			for_each_impl<N,I+1,F>::apply(args...);
-		}
-	};
+	// template<unsigned int N, unsigned int I, template<unsigned int> class F>
+	// struct for_each_impl {
+	// 	template<typename... Args>
+	// 	static inline void apply(Args... args) {
+	// 		F<I>::apply(args...);
+	// 		for_each_impl<N,I+1,F>::apply(args...);
+	// 	}
+	// };
 
-	template<unsigned int N, template<unsigned int> class F>
-	struct for_each_impl<N,N,F> {
-		template<typename... Args>
-		static inline void apply(Args... args) { }
-	};
+	// template<unsigned int N, template<unsigned int> class F>
+	// struct for_each_impl<N,N,F> {
+	// 	template<typename... Args>
+	// 	static inline void apply(Args... args) { }
+	// };
 
-	template<unsigned int N, template<unsigned int> class F, typename... Args>
-	static inline void for_each(Args... args) {
-		for_each_impl<N,0,F>::apply(args...);
+	// template<unsigned int N, template<unsigned int> class F, typename... Args>
+	// static inline void for_each(Args... args) {
+	// 	for_each_impl<N,0,F>::apply(args...);
+	// }
+
+	template<unsigned int N, template<unsigned int> class F, unsigned int I=0, typename... Args>
+	typename std::enable_if<I==N>::type for_each(Args... args) { }
+
+	template<unsigned int N, template<unsigned int> class F, unsigned int I=0, typename... Args>
+	typename std::enable_if<I<N>::type for_each(Args... args) {
+		F<I>::apply(args...);
+		for_each<N,F,I+1,Args...>(args...);
 	}
+
 }
 
 namespace detail
@@ -52,7 +62,7 @@ namespace detail
 			if(I > 0) {
 				*os << ", ";
 			}
-			*os << static_cast<unsigned char>('a'+I) << "=";
+			//*os << static_cast<unsigned char>('a'+I) << "=";
 			print(*os, std::get<I>(dom), std::get<I>(u));
 		}
 	};
@@ -60,9 +70,9 @@ namespace detail
 
 template<typename... Args>
 void print(std::ostream& os, const tuple<Args...>& dom, const typename state_type<tuple<Args...>>::type& u) {
-	os << "tuple< ";
+	os << "tuple<";
 	detail::for_each<std::tuple_size<tuple<Args...>>::value, detail::print_helper>(&os, dom, u);
-	os << " >";
+	os << ">";
 }
 
 namespace detail
@@ -172,10 +182,7 @@ namespace detail
 	// 	}
 	// 	return result;
 	// }
-}
 
-namespace detail
-{
 	template<unsigned int I>
 	struct exp_helper {
 		template<typename T, typename... Args>

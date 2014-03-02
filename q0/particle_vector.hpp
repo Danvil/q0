@@ -26,20 +26,21 @@ struct particle_vector
 
 	particle<State,Score> get_particle(std::size_t i) const {
 		BOOST_ASSERT(i < size());
-		return {states[i], scores[i]};
+		return { states[i], scores[i] };
 	}
 
 	template<typename Compare>
 	particle<State,Score> find_best(Compare cmp) const {
 		BOOST_ASSERT(states.size() == scores.size());
 		BOOST_ASSERT(states.size() > 0);
-		std::size_t i = std::distance(scores.begin(), std::min_element(scores.begin(), scores.end(), cmp));
+		std::size_t i = std::distance(scores.begin(),
+			std::min_element(scores.begin(), scores.end(), cmp));
 		return get_particle(i);
 	}
 
 	template<typename F>
 	void evaluate(F f) {
-		scores = objective::parallel(f, states);
+		scores = q0::evaluate(f, states);
 	}
 
 	void set_states(const std::vector<State>& u) {

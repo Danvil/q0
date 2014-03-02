@@ -41,17 +41,17 @@ struct state_type<so2<K>> {
 
 template<typename K>
 void print(std::ostream& os, const so2<K>&, const typename state_type<so2<K>>::type& u) {
-	os << "so(2){" << u << "}";
+	os << "SO(2)[" << u << "]";
 }
 
 template<typename K>
 typename state_type<so2<K>>::type restrict(const so2<K>&, const typename state_type<so2<K>>::type& x) {
+	// limiting the angle to [0|2pi]
 	return math::wrap_2pi<K>(x);
 }
 
 template<typename T, typename K>
 typename state_type<so2<K>>::type exp(const so2<K>& dom, const typename state_type<so2<K>>::type& y, const typename tangent_type<T,so2<K>>::type& t) {
-	// limiting the angle is imperative!
 	return restrict(dom, y + t[0]);
 }
 
@@ -65,20 +65,21 @@ typename tangent_type<T,so2<K>>::type log(const so2<K>&, const typename state_ty
 
 template<typename K>
 typename state_type<so2<K>>::type random(const so2<K>& dom) {
+	// uniform distribution
 	return math::random_uniform<K>(0, K(2)*boost::math::constants::pi<K>());
 }
 
 template<typename K>
 typename state_type<so2<K>>::type random_neighbour(const so2<K>& dom, const typename state_type<so2<K>>::type& x, double radius) {
-	//if(radius > boost::math::constants::pi<double>()) {
-	//	radius = boost::math::constants::pi<double>();
-	//}
-	//return {math::wrap(x + math::random<K>(-radius, +radius), 2*boost::math::constants::pi<K>())};
-	return restrict(dom, x + radius*math::random_stddev<K>()); // FIXME normal distribution in SO(2) ?
+	// pick normal distributed around given point
+	return restrict(dom, x + radius*math::random_stddev<K>());
+	// this works well for small radii (wrt pi)
+	// but for a big radius we need a better notion of a normal distribution over SO(2)
 }
 
 template<typename W, typename K>
 typename state_type<so2<K>>::type mean(const so2<K>& dom, const std::vector<W>& weights, const std::vector<typename state_type<so2<K>>::type>& states) {
+	// FIXME this implementation is probably not mathematically correct
 	BOOST_ASSERT(states.size() == weights.size());
 	BOOST_ASSERT(states.size() > 0);
 	K weight_sum = 0;
@@ -97,16 +98,10 @@ typename state_type<so2<K>>::type mean(const so2<K>& dom, const std::vector<W>& 
 
 template<typename W, typename K>
 typename state_type<so2<K>>::type lerp(const so2<K>& dom, W p, const typename state_type<so2<K>>::type& u, const typename state_type<so2<K>>::type& v) {
-	K a = math::wrap_2pi<K>(u);
-	K b = math::wrap_2pi<K>(v);
-	K d = b - a;
-	if(d < -boost::math::constants::pi<K>()) {
-		b += K(2)*boost::math::constants::pi<K>();
-	}
-	if(d > +boost::math::constants::pi<K>()) {
-		b -= K(2)*boost::math::constants::pi<K>();
-	}
-	return math::wrap_2pi(a + static_cast<K>(p)*(b - a));
+	// limit difference to interval [-pi|+pi]
+	K d = math::wrap(v - u, -boost::math::constants::pi<K>(), +boost::math::constants::pi<K>());
+	// interpolate linearly and restrict to domain
+	return restrict(dom, u + static_cast<K>(p)*d);
 }
 
 }}

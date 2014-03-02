@@ -1,14 +1,11 @@
 #ifndef Q0_MATH_HPP_
 #define Q0_MATH_HPP_
-#include <q0/common.hpp>
 #include <boost/random.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
 #include <boost/random/normal_distribution.hpp>
 #include <boost/math/constants/constants.hpp>
 #include <boost/assert.hpp>
-#include <vector>
-#include <algorithm>
 #include <type_traits>
 //---------------------------------------------------------------------------
 namespace q0 { namespace math {
@@ -50,18 +47,18 @@ K random_stddev() {
 
 /** Returns b which solves x = n*a + b, 0 <= b < a, n integer */
 template<typename K>
-K wrap(K x, K a) {
-	BOOST_ASSERT(0 < a);
+K wrap(K x, K w) {
+	BOOST_ASSERT(w > 0);
 	// FIXME faster!
-	while(x < 0) x += a;
-	while(x >= a) x -= a;
+	while(x < 0) x += w;
+	while(x >= w) x -= w;
 	return x;
 }
 
 /** Returns a + wrap(x-a, b-a) */
 template<typename K>
 K wrap(K x, K a, K b) {
-	BOOST_ASSERT(b > a);
+	BOOST_ASSERT(a < b);
 	return a + wrap(x-a, b-a);
 }
 
@@ -73,7 +70,10 @@ K wrap_2pi(K x) {
 /** Returns max(a, min(b, x)) */
 template<typename K>
 K clamp(K x, K a, K b) {
-	return std::max(a, std::min(b, x));
+	BOOST_ASSERT(a <= b);
+	if(x <= a) return a;
+	if(x >= b) return b;
+	return x;
 }
 
 }}

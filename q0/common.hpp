@@ -2,8 +2,6 @@
 #define Q0_COMMON_HPP_
 #include <Eigen/Dense>
 #include <boost/assert.hpp>
-#include <vector>
-#include <algorithm>
 //---------------------------------------------------------------------------
 namespace q0 {
 

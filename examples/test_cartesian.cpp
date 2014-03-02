@@ -23,7 +23,8 @@ int main(int argc, char** argv)
 
 	auto p = q0::minimize(dom, f, alg, q0::stop_condition(&stop_condition));
 
-	std::cout << "{" << p.state.x() << "," << p.state.y() << "} -> " << p.score << std::endl;
+	std::cout << "Expected: {0,0} -> 0" << std::endl;
+	std::cout << "Actual: {" << p.state.x() << "," << p.state.y() << "} -> " << p.score << std::endl;
 	std::cout << "Number of evaluations: " << f_eval_count << std::endl;
 
 	return 1;

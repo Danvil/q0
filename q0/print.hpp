@@ -1,6 +1,5 @@
 #ifndef Q0_PRINT_H_
 #define Q0_PRINT_H_
-#include <q0/common.hpp>
 #include <q0/domains.hpp>
 #include <iostream>
 #include <sstream>
@@ -25,16 +24,15 @@ namespace detail
 			return ss.str();
 		}
 
+		friend std::ostream& operator<<(std::ostream& os, const serialize_impl<Domain>& s) {
+			s.stream(os);
+			return os;
+		}
+
 	private:
 		const Domain& domain_;
 		const typename domains::state_type<Domain>::type& x_;
 	};
-
-	template<typename Domain>
-	std::ostream& operator<<(std::ostream& os, const serialize_impl<Domain>& s) {
-		s.stream(os);
-		return os;
-	}
 
 }
 

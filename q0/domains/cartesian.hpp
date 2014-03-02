@@ -120,14 +120,14 @@ void print(
 	const cartesian<K,N,Constraint>&,
 	const typename state_type<cartesian<K,N,Constraint>>::type& u
 ) {
-	os << "R^" << N << "{";
-	for(int i=0; i<u.size(); i++) {
+	os << "R^" << N << "[";
+	for(size_t i=0; i<N; i++) {
 		if(i > 0) {
 			os << ", ";
 		}
-		os << u[i];
+		os << at(u,i);
 	}
-	os << "}";
+	os << "]";
 }
 
 template<typename T, typename K, unsigned int N, template<typename,unsigned int>class Constraint>
@@ -172,7 +172,8 @@ typename cartesian_base<K,N>::State mean(
 
 template<typename W, typename K, unsigned int N, template<typename,unsigned int>class Constraint>
 typename cartesian_base<K,N>::State lerp(
-	const cartesian<K,N,Constraint>& dom, W p,
+	const cartesian<K,N,Constraint>& dom,
+	W p,
 	const typename cartesian_base<K,N>::State& a,
 	const typename cartesian_base<K,N>::State& b
 ) {

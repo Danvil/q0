@@ -31,15 +31,15 @@ struct state_type<vector<X>> {
 template<typename X>
 void print(std::ostream& os, const vector<X>& dom, const typename state_type<vector<X>>::type& u) {
 	BOOST_ASSERT(dom.size() == u.size());
-	os << "vector( ";
+	os << "vector[";
 	for(std::size_t i=0; i<u.size(); i++) {
 		if(i > 0) {
 			os << ", ";
 		}
-		os << i << "=";
+		//os << i << "=";
 		print(os, dom[i], u[i]);
 	}
-	os << " )";
+	os << "]";
 }
 
 namespace detail
