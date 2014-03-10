@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.6)
 set(EIGEN3_INCLUDE_DIR "/usr/local/include/eigen3" CACHE STRING "Eigen3 include directory")
 
 add_definitions(
-	-std=c++11
+	-std=c++0x
 	-DBOOST_DISABLE_ASSERTS
 	-Wall
 	-Werror
