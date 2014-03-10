@@ -36,15 +36,11 @@ Tracking Algorithms (under construction):
 
 ~~~~~ Required dependencies ~~~~~
 
-loki template library
-Required version: 0.1.7 or newer
-http://loki-lib.sourceforge.net/
-
-Boost C++ Libraries
+Boost C++ Libraries (actually just for convenience)
 Required version: 1.46.1 or newer
 http://www.boost.org/
 
-Eigen C++ template library for linear algebra
+Eigen C++ linear algebra template library
 Required version: 3.0 or newer
 http://eigen.tuxfamily.org
 
@@ -62,6 +58,7 @@ mkdir build
 cd build
 ccmake ..
 make
+
 
 ~~~~~ Usage ~~~~~
 
