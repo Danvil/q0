@@ -6,6 +6,7 @@
 add_executable(test_cartesian test_cartesian.cpp)
 add_executable(test_cartesian_box test_cartesian_box.cpp)
 add_executable(test_so2 test_so2.cpp)
+add_executable(test_so3 test_so3.cpp)
 add_executable(test_trace test_trace.cpp)
 add_executable(test_tuple test_tuple.cpp)
 add_executable(test_vector test_vector.cpp)
