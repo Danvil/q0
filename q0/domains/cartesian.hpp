@@ -115,6 +115,11 @@ struct state_type<cartesian<K,N,Constraint>> {
 };
 
 template<typename K, unsigned int N, template<typename,unsigned int>class Constraint>
+struct state_scalar_type<cartesian<K,N,Constraint>> {
+	typedef K type;
+};
+
+template<typename K, unsigned int N, template<typename,unsigned int>class Constraint>
 void print(
 	std::ostream& os,
 	const cartesian<K,N,Constraint>&,
@@ -130,17 +135,17 @@ void print(
 	os << "]";
 }
 
-template<typename T, typename K, unsigned int N, template<typename,unsigned int>class Constraint>
+template<typename K, unsigned int N, template<typename,unsigned int>class Constraint>
 typename cartesian_base<K,N>::State exp(
 	const cartesian<K,N,Constraint>& dom,
 	const typename cartesian_base<K,N>::State& y,
-	const typename tangent_type<T,cartesian<K,N,Constraint>>::type& t
+	const typename tangent_type<cartesian<K,N,Constraint>>::type& t
 ) {
 	return restrict(dom, y + t);
 }
 
-template<typename T, typename K, unsigned int N, template<typename,unsigned int>class Constraint>
-typename tangent_type<T,cartesian<K,N,Constraint>>::type log(
+template<typename K, unsigned int N, template<typename,unsigned int>class Constraint>
+typename tangent_type<cartesian<K,N,Constraint>>::type log(
 	const cartesian<K,N,Constraint>&,
 	const typename cartesian_base<K,N>::State& y,
 	const typename cartesian_base<K,N>::State& x

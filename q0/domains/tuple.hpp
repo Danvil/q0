@@ -19,6 +19,44 @@ struct state_type<tuple<Args...>> {
 
 namespace detail
 {
+	template<typename A, typename B> struct highest_type;
+	template<typename A> struct highest_type<A,A> { typedef A result; };
+	template<> struct highest_type<float,double> { typedef double result; };
+	template<> struct highest_type<double,float> { typedef double result; };
+
+	template<typename... Args>
+	struct state_scalar_type_helper;
+
+	template<typename A, typename Head, typename... Args>
+	struct state_scalar_type_helper<A,Head,Args...> {
+		typedef typename state_scalar_type_helper<
+			typename highest_type<A,typename state_scalar_type<Head>::type>::result,
+			Args...>::result result;
+	};
+
+	template<typename A>
+	struct state_scalar_type_helper<A> {
+		typedef A result;
+	};
+
+	template<typename... Args>
+	struct state_scalar_type_helper0;
+
+	template<typename Head, typename... Args>
+	struct state_scalar_type_helper0<Head,Args...> {
+		typedef typename state_scalar_type_helper<typename state_scalar_type<Head>::type, Args...>::result result;
+	};
+
+}
+
+/** Subdomains may have different tangent space types -> use the one with highest precision */
+template<typename... Args>
+struct state_scalar_type<tuple<Args...>> {
+	typedef typename detail::state_scalar_type_helper0<Args...>::result type;
+};
+
+namespace detail
+{
 	template<unsigned int>
 	struct int_ {};
 
@@ -142,8 +180,8 @@ namespace detail
 		return get_tangent_part_position(int_<I-1>(), dom) + dimension(std::get<I-1>(dom));
 	}
 
-	template<unsigned int I, typename T, typename... Args>
-	typename tangent_type<T,typename std::tuple_element<I,tuple<Args...>>::type>::type get_tangent_part(const tuple<Args...>& dom, const typename tangent_type<T,tuple<Args...>>::type& t) {
+	template<unsigned int I, typename... Args>
+	typename tangent_type<typename std::tuple_element<I,tuple<Args...>>::type>::type get_tangent_part(const tuple<Args...>& dom, const typename tangent_type<tuple<Args...>>::type& t) {
 		const unsigned int pos = get_tangent_part_position(int_<I>(), dom);
 		BOOST_ASSERT(pos < dimension(dom));
 		const unsigned int dim = dimension(std::get<I>(dom));
@@ -157,8 +195,8 @@ namespace detail
 //		}
 	}
 
-	template<unsigned int I, typename T, typename... Args>
-	void set_tangent_part(const tuple<Args...>& dom, typename tangent_type<T,tuple<Args...>>::type& t, const typename tangent_type<T,typename std::tuple_element<I,tuple<Args...>>::type>::type& p) {
+	template<unsigned int I, typename... Args>
+	void set_tangent_part(const tuple<Args...>& dom, typename tangent_type<tuple<Args...>>::type& t, const typename tangent_type<typename std::tuple_element<I,tuple<Args...>>::type>::type& p) {
 		const unsigned int pos = get_tangent_part_position(int_<I>(), dom);
 		BOOST_ASSERT(pos < dimension(dom));
 		const unsigned int dim = dimension(std::get<I>(dom));
@@ -185,33 +223,32 @@ namespace detail
 
 	template<unsigned int I>
 	struct exp_helper {
-		template<typename T, typename... Args>
+		template<typename... Args>
 		static inline void apply(
-			T,
 			typename state_type<tuple<Args...>>::type* result,
 			const tuple<Args...>& dom,
 			const typename state_type<tuple<Args...>>::type& x,
-			const typename tangent_type<T,tuple<Args...>>::type& y) 
+			const typename tangent_type<tuple<Args...>>::type& y) 
 		{
-			std::get<I>(*result) = domains::exp<T>(
+			std::get<I>(*result) = domains::exp(
 				std::get<I>(dom),
 				std::get<I>(x),
-				get_tangent_part<I,T>(dom, y));
+				get_tangent_part<I>(dom, y));
 		}
 	};
 }
 
-template<typename T, typename... Args>
+template<typename... Args>
 typename state_type<tuple<Args...>>::type exp(
 	const tuple<Args...>& dom,
 	const typename state_type<tuple<Args...>>::type& x,
-	const typename tangent_type<T,tuple<Args...>>::type& y
+	const typename tangent_type<tuple<Args...>>::type& y
 ) {
 	typename state_type<tuple<Args...>>::type result;
 	detail::for_each<
 			std::tuple_size<tuple<Args...>>::value,
 			detail::exp_helper
-	>(T(), &result, dom, x, y);
+	>(&result, dom, x, y);
 	return result;
 }
 
@@ -219,15 +256,14 @@ namespace detail
 {
 	template<unsigned int I>
 	struct log_helper {
-		template<typename T, typename... Args>
+		template<typename... Args>
 		static inline void apply(
-			T,
-			typename tangent_type<T,tuple<Args...>>::type* result,
+			typename tangent_type<tuple<Args...>>::type* result,
 			const tuple<Args...>& dom,
 			const typename state_type<tuple<Args...>>::type& x,
 			const typename state_type<tuple<Args...>>::type& y) 
 		{
-			set_tangent_part<I,T>(dom, *result, domains::log<T>(
+			set_tangent_part<I>(dom, *result, domains::log(
 				std::get<I>(dom),
 				std::get<I>(x),
 				std::get<I>(y)));
@@ -235,17 +271,17 @@ namespace detail
 	};
 }
 
-template<typename T, typename... Args>
-typename tangent_type<T,tuple<Args...>>::type log(
+template<typename... Args>
+typename tangent_type<tuple<Args...>>::type log(
 	const tuple<Args...>& dom,
 	const typename state_type<tuple<Args...>>::type& x,
 	const typename state_type<tuple<Args...>>::type& y
 ) {
-	typename tangent_type<T,tuple<Args...>>::type result(dimension(dom));
+	typename tangent_type<tuple<Args...>>::type result(dimension(dom));
 	detail::for_each<
 			std::tuple_size<tuple<Args...>>::value,
 			detail::log_helper
-	>(T(), &result, dom, x, y);
+	>(&result, dom, x, y);
 	return result;
 }
 

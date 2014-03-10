@@ -40,6 +40,11 @@ struct state_type<so2<K>> {
 };
 
 template<typename K>
+struct state_scalar_type<so2<K>> {
+	typedef K type;
+};
+
+template<typename K>
 void print(std::ostream& os, const so2<K>&, const typename state_type<so2<K>>::type& u) {
 	os << "SO(2)[" << u << "]";
 }
@@ -50,15 +55,15 @@ typename state_type<so2<K>>::type restrict(const so2<K>&, const typename state_t
 	return math::wrap_2pi<K>(x);
 }
 
-template<typename T, typename K>
-typename state_type<so2<K>>::type exp(const so2<K>& dom, const typename state_type<so2<K>>::type& y, const typename tangent_type<T,so2<K>>::type& t) {
+template<typename K>
+typename state_type<so2<K>>::type exp(const so2<K>& dom, const typename state_type<so2<K>>::type& y, const typename tangent_type<so2<K>>::type& t) {
 	return restrict(dom, y + t[0]);
 }
 
-template<typename T, typename K>
-typename tangent_type<T,so2<K>>::type log(const so2<K>&, const typename state_type<so2<K>>::type& y, const typename state_type<so2<K>>::type& x) {
+template<typename K>
+typename tangent_type<so2<K>>::type log(const so2<K>&, const typename state_type<so2<K>>::type& y, const typename state_type<so2<K>>::type& x) {
 	// tangent is 1-dim vector -> need to initialize correctly;
-	typename tangent_type<T,so2<K>>::type v;
+	typename tangent_type<so2<K>>::type v;
 	v[0] = x - y;
 	return v;
 }

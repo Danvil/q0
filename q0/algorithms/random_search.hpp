@@ -39,11 +39,12 @@ namespace detail
 	struct LocalUnimodalSearch
 	{
 		typedef typename domains::state_type<Domain>::type State;
+		typedef typename domains::state_scalar_type<Domain>::type Scalar;
 		
 		void init(const Domain& dom) {
 			radius_ = p_LocalUnimodalSearch_initial_radius;
 			unsigned int dim = domains::dimension(dom);
-			decrease_factor_ = std::pow(0.5, 1.0 / (p_LocalUnimodalSearch_gamma * static_cast<double>(dim)));
+			decrease_factor_ = std::pow(0.5, 1.0 / (p_LocalUnimodalSearch_gamma * static_cast<Scalar>(dim)));
 		}
 
 		State operator()(const Domain& dom, const State& x) {
@@ -60,8 +61,8 @@ namespace detail
 		}
 
 	private:
-		double radius_;
-		double decrease_factor_;
+		Scalar radius_;
+		Scalar decrease_factor_;
 	};
 
 	constexpr double p_PatternSearch_initial_radius = 1.0;
@@ -72,8 +73,8 @@ namespace detail
 	struct PatternSearch
 	{
 		typedef typename domains::state_type<Domain>::type State;
-		typedef float T;
-		typedef typename domains::tangent_type<T,Domain>::type Tangent;		
+		typedef typename domains::state_scalar_type<Domain>::type Scalar;
+		typedef typename domains::tangent_type<Domain>::type Tangent;		
 
 		void init(const Domain& dom) {
 			const unsigned int dim = domains::dimension(dom);
@@ -88,7 +89,7 @@ namespace detail
 			Tangent t = zero_;
 			k_ = math::random_int<unsigned int>(0, t.size()-1);
 			at(t,k_) = step_length_[k_];
-			return domains::exp<T>(dom, x, t);
+			return domains::exp(dom, x, t);
 		}
 
 		template<typename Compare, typename Score>
@@ -103,7 +104,7 @@ namespace detail
 
 	private:
 		Tangent zero_;
-		std::vector<double> step_length_;
+		std::vector<Scalar> step_length_;
 		unsigned int k_;
 	};	
 
@@ -116,8 +117,8 @@ namespace detail
 	struct SimulatedAnnealing
 	{
 		typedef typename domains::state_type<Domain>::type State;
-		typedef float T;
-		typedef typename domains::tangent_type<T,Domain>::type Tangent;		
+		typedef typename domains::state_scalar_type<Domain>::type Scalar;
+		typedef typename domains::tangent_type<Domain>::type Tangent;		
 
 		void init(const Domain& dom) {
 			radius_ = p_SimulatedAnnealing_initial_radius;
@@ -138,16 +139,16 @@ namespace detail
 				// cold as death
 				return false;
 			}
-			double temperature_old = temperature_;
+			Scalar temperature_old = temperature_;
 			temperature_ *= p_SimulatedAnnealing_factor;
-			double ds = a - b; // FIXME does this work?
+			Scalar ds = a - b; // FIXME does this work?
 			if(ds < 0) {
 //				std::cout << a << " is better than " << b << std::endl;
 				return true;
 			}
-			double p = std::exp(-ds/temperature_old);
+			Scalar p = std::exp(-ds/temperature_old);
 //			std::cout << a << " / " << b <<  " -> p=" << p;
-			if(math::random_uniform<double>(0,1) < p) {
+			if(math::random_uniform<Scalar>(0,1) < p) {
 //				std::cout << " YES" << std::endl;
 				return true;
 			}
@@ -158,8 +159,8 @@ namespace detail
 		}
 
 	private:
-		double radius_;
-		double temperature_;
+		Scalar radius_;
+		Scalar temperature_;
 	};	
 
 	/** Random search with parallel function evaluate */

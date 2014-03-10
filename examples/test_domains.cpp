@@ -15,11 +15,11 @@ void run(const Domain& dom, const std::string& name)
 	state_t x = q0::domains::random(dom);
 	state_t y = q0::domains::random(dom);
 
-	auto t = q0::domains::log<float>(dom, x, y);
+	auto t = q0::domains::log(dom, x, y);
 	std::cout << "Tangent = {" << t.transpose() << "}" << std::endl;
 
-	state_t q = q0::domains::exp<float>(dom, x, t);
-	auto t2 = q0::domains::log<float>(dom, x, q);
+	state_t q = q0::domains::exp(dom, x, t);
+	auto t2 = q0::domains::log(dom, x, q);
 	std::cout << "Tangent = {" << t2.transpose() << "}" << std::endl;
 }
 

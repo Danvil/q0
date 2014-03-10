@@ -14,8 +14,6 @@ namespace q0 { namespace algorithms {
 /** Random search */
 struct differential_evolution
 {
-	typedef float T;
-
 	struct Parameters
 	{
 		unsigned int N;
@@ -61,6 +59,7 @@ struct differential_evolution
 	solve(const Domain& dom, Objective f, Control control, Compare cmp)
 	{
 		typedef typename domains::state_type<Domain>::type State;
+		typedef typename domains::state_scalar_type<Domain>::type Scalar;
 		typedef typename std::result_of<Objective(State)>::type Score;
 
 		// initial particles
@@ -77,18 +76,18 @@ struct differential_evolution
 			for(std::size_t i=0; i<n; i++) {
 				// mutation
 				std::array<std::size_t,3> indices = pick_mutation_indices<3>(i, n);
-				auto d = parameters.F*domains::log<T>(dom, particles.states[indices[1]], particles.states[indices[2]]);
-				auto m = domains::exp<T>(dom, particles.states[indices[0]], d);
-				auto x = domains::log<T>(dom, particles.states[i], m);
+				auto d = static_cast<Scalar>(parameters.F)*domains::log(dom, particles.states[indices[1]], particles.states[indices[2]]);
+				auto m = domains::exp(dom, particles.states[indices[0]], d);
+				auto x = domains::log(dom, particles.states[i], m);
 				// crossover
 				std::size_t k = math::random_int<std::size_t>(0, dim-1);
 				for(std::size_t j=0; j<dim; j++) {
-				 	if(j != k && math::random_uniform(0.f,1.f) > parameters.CR) {
+				 	if(j != k && math::random_uniform<Scalar>(0,1) > parameters.CR) {
 				 		at(x,j) = 0;
 				 	}
 				}
 				// store for parallel evaluation and selection
-				particles_new.states[i] = domains::exp<T>(dom, particles.states[i], x);
+				particles_new.states[i] = domains::exp(dom, particles.states[i], x);
 			}
 			// mass selection
 			particles_new.evaluate(f);

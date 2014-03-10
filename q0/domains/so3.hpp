@@ -36,6 +36,11 @@ struct state_type<so3<K>> {
 };
 
 template<typename K>
+struct state_scalar_type<so3<K>> {
+	typedef K type;
+};
+
+template<typename K>
 void print(std::ostream& os, const so3<K>&, const typename state_type<so3<K>>::type& u) {
 	os << "so(3){" << u.w() << "," << u.x() << "," << u.y() << "," << u.z() << "}";
 }
@@ -45,8 +50,8 @@ typename state_type<so3<K>>::type restrict(const so3<K>&, const typename state_t
 	return x.normalized();
 }
 
-template<typename T, typename K>
-typename state_type<so3<K>>::type exp(const so3<K>& dom, const typename state_type<so3<K>>::type& y, const typename tangent_type<T,so3<K>>::type& t) {
+template<typename K>
+typename state_type<so3<K>>::type exp(const so3<K>& dom, const typename state_type<so3<K>>::type& y, const typename tangent_type<so3<K>>::type& t) {
 	K n = t.norm();
 	if(n == K(0)) {
 		return y;
@@ -58,14 +63,14 @@ typename state_type<so3<K>>::type exp(const so3<K>& dom, const typename state_ty
 	return restrict(dom, y * Eigen::Quaternion<K>(ca, scl*t[0], scl*t[1], scl*t[2]));
 }
 
-template<typename T, typename K>
-typename tangent_type<T,so3<K>>::type log(const so3<K>&, const typename state_type<so3<K>>::type& y, const typename state_type<so3<K>>::type& x) {
+template<typename K>
+typename tangent_type<so3<K>>::type log(const so3<K>&, const typename state_type<so3<K>>::type& y, const typename state_type<so3<K>>::type& x) {
 	// tangent is 1-dim vector -> need to initialize correctly;
-	typename tangent_type<T,so3<K>>::type v;
+	typename tangent_type<so3<K>>::type v;
 	typename state_type<so3<K>>::type d = y.inverse() * x;
 	K sa = d.vec().norm();
 	K scl = (sa == K(0) ? 0 : (2.0f*std::atan2(sa, d.w())/sa));
-	return (scl*d.vec()).template cast<T>();
+	return scl*d.vec();
 }
 
 template<typename K>
@@ -81,12 +86,11 @@ typename state_type<so3<K>>::type random(const so3<K>& dom) {
 
 template<typename K>
 typename state_type<so3<K>>::type random_neighbour(const so3<K>& dom, const typename state_type<so3<K>>::type& x, double radius) {
-	typedef K T;
-	typedef typename tangent_type<T,so3<K>>::type t_t;
+	typedef typename tangent_type<so3<K>>::type t_t;
 	K r = radius;
 	// TODO do we know a direct method to avoid the tangent space?
 	// TODO what is the meaning of "radius"
-	return exp<T,K>(dom, x, t_t{
+	return exp<K>(dom, x, t_t{
 		math::random_uniform<K>(-r, +r),
 		math::random_uniform<K>(-r, +r),
 		math::random_uniform<K>(-r, +r)
@@ -98,8 +102,7 @@ typename state_type<so3<K>>::type mean(const so3<K>& dom, const std::vector<W>& 
 	constexpr unsigned MAX_ITER = 1000;
 	constexpr K TARGET = K(0.001);
 	// using general iterative algorithm
-	typedef W T;
-	typedef typename tangent_type<T,so3<K>>::type t_t;
+	typedef typename tangent_type<so3<K>>::type t_t;
 	typedef typename state_type<so3<K>>::type s_t;
 	size_t n = weights.size();
 	if(n == 0) {
@@ -112,11 +115,11 @@ typename state_type<so3<K>>::type mean(const so3<K>& dom, const std::vector<W>& 
 	BOOST_ASSERT(n == states.size());
 	// initial value
 	s_t id = s_t::Identity();
-	t_t logy = weights[0]*log<T>(dom, id, states[0]);
+	t_t logy = weights[0]*log(dom, id, states[0]);
 	for(size_t i=1; i<n; i++) {
-		logy += weights[i]*log<T>(dom, id, states[i]);
+		logy += weights[i]*log(dom, id, states[i]);
 	}
-	s_t y = exp<T>(dom, id, logy);
+	s_t y = exp(dom, id, logy);
 	if(y.norm() == K(0)) {
 		std::cerr << "so3::mean ill posed problem as mean of elements is 0!" << std::endl;
 		throw 0; // FIXME
@@ -126,7 +129,7 @@ typename state_type<so3<K>>::type mean(const so3<K>& dom, const std::vector<W>& 
 	for(unsigned k=0; ; k++) {
 		t_t e = t_t::Zero();
 		for(size_t i=0; i<n; i++) {
-			e += weights[i]*log<T>(dom, y, states[i]);
+			e += weights[i]*log(dom, y, states[i]);
 		}
 		// check end
 		if(e.squaredNorm() <= TARGET*TARGET) {
@@ -137,7 +140,7 @@ typename state_type<so3<K>>::type mean(const so3<K>& dom, const std::vector<W>& 
 			throw 0; // FIXME
 		}
 		// new value
-		y = exp<T>(dom, y, e);
+		y = exp(dom, y, e);
 	}
 	return y;
 }
