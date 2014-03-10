@@ -1,9 +1,6 @@
 #ifndef Q0_MATH_HPP_
 #define Q0_MATH_HPP_
-#include <boost/random.hpp>
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_real_distribution.hpp>
-#include <boost/random/normal_distribution.hpp>
+#include <random>
 #include <boost/math/constants/constants.hpp>
 #include <boost/assert.hpp>
 #include <type_traits>
@@ -11,8 +8,8 @@
 namespace q0 { namespace math {
 
 namespace detail {
-	inline boost::random::mt19937& random_engine() {
-		static boost::random::mt19937 rng;
+	inline std::mt19937& random_engine() {
+		static std::mt19937 rng;
 		return rng;
 	}
 }
@@ -25,7 +22,7 @@ void random_seed(unsigned int i) {
 template<typename K>
 K random_int(K a, K b) {
 	static_assert(std::is_integral<K>::value, "random_int requires integral type!");
-	boost::random::uniform_int_distribution<K> dist(a, b);
+	std::uniform_int_distribution<K> dist(a, b);
 	return dist(detail::random_engine());
 }
 
@@ -33,7 +30,7 @@ K random_int(K a, K b) {
 template<typename K>
 K random_uniform(K a, K b) {
 	static_assert(std::is_floating_point<K>::value, "random_uniform requires floating point type!");
-	boost::random::uniform_real_distribution<K> dist(a, b);
+	std::uniform_real_distribution<K> dist(a, b);
 	return dist(detail::random_engine());
 }
 
@@ -41,7 +38,7 @@ K random_uniform(K a, K b) {
 template<typename K>
 K random_stddev() {
 	static_assert(std::is_floating_point<K>::value, "random_stddev requires floating point type!");
-	static boost::random::normal_distribution<K> dist;
+	static std::normal_distribution<K> dist;
 	return dist(detail::random_engine());
 }
 
