@@ -29,8 +29,8 @@ struct state_type<vector<X>> {
 };
 
 template<typename X>
-struct state_scalar_type<vector<X>> {
-	typedef typename state_scalar_type<X>::type type;
+struct scalar_type<vector<X>> {
+	typedef typename scalar_type<X>::type type;
 };
 
 template<typename X>
@@ -107,7 +107,7 @@ typename state_type<vector<X>>::type random(const vector<X>& dom) {
 }
 
 template<typename X>
-typename state_type<vector<X>>::type random_neighbour(const vector<X>& dom, const typename state_type<vector<X>>::type& x, double radius) {
+typename state_type<vector<X>>::type random_neighbour(const vector<X>& dom, const typename state_type<vector<X>>::type& x, typename scalar_type<X>::type radius) {
 	typename state_type<vector<X>>::type y(dom.size());
 	for(std::size_t i=0; i<dom.size(); i++) {
 		y[i] = random_neighbour(dom[i], x[i], radius);
@@ -115,7 +115,7 @@ typename state_type<vector<X>>::type random_neighbour(const vector<X>& dom, cons
 	return y;
 }
 
-template<typename W, typename X>
+template<typename X, typename W>
 typename state_type<vector<X>>::type mean(const vector<X>& dom, const std::vector<W>& weights, const std::vector<typename state_type<vector<X>>::type>& states) {
 	typename state_type<vector<X>>::type y(dom.size());
 	for(std::size_t i=0; i<dom.size(); i++) {
@@ -128,7 +128,7 @@ typename state_type<vector<X>>::type mean(const vector<X>& dom, const std::vecto
 	return y;
 }
 
-template<typename W, typename X>
+template<typename X, typename W>
 typename state_type<vector<X>>::type lerp(const vector<X>& dom, W p, const typename state_type<vector<X>>::type& a, const typename state_type<vector<X>>::type& b) {
 	typename state_type<vector<X>>::type y(dom.size());
 	for(std::size_t i=0; i<dom.size(); i++) {

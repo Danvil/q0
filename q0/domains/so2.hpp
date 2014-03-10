@@ -40,7 +40,7 @@ struct state_type<so2<K>> {
 };
 
 template<typename K>
-struct state_scalar_type<so2<K>> {
+struct scalar_type<so2<K>> {
 	typedef K type;
 };
 
@@ -74,10 +74,10 @@ typename state_type<so2<K>>::type random(const so2<K>& dom) {
 	return math::random_uniform<K>(0, K(2)*boost::math::constants::pi<K>());
 }
 
-template<typename K>
-typename state_type<so2<K>>::type random_neighbour(const so2<K>& dom, const typename state_type<so2<K>>::type& x, double radius) {
+template<typename W, typename K>
+typename state_type<so2<K>>::type random_neighbour(const so2<K>& dom, const typename state_type<so2<K>>::type& x, W radius) {
 	// pick normal distributed around given point
-	return restrict(dom, x + radius*math::random_stddev<K>());
+	return restrict(dom, x + static_cast<K>(radius)*math::random_stddev<K>());
 	// this works well for small radii (wrt pi)
 	// but for a big radius we need a better notion of a normal distribution over SO(2)
 }

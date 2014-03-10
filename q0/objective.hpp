@@ -11,6 +11,7 @@ template<typename Domain, typename Objective>
 struct problem_traits
 {
 	typedef typename domains::state_type<Domain>::type state_t;
+	typedef typename domains::scalar_type<Domain>::type scalar_t;
 	typedef typename std::result_of<Objective(state_t)>::type score_t;
 	typedef particle<state_t, score_t> particle_t;
 };

@@ -59,7 +59,7 @@ struct differential_evolution
 	solve(const Domain& dom, Objective f, Control control, Compare cmp)
 	{
 		typedef typename domains::state_type<Domain>::type State;
-		typedef typename domains::state_scalar_type<Domain>::type Scalar;
+		typedef typename domains::scalar_type<Domain>::type Scalar;
 		typedef typename std::result_of<Objective(State)>::type Score;
 
 		// initial particles

@@ -39,12 +39,13 @@ typename cartesian_base<K,N>::State random(const cartesian_constraint_none<K,N>&
 	return x;
 }
 
-template<typename K, unsigned int N>
-typename cartesian_base<K,N>::State random_neighbour(const cartesian_constraint_none<K,N>&, const typename cartesian_base<K,N>::State& x, double radius) {
+template<typename W, typename K, unsigned int N>
+typename cartesian_base<K,N>::State random_neighbour(const cartesian_constraint_none<K,N>&, const typename cartesian_base<K,N>::State& x, W radius) {
 	typename cartesian_base<K,N>::State y;
+	K r = static_cast<K>(radius);
 	for(unsigned int i=0; i<N; i++) {
-//		at(y, i) = at(x, i) + math::random_uniform<K>(-radius, +radius);
-		at(y, i) = at(x, i) + radius*math::random_stddev<K>();
+//		at(y, i) = at(x, i) + math::random_uniform<K>(-r, +r);
+		at(y, i) = at(x, i) + r*math::random_stddev<K>();
 	}
 	return y;
 }
@@ -86,14 +87,12 @@ typename cartesian_base<K,N>::State random(const cartesian_constraint_box<K,N>& 
 	return y;
 }
 
-template<typename K, unsigned int N>
-typename cartesian_base<K,N>::State random_neighbour(const cartesian_constraint_box<K,N>& dom, const typename cartesian_base<K,N>::State& x, double radius) {
+template<typename W, typename K, unsigned int N>
+typename cartesian_base<K,N>::State random_neighbour(const cartesian_constraint_box<K,N>& dom, const typename cartesian_base<K,N>::State& x, W radius) {
 	typename cartesian_base<K,N>::State y;
+	K r = static_cast<K>(radius);
 	for(unsigned int i=0; i<N; i++) {
-//		at(y, i) = math::random_uniform<K>(
-//			std::max(at(dom.min,i), at(x,i)-radius),
-//			std::min(at(dom.max,i), at(x,i)+radius));
-		at(y, i) = at(x,i) + radius*math::random_stddev<K>();
+		at(y, i) = at(x,i) + r*math::random_stddev<K>();
 	}
 	return restrict(dom, y);
 }
@@ -115,7 +114,7 @@ struct state_type<cartesian<K,N,Constraint>> {
 };
 
 template<typename K, unsigned int N, template<typename,unsigned int>class Constraint>
-struct state_scalar_type<cartesian<K,N,Constraint>> {
+struct scalar_type<cartesian<K,N,Constraint>> {
 	typedef K type;
 };
 

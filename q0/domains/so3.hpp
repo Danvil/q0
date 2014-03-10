@@ -36,7 +36,7 @@ struct state_type<so3<K>> {
 };
 
 template<typename K>
-struct state_scalar_type<so3<K>> {
+struct scalar_type<so3<K>> {
 	typedef K type;
 };
 
@@ -84,12 +84,12 @@ typename state_type<so3<K>>::type random(const so3<K>& dom) {
 		math::random_uniform<K>(K(-1), K(+1)) });
 }
 
-template<typename K>
-typename state_type<so3<K>>::type random_neighbour(const so3<K>& dom, const typename state_type<so3<K>>::type& x, double radius) {
+template<typename W, typename K>
+typename state_type<so3<K>>::type random_neighbour(const so3<K>& dom, const typename state_type<so3<K>>::type& x, W radius) {
 	typedef typename tangent_type<so3<K>>::type t_t;
-	K r = radius;
 	// TODO do we know a direct method to avoid the tangent space?
 	// TODO what is the meaning of "radius"
+	K r = static_cast<K>(radius);
 	return exp<K>(dom, x, t_t{
 		math::random_uniform<K>(-r, +r),
 		math::random_uniform<K>(-r, +r),

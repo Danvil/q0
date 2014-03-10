@@ -25,34 +25,34 @@ namespace detail
 	template<> struct highest_type<double,float> { typedef double result; };
 
 	template<typename... Args>
-	struct state_scalar_type_helper;
+	struct scalar_type_helper;
 
 	template<typename A, typename Head, typename... Args>
-	struct state_scalar_type_helper<A,Head,Args...> {
-		typedef typename state_scalar_type_helper<
-			typename highest_type<A,typename state_scalar_type<Head>::type>::result,
+	struct scalar_type_helper<A,Head,Args...> {
+		typedef typename scalar_type_helper<
+			typename highest_type<A,typename scalar_type<Head>::type>::result,
 			Args...>::result result;
 	};
 
 	template<typename A>
-	struct state_scalar_type_helper<A> {
+	struct scalar_type_helper<A> {
 		typedef A result;
 	};
 
 	template<typename... Args>
-	struct state_scalar_type_helper0;
+	struct scalar_type_helper0;
 
 	template<typename Head, typename... Args>
-	struct state_scalar_type_helper0<Head,Args...> {
-		typedef typename state_scalar_type_helper<typename state_scalar_type<Head>::type, Args...>::result result;
+	struct scalar_type_helper0<Head,Args...> {
+		typedef typename scalar_type_helper<typename scalar_type<Head>::type, Args...>::result result;
 	};
 
 }
 
 /** Subdomains may have different tangent space types -> use the one with highest precision */
 template<typename... Args>
-struct state_scalar_type<tuple<Args...>> {
-	typedef typename detail::state_scalar_type_helper0<Args...>::result type;
+struct scalar_type<tuple<Args...>> {
+	typedef typename detail::scalar_type_helper0<Args...>::result type;
 };
 
 namespace detail
@@ -325,7 +325,7 @@ namespace detail
 }
 
 template<typename... Args>
-typename state_type<tuple<Args...>>::type random_neighbour(const tuple<Args...>& dom, const typename state_type<tuple<Args...>>::type& x, double radius) {
+typename state_type<tuple<Args...>>::type random_neighbour(const tuple<Args...>& dom, const typename state_type<tuple<Args...>>::type& x, typename scalar_type<tuple<Args...>>::type radius) {
 	typename state_type<tuple<Args...>>::type result;
 	detail::for_each<std::tuple_size<tuple<Args...>>::value, detail::random_neighbour_helper>(&result, dom, x, radius);
 	return result;

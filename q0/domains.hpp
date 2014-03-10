@@ -23,12 +23,12 @@ struct state_type;
 
 /** The scalar type of the domain */
 template<typename Domain>
-struct state_scalar_type;
+struct scalar_type;
 
 /** The type of tangent space vectors */
 template<typename Domain>
 struct tangent_type {
-	typedef typename tangent_vec<typename state_scalar_type<Domain>::type,tangent_size<Domain>::value>::type type;
+	typedef typename tangent_vec<typename scalar_type<Domain>::type,tangent_size<Domain>::value>::type type;
 };
 
 /** Prototype for function 'exp' */

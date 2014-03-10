@@ -39,7 +39,7 @@ namespace detail
 	struct LocalUnimodalSearch
 	{
 		typedef typename domains::state_type<Domain>::type State;
-		typedef typename domains::state_scalar_type<Domain>::type Scalar;
+		typedef typename domains::scalar_type<Domain>::type Scalar;
 		
 		void init(const Domain& dom) {
 			radius_ = p_LocalUnimodalSearch_initial_radius;
@@ -73,7 +73,7 @@ namespace detail
 	struct PatternSearch
 	{
 		typedef typename domains::state_type<Domain>::type State;
-		typedef typename domains::state_scalar_type<Domain>::type Scalar;
+		typedef typename domains::scalar_type<Domain>::type Scalar;
 		typedef typename domains::tangent_type<Domain>::type Tangent;		
 
 		void init(const Domain& dom) {
@@ -117,7 +117,7 @@ namespace detail
 	struct SimulatedAnnealing
 	{
 		typedef typename domains::state_type<Domain>::type State;
-		typedef typename domains::state_scalar_type<Domain>::type Scalar;
+		typedef typename domains::scalar_type<Domain>::type Scalar;
 		typedef typename domains::tangent_type<Domain>::type Tangent;		
 
 		void init(const Domain& dom) {
